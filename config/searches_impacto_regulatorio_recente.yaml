@@ -1,0 +1,66 @@
+project_name: impacto_regulatorio_desenvolvimento_urbano_recente
+
+# Os limites de data e de registros podem ser sobrescritos pelos scripts PowerShell.
+defaults:
+  from_publication_date: "2021-07-20"
+  to_publication_date: "2026-07-20"
+  types:
+    - article
+  languages:
+    - en
+    - pt
+    - es
+  open_access_only: true
+  published_only: true
+  journal_only: true
+  has_abstract_only: true
+  has_doi_only: true
+  exclude_retracted: true
+  max_records: 50
+  progress_every: 25
+
+queries:
+  - id: q01_zoneamento_oferta_acessibilidade
+    mode: lexical
+    search: >
+      ("land use regulation" OR "zoning restriction" OR "zoning reform"
+      OR "regulatory barrier")
+      AND
+      ("housing supply" OR "housing affordability")
+
+  - id: q02_licenciamento_custo_prazo
+    mode: lexical
+    search: >
+      ("development approval" OR "planning permission" OR "permitting delay"
+      OR "approval delay")
+      AND
+      ("housing development" OR "housing supply")
+      AND
+      (cost OR delay OR uncertainty)
+
+  - id: q03_parametros_viabilidade_habitacional
+    mode: lexical
+    search: >
+      ("minimum lot size" OR "parking requirement" OR "building code"
+      OR "density restriction")
+      AND
+      ("housing affordability" OR "development feasibility" OR "housing cost")
+
+  - id: q04_avaliacao_impacto_regulatorio_urbano
+    mode: lexical
+    max_records: 40
+    search: >
+      ("regulatory impact assessment" OR "regulatory impact analysis")
+      AND
+      ("urban planning" OR "urban development" OR housing OR "land use")
+
+  - id: q05_regulacao_urbanistica_america_latina
+    mode: lexical
+    max_records: 30
+    search: >
+      ("regulacao urbanistica" OR "legislacao urbanistica"
+      OR "regulacion urbanistica" OR "legislacion urbanistica")
+      AND
+      ("oferta habitacional" OR "habitacao de interesse social"
+      OR "vivienda asequible" OR "vivienda social"
+      OR "custo regulatorio" OR "impacto regulatorio")

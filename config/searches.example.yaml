@@ -1,0 +1,35 @@
+project_name: ia_legislacao
+
+# Filtros padrao aplicados a todas as consultas, salvo sobrescrita local.
+defaults:
+  from_publication_date: "2015-01-01"
+  to_publication_date: "2026-12-31"
+  types:
+    - article
+    - review
+    - book-chapter
+    - preprint
+  languages:
+    - en
+    - pt
+    - es
+  open_access_only: false
+  max_records: null
+
+# Para revisoes sistematicas, mantenha cada estrategia como consulta separada.
+# Isso permite informar, no PRISMA, quantos registros vieram de cada expressao.
+queries:
+  - id: q01_ai_legislation_en
+    search: '"artificial intelligence" legislation'
+
+  - id: q02_legislative_drafting_en
+    search: '"legislative drafting" artificial intelligence'
+
+  - id: q03_legal_text_analysis_en
+    search: '"legal text analysis" language model'
+
+  - id: q04_ia_legislacao_pt
+    search: 'inteligencia artificial legislacao'
+
+  - id: q05_ia_normas_es
+    search: 'inteligencia artificial legislacion'

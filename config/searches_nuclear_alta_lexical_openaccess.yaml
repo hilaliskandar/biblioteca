@@ -1,0 +1,49 @@
+project_name: ia_entraves_regulatorios_nuclear_alta_openaccess
+defaults:
+  from_publication_date: null
+  to_publication_date: null
+  types:
+  - article
+  - review
+  - book-chapter
+  - preprint
+  languages: []
+  open_access_only: true
+  max_records: null
+queries:
+- id: q01_ai_lawmaking_drafting
+  mode: lexical
+  search: ("artificial intelligence" OR "large language model" OR "generative AI" OR "natural language processing" OR "expert system") AND ("legislative drafting" OR "drafting legislation" OR "legislative process" OR lawmaking OR "law-making")
+- id: q02_ai_legislation_interpretation
+  mode: lexical
+  search: ("artificial intelligence" OR "large language model" OR "expert system" OR "knowledge representation") AND (legislation OR statute OR regulation OR "legal norm") AND (interpretation OR "semantic processing" OR reasoning)
+- id: q03_ai_conflict_gap_detection
+  mode: lexical
+  search: ("artificial intelligence" OR "large language model" OR "natural language processing" OR "knowledge graph" OR ontology) AND (legislation OR regulation OR statute OR "legal norm") AND (conflict OR inconsistency OR contradiction OR gap OR coherence OR harmonization)
+- id: q04_ai_systematization_codification
+  mode: lexical
+  search: ("artificial intelligence" OR "semantic search" OR "knowledge graph" OR ontology) AND (legislation OR regulation OR statutes) AND (systematization OR consolidation OR codification OR "legal monitoring" OR amendment OR repeal)
+- id: q05_rules_as_code_computable_law
+  mode: lexical
+  search: ("rules as code" OR "legislation as code" OR "law as code" OR "machine-readable legislation" OR "computable law" OR "computational law") AND (legislation OR regulation OR statute OR drafting)
+- id: q06_ai_regulatory_impact_burdens
+  mode: lexical
+  search: ("artificial intelligence" OR "machine learning" OR "natural language processing" OR "large language model") AND ("regulatory impact assessment" OR "legislative impact assessment" OR "administrative burden" OR "regulatory burden" OR "compliance burden")
+- id: q07_ai_obligation_requirement_extraction
+  mode: lexical
+  search: ("artificial intelligence" OR "natural language processing" OR "large language model" OR "information extraction") AND (legislation OR regulation OR statute) AND ("obligation extraction" OR "requirement extraction" OR compliance OR "norm extraction" OR "rule extraction")
+- id: q08_legal_retrieval_knowledge_graphs
+  mode: lexical
+  search: ("legal information retrieval" OR "semantic legal search" OR "legal knowledge graph" OR "legal ontology") AND (legislation OR regulation OR statute OR "legal norm")
+- id: q09_ai_legislative_quality_ambiguity
+  mode: lexical
+  search: ("large language model" OR "generative AI" OR "artificial intelligence") AND (legislation OR regulation OR statute OR "legislative text") AND ("quality assessment" OR ambiguity OR defect OR "drafting error" OR simplification OR readability)
+- id: q10_ai_normative_text_generation
+  mode: lexical
+  search: ("artificial intelligence" OR "large language model" OR "generative AI") AND ("normative text generation" OR "legislative text generation" OR "automated legal drafting" OR "statute generation" OR "regulation drafting")
+- id: q11_pt_ia_legislacao_analise
+  mode: lexical
+  search: ("inteligencia artificial" OR "processamento de linguagem natural" OR "modelo de linguagem") AND (legislacao OR "processo legislativo" OR "redacao legislativa" OR regulamento OR norma) AND (analise OR interpretacao OR conflito OR contradicao OR lacuna OR revisao OR sistematizacao)
+- id: q12_es_ia_legislacion_analisis
+  mode: lexical
+  search: ("inteligencia artificial" OR "procesamiento del lenguaje natural" OR "modelo de lenguaje") AND (legislacion OR "proceso legislativo" OR "tecnica legislativa" OR reglamento OR norma) AND (analisis OR interpretacion OR conflicto OR contradiccion OR laguna OR revision OR sistematizacion)

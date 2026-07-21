@@ -1,0 +1,39 @@
+# Ambientes e segredos
+.venv*/
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editores e sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dados e resultados gerados
+/data/raw/*
+/data/manifests/*
+/data/db/*
+/data/processed/*
+/data/quarantine/*
+/data/control/*
+/exports/zotero/*
+/exports/asreview/*
+/exports/bibliometrix/*
+/reports/*
+
+# Mantém a estrutura vazia
+!/data/raw/.gitkeep
+!/data/manifests/.gitkeep
+!/data/db/.gitkeep
+!/data/processed/.gitkeep
+!/data/quarantine/.gitkeep
+!/data/control/.gitkeep
+!/exports/zotero/.gitkeep
+!/exports/asreview/.gitkeep
+!/exports/bibliometrix/.gitkeep
+!/reports/.gitkeep

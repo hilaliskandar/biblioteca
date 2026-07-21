@@ -1,0 +1,22 @@
+project_name: ia_entraves_regulatorios_semantic_supplement_openaccess
+defaults:
+  from_publication_date: null
+  to_publication_date: null
+  types:
+  - article
+  - review
+  - book-chapter
+  - preprint
+  languages: []
+  open_access_only: true
+  max_records: 50
+queries:
+- id: s01_ai_identification_correction_regulatory_obstacles
+  mode: semantic
+  search: Research on using artificial intelligence, large language models, natural language processing, expert systems, knowledge graphs, or semantic search to identify, classify, compare, interpret, consolidate, monitor, or revise legislation and regulations. Relevant studies detect legal conflicts, contradictions, gaps, ambiguities, burdens, obsolete provisions, implementation barriers, and regulatory obstacles, or support the drafting and correction of normative texts.
+- id: s02_ai_legislative_quality_and_impact
+  mode: semantic
+  search: Studies that apply artificial intelligence to legislative quality, regulatory impact assessment, administrative burden detection, obligation and requirement extraction, compliance analysis, legal coherence, harmonization, statutory interpretation, and evidence-based revision of laws and regulations.
+- id: s03_computable_legislation_rules_as_code
+  mode: semantic
+  search: Research on Rules as Code, Legislation as Code, machine-readable legislation, computable law, formalization of legal norms, automated checking of statutory logic, and artificial intelligence assisted legislative drafting with human validation.

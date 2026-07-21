@@ -1,0 +1,6 @@
+cff-version: 1.2.0
+title: OpenAlex Review Pipeline
+message: "Ao utilizar este software em pesquisa, cite o repositório e a versão empregada."
+type: software
+version: 0.2.0
+date-released: 2026-07-21

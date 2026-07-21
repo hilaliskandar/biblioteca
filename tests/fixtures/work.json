@@ -1,0 +1,62 @@
+{
+  "id": "https://openalex.org/W1234567890",
+  "doi": "https://doi.org/10.1234/example.1",
+  "title": "Regulatory barriers and affordable housing",
+  "display_name": "Regulatory barriers and affordable housing",
+  "publication_year": 2025,
+  "publication_date": "2025-06-10",
+  "type": "article",
+  "language": "en",
+  "cited_by_count": 7,
+  "is_retracted": false,
+  "has_abstract": true,
+  "abstract_inverted_index": {
+    "Affordable": [0],
+    "housing": [1],
+    "matters": [2]
+  },
+  "primary_location": {
+    "is_published": true,
+    "landing_page_url": "https://doi.org/10.1234/example.1",
+    "pdf_url": "https://example.org/work.pdf",
+    "source": {
+      "id": "https://openalex.org/S111",
+      "display_name": "Journal of Urban Regulation",
+      "type": "journal",
+      "issn_l": "1234-5678",
+      "issn": ["1234-5678"]
+    }
+  },
+  "open_access": {"is_oa": true, "oa_status": "gold"},
+  "biblio": {"volume": "10", "issue": "2", "first_page": "1", "last_page": "20"},
+  "authorships": [
+    {
+      "author_position": "first",
+      "is_corresponding": true,
+      "author": {
+        "id": "https://openalex.org/A123",
+        "display_name": "Ana Maria da Silva",
+        "orcid": "https://orcid.org/0000-0001-0000-0001"
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I123",
+          "display_name": "Universidade Exemplo",
+          "country_code": "BR"
+        }
+      ]
+    }
+  ],
+  "keywords": [{"display_name": "housing"}],
+  "topics": [
+    {
+      "id": "https://openalex.org/T123",
+      "display_name": "Housing Policy",
+      "score": 0.9,
+      "subfield": {"display_name": "Urban Studies"},
+      "field": {"display_name": "Social Sciences"},
+      "domain": {"display_name": "Social Sciences"}
+    }
+  ],
+  "referenced_works": ["https://openalex.org/W999"]
+}

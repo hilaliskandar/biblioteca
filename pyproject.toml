@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openalex-review-pipeline"
+version = "0.2.0"
+description = "Pipeline reprodutivel para busca, controle e exportacao de revisoes bibliograficas com OpenAlex."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Projeto Protocolo HIS"}]
+dependencies = [
+  "duckdb>=1.4,<2",
+  "pandas>=2.2,<3",
+  "pyalex>=0.21,<1",
+  "pyarrow>=18,<25",
+  "python-dotenv>=1.0,<2",
+  "PyYAML>=6,<7",
+  "rispy>=0.10,<1",
+  "tabulate>=0.9,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+  "pytest-cov>=5,<7",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+openalex-review = "openalex_review.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
