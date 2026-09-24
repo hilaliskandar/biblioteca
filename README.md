@@ -1,240 +1,334 @@
 # OpenAlex Review Pipeline
 
-Pipeline reprodutível para **buscar, registrar, deduplicar, triar e exportar bibliografia** recuperada no OpenAlex. O projeto foi estruturado para revisões bibliográficas e pesquisas aplicadas que exigem rastreabilidade entre:
+> Pipeline Python reprodutível para identificar, preservar, deduplicar, exportar e triar literatura recuperada da API OpenAlex.
 
-- estratégia de busca;
-- consulta executada;
-- registro recuperado;
-- decisão de triagem;
-- leitura integral;
-- evidência extraída;
-- utilização no texto científico.
+Este repositório atende pessoas e automações: estratégias são YAMLs versionados; JSONL, manifestos, DuckDB, exportações e relatórios são produtos locais, reproduzíveis e não versionados.
 
-## O que esta versão melhora
+## Objetivo e fluxo
 
-A versão 0.2 reorganiza o protótipo original e introduz:
+```text
+YAML de estratégia
+  -> contagem na API
+  -> coleta OpenAlex em JSONL
+  -> manifesto com parâmetros e SHA-256
+  -> normalização e quarentena de erros
+  -> DuckDB e deduplicação
+  -> ASReview, Zotero e Bibliometrix
+  -> triagem e PRISMA inicial
+  -> leitura integral e matriz de evidências (futuro)
+```
 
-- aplicação Python instalável com um único comando `openalex-review`;
-- consultas lexicais e semânticas configuradas em YAML;
-- manifestos com data, parâmetros, versões do software e hash SHA-256;
-- coleta atômica, com proteção contra sobrescrita acidental;
-- retentativas para erros transitórios da API;
-- DuckDB construído de forma atômica;
-- registro detalhado de erros de normalização em quarentena;
-- deduplicação por identificadores OpenAlex e DOI;
-- tabelas para triagem, leitura e evidências;
-- exportação para Zotero, ASReview e Bibliometrix;
-- relatório inicial de identificação e deduplicação compatível com PRISMA;
-- validação de estudos-semente;
-- testes automatizados e integração contínua no GitHub Actions;
-- modelos CSV para controle manual ou importação posterior.
+O software automatiza rastreabilidade bibliográfica; não substitui protocolo de revisão, julgamento humano, validação metodológica ou acesso legal a textos completos.
 
-## Segurança e dados
+## Estado da rodada real
 
-O repositório **não deve conter**:
+O caso de uso ativo é **IA aplicada à legislação e entraves regulatórios**. Consulte [`docs/real-research-ia-entraves.md`](docs/real-research-ia-entraves.md).
 
-- `.env` ou chaves da API;
-- ambientes virtuais;
-- PDFs protegidos por direitos autorais;
-- bases DuckDB;
-- JSONL brutos;
-- exportações com dados de pesquisa;
-- relatórios gerados automaticamente.
+Em **24 de setembro de 2026**, as rodadas locais foram:
 
-Esses itens estão cobertos pelo `.gitignore`. A chave deve existir apenas no arquivo local `.env`.
+| Rodada | Estratégia | Consultas | Teto | Ocorrências |
+|---|---|---:|---:|---:|
+| `ia_entraves_lexical_20260924` | lexical | 12 | 200/consulta | 2.400 |
+| `ia_entraves_semantic_20260924` | semântica suplementar | 3 | 50/consulta | 150 |
+| **Corpus combinado** | deduplicado | 15 | — | **1.991 obras** |
 
-## Instalação no Windows
+| Indicador | Valor |
+|---|---:|
+| Ocorrências identificadas | 2.550 |
+| Obras deduplicadas | 1.991 |
+| Duplicatas removidas | 559 |
+| Obras com resumo | 1.808 |
+| Obras com DOI | 1.885 |
+| Obras em acesso aberto | 1.848 |
+| Erros de normalização | 0 |
+| Decisões reais importadas | 0 |
 
-Na raiz do projeto, abra o PowerShell:
+Os números são resultados locais, não dados versionados. Confirme o estado atual com `openalex-review report` e `reports/`.
+
+## Arquitetura e produtos
+
+```text
+config/                  estratégias YAML versionadas
+data/raw/                respostas JSONL; uma ocorrência por linha
+data/manifests/          parâmetros da coleta, versões e SHA-256
+data/db/                 DuckDB local
+data/processed/          CSVs e metadados de construção
+data/quarantine/         erros de normalização
+data/control/            triagem, leitura e evidências
+exports/                 ASReview, Zotero e Bibliometrix
+reports/                 identificação, sobreposição e triagem
+src/openalex_review/     pacote Python
+tests/                   testes automatizados
+```
+
+| Comando | Entrada | Saída ou efeito |
+|---|---|---|
+| `count` | YAML | Conta o universo filtrado; não grava registros. |
+| `collect` | YAML + `run_id` | Cria JSONL e manifesto por consulta. |
+| `build-db` | `data/raw/*.jsonl` | Reconstrói DuckDB e quarentena. |
+| `export` | DuckDB | Gera arquivos para ferramentas externas. |
+| `report` | DuckDB | Gera identificação, sobreposição e triagem. |
+| `import-screening` | CSV + DuckDB | Importa decisões validadas. |
+| `pipeline` | YAML + `run_id` | Executa coleta, banco, exportação, relatório e controles. |
+
+## Algoritmo e regras operacionais
+
+### Consulta, filtros e contagem
+
+O YAML define valores padrão e consultas. A CLI pode substituir datas, `max_records` e frequência de progresso para uma execução sem alterar o YAML.
+
+```text
+mode=lexical  -> Works().search(expressão)
+mode=semantic -> Works().similar(descrição)
+```
+
+Aplicam-se, quando configurados, filtros de data, tipo, idioma, OA, resumo, DOI, retratação, publicação e periódico. `count` mostra o universo filtrado naquele momento; isso não remove o teto operacional de coleta.
+
+### Coleta: retentativas, teto e atomicidade
+
+Cada operação de API recebe até cinco tentativas, com espera:
+
+```text
+min(60 segundos, 2^tentativa + valor_aleatório)
+```
+
+Buscas lexicais usam páginas de até 200 itens, mas `max_records` é conferido **registro a registro**. Portanto, `max_records=50` grava no máximo 50 itens mesmo se a API devolver 200. Buscas semânticas são suplementares e limitadas a 50 itens por consulta.
+
+Por consulta, o coletor cria manifesto `running`, grava JSONL temporário, renomeia o arquivo somente após sucesso, calcula SHA-256 e grava manifesto `completed`. Em erro, remove o temporário e registra `failed`, tipo, mensagem e rastreio. Um `run_id` já existente é bloqueado; use `--overwrite` apenas com justificativa metodológica explícita.
+
+### Normalização, ocorrência e deduplicação
+
+Uma linha JSONL é uma **ocorrência**: obra retornada por consulta e rodada específicas. O pipeline extrai metadados, resumo, autoria, links, OA, tópicos e palavras-chave. Falhas vão para `data/quarantine/normalization_errors.jsonl` sem interromper toda a construção.
+
+```text
+works_stage        = todas as ocorrências normalizadas
+work_queries       = origem por obra, rodada, consulta e posição
+works              = uma obra por record_key
+works_with_queries = visão com consultas agregadas
+```
+
+`record_key` é construído preferencialmente a partir do identificador OpenAlex. DOI normalizado é preservado para auditoria e resolução de importações. Para ocorrências da mesma chave, a obra retida é a de maior número de citações e, em empate, a de publicação mais recente:
+
+```sql
+ROW_NUMBER() OVER (
+  PARTITION BY record_key
+  ORDER BY cited_by_count DESC, publication_date DESC NULLS LAST
+)
+```
+
+Ocorrências e consultas de origem permanecem disponíveis para auditoria e cálculo de sobreposição.
+
+### Reconstrução segura do banco
+
+O banco é criado primeiro como `openalex.duckdb.tmp`; depois de `CHECKPOINT`, substitui o arquivo final. Antes de reconstruir, o pipeline preserva e restaura as linhas existentes de:
+
+```text
+screening_decisions
+reading_status
+evidence_notes
+```
+
+Assim, `build-db` não deve apagar controles já registrados.
+
+### Exportação, triagem e PRISMA
+
+`export` aceita `all`, `open_access`, `with_abstract`, `with_doi` e `not_retracted`, produzindo RIS/CSL JSON para Zotero, CSV/RIS para ASReview, CSV para Bibliometrix e `works_deduplicated.csv`. Valores ausentes do pandas são convertidos antes de gerar RIS e CSL JSON.
+
+`import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza o rótulo para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Decisão inválida ou obra desconhecida cancela toda a importação. Reimportação do mesmo revisor e etapa não duplica registros; `--replace` substitui deliberadamente a importação anterior.
+
+No relatório, por obra e etapa:
+
+```text
+inclusão e nenhuma exclusão -> incluir
+exclusão e nenhuma inclusão -> excluir
+inclusão e exclusão         -> conflito
+```
+
+Para `titulo_resumo`, pendentes são obras deduplicadas menos obras com ao menos uma decisão. O PRISMA atual cobre identificação, deduplicação e triagem inicial; texto integral e síntese final são incrementos futuros.
+
+## Ferramentas e requisitos
+
+| Categoria | Ferramenta | Uso |
+|---|---|---|
+| Linguagem | Python >= 3.10 | aplicação e testes |
+| API | OpenAlex via PyAlex | busca e metadados |
+| Banco | DuckDB | deduplicação e controles |
+| Tabelas | pandas + PyArrow | CSV e exportações |
+| Configuração | PyYAML | estratégias YAML |
+| Credenciais | python-dotenv | `.env` local |
+| Referências | rispy | RIS |
+| Relatórios | tabulate | tabelas Markdown |
+| Qualidade | pytest, pytest-cov, Ruff | testes e lint |
+| CI | GitHub Actions | Python 3.10 e 3.12 |
+
+```toml
+[project.scripts]
+openalex-review = "openalex_review.cli:main"
+```
+
+No Windows, `pip install -e '.[dev]'` cria `.venv\Scripts\openalex-review.exe`. Não é binário nativo compilado; é um *launcher* do ambiente virtual para o pacote Python em modo editável.
+
+## Instalação
+
+### Windows
 
 ```powershell
+Set-Location F:\ale_2_0\openalex\biblioteca
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\scripts\setup_windows.ps1
 ```
 
-Edite o arquivo `.env` criado e informe:
+Crie `.env` localmente:
 
 ```text
 OPENALEX_API_KEY=sua_chave
 ```
 
-Verifique o ambiente:
-
 ```powershell
 .\.venv\Scripts\openalex-review.exe check
 ```
 
-## Instalação em Linux ou macOS
+### Linux e macOS
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -e '.[dev]'
+python -m pip install -e '.[dev]'
 cp .env.example .env
 openalex-review check
 ```
 
-## Fluxo mínimo
+## Referência da CLI e fluxos
 
-### 1. Validar uma estratégia
+Use `--root` se necessário:
 
 ```powershell
-openalex-review validate-config `
-  --config config/searches_impacto_regulatorio_recente.yaml
+openalex-review --root F:\ale_2_0\openalex\biblioteca report
 ```
 
-### 2. Contar os resultados antes da coleta
+| Comando | Finalidade |
+|---|---|
+| `check` | Verifica Python, raiz e chave. |
+| `validate-config --config <yaml>` | Valida estratégia. |
+| `count --config <yaml>` | Conta resultados por consulta. |
+| `collect --config <yaml> --run-id <id>` | Coleta JSONL e manifestos. |
+| `build-db` | Normaliza e reconstrói DuckDB. |
+| `export [--filter <nome>]` | Exporta obras deduplicadas. |
+| `report` | Gera relatórios Markdown e CSV. |
+| `validate-seeds [--fail-on-missing]` | Confere DOIs-semente. |
+| `init-control [--overwrite]` | Cria modelos CSV. |
+| `import-screening ...` | Importa decisões. |
+| `pipeline ...` | Executa etapas integradas. |
+
+Nova rodada:
 
 ```powershell
-openalex-review count `
-  --config config/searches_impacto_regulatorio_recente.yaml
-```
-
-### 3. Executar a coleta
-
-```powershell
-openalex-review collect `
-  --config config/searches_impacto_regulatorio_recente.yaml `
-  --run-id impacto_regulatorio_20260721
-```
-
-A coleta cria, para cada consulta:
-
-- `data/raw/<run_id>__<query_id>.jsonl`;
-- `data/manifests/<run_id>__<query_id>.manifest.json`.
-
-### 4. Construir a base
-
-```powershell
+openalex-review validate-config --config config/searches_nuclear_alta_lexical.yaml
+openalex-review count --config config/searches_nuclear_alta_lexical.yaml
+openalex-review collect --config config/searches_nuclear_alta_lexical.yaml --run-id ia_entraves_lexical_YYYYMMDD
 openalex-review build-db
-```
-
-Produtos principais:
-
-- `data/db/openalex.duckdb`;
-- tabelas Parquet em `data/processed/`;
-- erros em `data/quarantine/normalization_errors.jsonl`.
-
-### 5. Exportar
-
-```powershell
 openalex-review export
-```
-
-São gerados:
-
-- RIS e CSL JSON para Zotero;
-- CSV e RIS para ASReview;
-- CSV para Bibliometrix;
-- base CSV deduplicada.
-
-### 6. Gerar relatório de qualidade
-
-```powershell
+openalex-review init-control
 openalex-review report
 ```
 
-### 7. Verificar estudos-semente
+Fluxo integrado:
 
 ```powershell
-openalex-review validate-seeds --fail-on-missing
+openalex-review pipeline --config config/searches_nuclear_alta_lexical.yaml --run-id ia_entraves_lexical_YYYYMMDD
 ```
 
-### 8. Inicializar o controle científico
+Triagem ASReview:
 
 ```powershell
-openalex-review init-control
+openalex-review import-screening --input F:\caminho\asreview_rotulado.csv --reviewer revisor_01 --stage titulo_resumo
+openalex-review report
 ```
 
-O comando cria em `data/control/`:
+Use `--decision-column minha_coluna` para cabeçalho não reconhecido e `--replace` somente para substituir decisões anteriores do mesmo revisor e etapa.
 
-- `search_log.csv`;
-- `screening_decisions.csv`;
-- `reading_status.csv`;
-- `evidence_matrix.csv`.
-
-## Execução integrada
-
-```powershell
-openalex-review pipeline `
-  --config config/searches_impacto_regulatorio_recente.yaml `
-  --run-id impacto_regulatorio_20260721
-```
-
-Para ensaio controlado:
-
-```powershell
-openalex-review pipeline `
-  --config config/searches_impacto_regulatorio_recente.yaml `
-  --max-records 20 `
-  --run-id teste_20
-```
-
-## Estrutura
-
-```text
-.
-├── config/                 estratégias de busca versionadas
-├── data/                   dados locais ignorados pelo Git
-├── docs/                   documentação metodológica e técnica
-├── exports/                arquivos para ferramentas externas
-├── reference/              estudos-semente e listas controladas
-├── reports/                relatórios gerados
-├── scripts/                atalhos operacionais para Windows
-├── src/openalex_review/    aplicação Python
-├── templates/              modelos de controle científico
-└── tests/                  testes automatizados
-```
-
-## Consultas lexicais e semânticas
-
-Cada consulta do YAML possui um `mode`:
+## Formato de configuração
 
 ```yaml
+project_name: exemplo_revisao
+defaults:
+  from_publication_date: null
+  to_publication_date: null
+  types: [article, review]
+  languages: []
+  open_access_only: false
+  has_abstract_only: false
+  has_doi_only: false
+  exclude_retracted: false
+  max_records: 200
+  progress_every: 50
+  sort_by: relevance_score
+  sort_order: desc
 queries:
-  - id: q01_zoneamento
+  - id: q01_termo_controlado
     mode: lexical
-    search: '(zoning OR "land use regulation") AND housing'
-
-  - id: s01_entraves_regulatorios
+    search: '("artificial intelligence") AND (legislation OR regulation)'
+  - id: s01_descoberta_suplementar
     mode: semantic
     search: >-
-      Studies on how urban regulation affects the cost, location,
-      density and production of affordable housing.
+      Studies on artificial intelligence used to analyze, draft, or evaluate
+      legislation and regulatory burdens.
     max_records: 50
 ```
 
-A busca semântica é tratada como **suplementar** e limitada a 50 registros por consulta.
+IDs devem ser estáveis e únicos. Mudança de expressão, filtro, ordenação ou teto requer nova rodada e justificativa. Mantenha consultas separadas quando cobertura e sobreposição por eixo forem relevantes.
 
-## Ordenação
+## Modelo de dados
 
-Uma consulta pode informar:
+| Estrutura | Papel |
+|---|---|
+| `works_stage` | Ocorrências antes da deduplicação. |
+| `works` | Obras deduplicadas, uma por `record_key`. |
+| `work_queries` | Origem por rodada, consulta e posição. |
+| `works_with_queries` | Obras com consultas agregadas. |
+| `screening_decisions` | Decisões por obra, etapa e revisor. |
+| `reading_status` | Estado e responsável pela leitura. |
+| `evidence_notes` | Unidades de evidência para síntese. |
 
-```yaml
-sort_by: cited_by_count
-sort_order: desc
+```text
+consulta   = operação de busca configurada
+ocorrência = retorno de uma consulta em uma rodada
+obra       = registro bibliográfico deduplicado
+evidência  = achado extraído e verificável de uma obra
 ```
 
-Para preservar a comparação metodológica, recomenda-se criar consultas ou rodadas distintas quando a mesma expressão for executada com ordenações diferentes.
+Consulte [`docs/data-model.md`](docs/data-model.md). Para o esquema executável, esta seção e `src/openalex_review/database.py` são a referência.
 
-## Modelo científico
+## Reprodutibilidade, segurança e limites
 
-O banco contém três tabelas de controle:
+Versionar: código, testes, YAMLs, documentação, estudos-semente, modelos vazios e CI.
 
-- `screening_decisions`: decisões por etapa e justificativas de exclusão;
-- `reading_status`: prioridade, andamento e responsável pela leitura;
-- `evidence_notes`: achados, método, limites, localização e uso no texto.
+Manter fora do Git: `.env` e chaves, ambientes virtuais, JSONL, manifestos locais, DuckDB, PDFs, exportações, decisões não autorizadas e relatórios gerados.
 
-A descrição completa está em [`docs/data-model.md`](docs/data-model.md).
+Nunca publique `OPENALEX_API_KEY` em commits, issues, PRs, logs ou imagens.
 
-## Desenvolvimento
+Limites: OpenAlex pode mudar; teto operacional não equivale a cobertura exaustiva; busca semântica é suplementar; conflitos de metadados exigem auditoria humana; importação por título é contingência e deve ser evitada quando houver chave, OpenAlex ID ou DOI; PRISMA completo depende de texto integral e evidências.
 
-```bash
-ruff check .
-pytest --cov=openalex_review --cov-report=term-missing
+## Desenvolvimento e integração
+
+```powershell
+Set-Location F:\ale_2_0\openalex\biblioteca
+F:\ale_2_0\openalex\.venv\Scripts\python.exe -m pytest --cov=openalex_review --cov-report=term-missing
+F:\ale_2_0\openalex\.venv\Scripts\python.exe -m ruff check .
+F:\ale_2_0\openalex\.venv\Scripts\python.exe -m compileall -q src tests
+git diff --check
 ```
 
-## Situação do projeto
+GitHub Actions executa lint, testes e validação de YAML em Python 3.10 e 3.12. Consulte o GitHub para o estado corrente de issues e pull requests. O histórico de integração, com dependências e critérios de aceite, está em [`docs/integration-backlog.md`](docs/integration-backlog.md).
 
-Esta versão constitui uma base funcional para desenvolvimento incremental. As próximas etapas prioritárias estão descritas em [`docs/roadmap.md`](docs/roadmap.md).
+```text
+issue com problema e critério de aceite
+  -> branch curta (issue/<numero>-tema)
+  -> implementação e teste
+  -> validação local e CI
+  -> PR pequeno com "Closes #<numero>"
+  -> revisão, merge e fechamento da issue
+```
+
+Consulte também [`CONTRIBUTING.md`](CONTRIBUTING.md), [`docs/roadmap.md`](docs/roadmap.md) e [`CHANGELOG.md`](CHANGELOG.md).
