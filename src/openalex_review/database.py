@@ -15,6 +15,29 @@ def _require_duckdb():
     return duckdb
 
 
+CONTROL_TABLES = ("screening_decisions", "reading_status", "evidence_notes")
+
+
+def _existing_control_rows(db_path: Path, duckdb) -> dict[str, list[tuple]]:
+    if not db_path.exists():
+        return {}
+    con = duckdb.connect(str(db_path), read_only=True)
+    try:
+        tables = {
+            row[0]
+            for row in con.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            ).fetchall()
+        }
+        return {
+            table: con.execute(f"SELECT * FROM {table}").fetchall()
+            for table in CONTROL_TABLES
+            if table in tables
+        }
+    finally:
+        con.close()
+
+
 def build_database(root: Path | None = None) -> Path:
     base = root or project_root()
     raw_files = sorted((base / "data" / "raw").glob("*.jsonl"))
@@ -22,10 +45,12 @@ def build_database(root: Path | None = None) -> Path:
         raise FileNotFoundError("Nenhum JSONL bruto encontrado em data/raw.")
     db_path = base / "data" / "db" / "openalex.duckdb"
     temp_db = db_path.with_suffix(".duckdb.tmp")
+    db_path.parent.mkdir(parents=True, exist_ok=True)
     temp_db.unlink(missing_ok=True)
     quarantine = base / "data" / "quarantine" / "normalization_errors.jsonl"
     quarantine_lines: list[str] = []
     duckdb = _require_duckdb()
+    control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
     con.execute(
         """
@@ -113,9 +138,12 @@ def build_database(root: Path | None = None) -> Path:
         );
         """
     )
+    for table, rows in control_rows.items():
+        if rows:
+            placeholders = ",".join(["?"] * len(rows[0]))
+            con.executemany(f"INSERT INTO {table} VALUES ({placeholders})", rows)
     con.execute("CHECKPOINT")
     con.close()
-    db_path.parent.mkdir(parents=True, exist_ok=True)
     temp_db.replace(db_path)
     write_text_atomic(quarantine, "\n".join(quarantine_lines) + ("\n" if quarantine_lines else ""))
     metadata = base / "data" / "processed" / "database_build.txt"
