@@ -12,7 +12,13 @@ defaults:
     - preprint
   languages: []
   open_access_only: false
-  max_records: null
+  # Limite operacional por consulta. A coleta lexical aplica esse teto item a
+  # item, mesmo que a API entregue paginas de 200 registros. Para ampliar a
+  # cobertura, execute uma nova rodada com --max-records e outro --run-id.
+  max_records: 200
+  progress_every: 50
+  sort_by: relevance_score
+  sort_order: desc
 
 queries:
   - id: q01_ai_lawmaking_drafting

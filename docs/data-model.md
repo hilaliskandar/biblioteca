@@ -1,127 +1,157 @@
 # Modelo de dados
 
-## 1. Princípio geral
+## 1. Status e fonte de verdade
 
-O sistema distingue quatro entidades que não devem ser confundidas:
+Este documento separa o **esquema implementado** do **modelo planejado**. A fonte de verdade do esquema executável é `src/openalex_review/database.py`.
 
-1. **consulta**: operação de busca executada;
-2. **ocorrência**: aparição de uma obra em uma consulta;
+O banco local é criado em `data/db/openalex.duckdb`. Ele é produto gerado e ignorado pelo Git. As entradas reproduzíveis são YAMLs versionados, JSONL brutos locais e seus manifestos.
+
+## 2. Entidades conceituais
+
+1. **consulta**: operação de busca configurada no YAML;
+2. **ocorrência**: aparição de uma obra em uma consulta e rodada;
 3. **obra**: unidade bibliográfica deduplicada;
 4. **evidência**: proposição analítica extraída de uma obra.
 
 Uma obra pode ser recuperada por várias consultas e sustentar várias evidências.
 
-## 2. Tabelas de recuperação
+```text
+consulta + rodada
+       -> ocorrência (works_stage)
+       -> obra deduplicada (works)
+       -> decisão, leitura e evidência
+```
 
-### `runs`
+## 3. Rastreabilidade antes do DuckDB
 
-Registra cada consulta executada, seus parâmetros, datas, arquivos e hash.
+### Estratégia versionada
+
+Arquivos em `config/` registram consultas, filtros, ordenação e limites. Mudança metodológica deve criar nova rodada e ser documentada.
+
+### JSONL bruto
+
+Cada arquivo em `data/raw/` representa uma consulta de uma rodada:
+
+```text
+<run_id>__<query_id>.jsonl
+```
+
+Cada linha contém a resposta bruta de uma ocorrência retornada pela API OpenAlex.
+
+### Manifesto
+
+Cada JSONL possui um manifesto em `data/manifests/`, com `project_name`, `run_id`, `query_id`, consulta e filtros efetivos, início/conclusão, status, versões, total gravado, caminho relativo, SHA-256 e detalhes de erro quando aplicável.
+
+> A tabela `runs` ainda **não existe** no DuckDB. O manifesto é a fonte de rastreabilidade de rodadas e consultas até que uma migração implemente essa tabela.
+
+## 4. Esquema DuckDB implementado
 
 ### `works_stage`
 
-Preserva as ocorrências antes da deduplicação. Uma obra repetida em cinco consultas aparece cinco vezes.
+Preserva todas as ocorrências normalizadas antes da deduplicação. Uma obra recuperada por cinco consultas gera cinco linhas.
 
-### `work_queries`
+Campos principais:
 
-Tabela de ligação entre obra, rodada e consulta. Permite medir sobreposição entre estratégias.
-
-## 3. Tabela bibliográfica mestre
+```text
+record_key, run_id, query_id, rank_in_query,
+openalex_id, doi, title, publication_year, publication_date,
+type, language, is_retracted, cited_by_count,
+abstract, has_abstract, authors, institutions,
+source_name, source_type, issn_l, volume, issue, first_page, last_page,
+is_oa, oa_status, landing_page_url, pdf_url,
+topics, keywords, referenced_works_count, raw_json
+```
 
 ### `works`
 
-Uma linha por obra deduplicada. Contém:
+Tabela bibliográfica mestre: uma linha por `record_key`. É derivada de `works_stage`, removendo campos específicos da ocorrência. Para chaves repetidas, retém maior `cited_by_count` e, em empate, maior data de publicação:
 
-- OpenAlex ID;
-- DOI normalizado;
-- título e resumo;
-- autores e instituições;
-- periódico;
-- idioma e tipo;
-- acesso aberto;
-- contagem de citações;
-- URLs;
-- tópicos e palavras-chave.
+```sql
+ROW_NUMBER() OVER (
+  PARTITION BY record_key
+  ORDER BY cited_by_count DESC, publication_date DESC NULLS LAST
+)
+```
 
-### `work_identifiers`
+### `work_queries`
 
-Relaciona a chave canônica aos identificadores OpenAlex e DOI observados.
+Tabela de origem distinta:
 
-### `authorships`
+```text
+record_key, run_id, query_id, rank_in_query
+```
 
-Preserva a ordem dos autores, ORCID e instituições.
+Permite medir sobreposição e localizar como a obra foi identificada.
 
-### `work_topics`
+### `works_with_queries`
 
-Preserva tópicos, escores, subcampos, campos e domínios.
+Visão derivada de `works` e `work_queries`. Agrega `query_ids` e `number_of_queries`, sendo a fonte principal das exportações.
 
-### `work_references`
-
-Registra referências OpenAlex citadas pela obra.
-
-## 4. Controle da revisão
+## 5. Tabelas de controle implementadas
 
 ### `screening_decisions`
 
-Uma linha por decisão de triagem:
+```text
+record_key, stage, decision, exclusion_reason,
+reviewer, decided_at, notes
+```
 
-- etapa;
-- decisão;
-- motivo de exclusão;
-- revisor;
-- data;
-- observação.
-
-Etapas recomendadas:
-
-- título;
-- título e resumo;
-- texto integral;
-- corpus final.
+A importação ASReview aceita decisões `incluir` e `excluir`, resolve obras por `record_key`, OpenAlex ID, DOI ou título e identifica conflito quando existe inclusão e exclusão para a mesma obra e etapa. A etapa operacional atualmente reportada é `titulo_resumo`.
 
 ### `reading_status`
 
-Controla prioridade e andamento:
+```text
+record_key, priority, status, responsible, started_at, completed_at,
+note_path, requires_verification, notes
+```
 
-- não iniciado;
-- priorizado;
-- leitura iniciada;
-- leitura integral concluída;
-- fichamento concluído;
-- conferido;
-- incorporado à síntese.
+A estrutura é criada e preservada pelo banco. Importação, validação e vocabulários controlados de leitura ainda são planejados.
 
 ### `evidence_notes`
 
-Cada linha representa uma unidade de evidência. Deve separar:
+```text
+evidence_id, record_key, theme, regulatory_mechanism, source_question,
+unit_of_analysis, method, finding, limitation, source_location,
+evidence_type, researcher_interpretation, manuscript_section, verified
+```
 
-- objeto ou pergunta da fonte;
-- método;
-- achado;
-- limitação;
-- localização no original;
-- interpretação do pesquisador;
-- seção do texto em que será utilizada;
-- estado de conferência.
+A estrutura é criada e preservada. Importação, validação referencial e relatórios de qualidade de evidência ainda são planejados.
 
-## 5. Unidade canônica
+## 6. Unidade canônica e identificadores
 
-A chave canônica é construída preferencialmente a partir do identificador OpenAlex, com reconciliação pelo DOI observado nas diferentes ocorrências. O sistema preserva os dois identificadores para auditoria.
+`record_key` é construído preferencialmente a partir do identificador OpenAlex. DOI normalizado também é preservado e pode resolver registros na importação de triagem.
 
-## 6. Dados versionados e dados locais
+Esta versão não cria `work_identifiers`; a relação entre chave, OpenAlex ID e DOI está materializada em `works` e `works_stage`.
 
-Devem ser versionados:
+## 7. Estruturas planejadas, não implementadas
 
-- código;
-- arquivos YAML de busca;
-- estudos-semente;
+| Estrutura futura | Finalidade |
+|---|---|
+| `runs` | Consolidar metadados de manifestos no banco. |
+| `work_identifiers` | Registrar múltiplos identificadores por obra. |
+| `authorships` | Preservar autoria, ordem, ORCID e instituições em forma relacional. |
+| `work_topics` | Preservar tópicos e escores em forma relacional. |
+| `work_references` | Registrar referências OpenAlex por obra. |
+| Aquisição de texto integral | Controlar URL, arquivo local, hash, tentativas e falhas. |
+
+Essas expansões exigem migração explícita, testes e documentação antes de serem tratadas como recursos disponíveis.
+
+## 8. Dados versionados e dados locais
+
+Versionar:
+
+- código e testes;
+- YAMLs de busca;
 - documentação;
-- modelos vazios.
+- estudos-semente;
+- modelos vazios;
+- configurações de CI.
 
-Devem permanecer locais ou em armazenamento de pesquisa:
+Manter localmente ou em armazenamento apropriado:
 
-- JSONL recuperados;
-- PDFs;
+- JSONL e manifestos de execução;
 - bancos DuckDB;
+- PDFs e textos sujeitos a direitos autorais;
 - exportações;
-- fichamentos ainda não autorizados para publicação;
+- decisões e fichamentos não autorizados;
 - chaves e credenciais.

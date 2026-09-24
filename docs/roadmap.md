@@ -1,11 +1,15 @@
 # Roadmap
 
+> Para a sequência imediata de issues e pull requests, com critérios de aceite e dependências, consulte [integration-backlog.md](integration-backlog.md).
+> Este documento mantém a visão funcional de médio prazo.
+
 ## Prioridade 1 — controle da triagem
 
-- importar e exportar decisões do ASReview;
+- importar decisões do ASReview; **concluído no código, pendente de integração**;
+- exportar decisões do ASReview;
 - validar vocabulários controlados;
 - calcular concordância entre revisores;
-- gerar o fluxo PRISMA completo.
+- gerar o fluxo PRISMA completo; **identificação e título/resumo iniciados**.
 
 ## Prioridade 2 — gestão dos textos integrais
 
