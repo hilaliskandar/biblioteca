@@ -5,6 +5,48 @@ from pathlib import Path
 from .common import project_root, utc_now_iso
 
 
+def _screening_summary(con):
+    return con.execute(
+        """
+        WITH decisions AS (
+          SELECT
+            stage,
+            record_key,
+            COUNT(*) AS decisions,
+            COUNT(DISTINCT reviewer) AS reviewers,
+            BOOL_OR(decision = 'incluir') AS has_include,
+            BOOL_OR(decision = 'excluir') AS has_exclude
+          FROM screening_decisions
+          GROUP BY stage, record_key
+        ), classified AS (
+          SELECT
+            stage,
+            record_key,
+            decisions,
+            reviewers,
+            CASE
+              WHEN has_include AND has_exclude THEN 'conflito'
+              WHEN has_include THEN 'incluir'
+              WHEN has_exclude THEN 'excluir'
+              ELSE 'sem_decisao'
+            END AS resolved_decision
+          FROM decisions
+        )
+        SELECT
+          stage AS etapa,
+          COUNT(*) AS registros_com_decisao,
+          COUNT(*) FILTER (WHERE resolved_decision = 'incluir') AS incluidos,
+          COUNT(*) FILTER (WHERE resolved_decision = 'excluir') AS excluidos,
+          COUNT(*) FILTER (WHERE resolved_decision = 'conflito') AS conflitos,
+          SUM(decisions) AS decisoes_registradas,
+          COUNT(*) FILTER (WHERE reviewers > 1) AS registros_com_multiplos_revisores
+        FROM classified
+        GROUP BY stage
+        ORDER BY stage
+        """
+    ).df()
+
+
 def generate_report(root: Path | None = None) -> Path:
     base = root or project_root()
     db_path = base / "data" / "db" / "openalex.duckdb"
@@ -36,11 +78,29 @@ def generate_report(root: Path | None = None) -> Path:
              FROM work_queries GROUP BY record_key
            ) GROUP BY number_of_queries ORDER BY number_of_queries"""
     ).df()
+    screening = _screening_summary(con)
     con.close()
     reports = base / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     by_query.to_csv(reports / "prisma_by_query.csv", index=False, encoding="utf-8-sig")
     overlap.to_csv(reports / "query_overlap.csv", index=False, encoding="utf-8-sig")
+    screening.to_csv(reports / "screening_summary.csv", index=False, encoding="utf-8-sig")
+    screening_markdown = (
+        screening.to_markdown(index=False)
+        if not screening.empty
+        else "Nenhuma decisao de triagem foi importada."
+    )
+    title_abstract = screening.loc[screening["etapa"] == "titulo_resumo"]
+    if title_abstract.empty:
+        title_abstract_markdown = "Nenhuma decisao registrada para a etapa titulo_resumo."
+    else:
+        values = title_abstract.iloc[0].to_dict()
+        pending = int(summary[1]) - int(values["registros_com_decisao"])
+        title_abstract_markdown = f"""- Registros com decisao: **{int(values['registros_com_decisao'])}**
+- Incluidos para a proxima etapa: **{int(values['incluidos'])}**
+- Excluidos: **{int(values['excluidos'])}**
+- Conflitos entre decisoes: **{int(values['conflitos'])}**
+- Pendentes de triagem: **{pending}**"""
     path = reports / "quality_and_prisma_report.md"
     path.write_text(
         f"""# Relatorio de identificacao e qualidade
@@ -62,7 +122,15 @@ Gerado em: {utc_now_iso()}
 
 {overlap.to_markdown(index=False)}
 
-> As contagens de triagem e texto integral dependem do preenchimento das tabelas de controle.
+## Triagem de titulo e resumo
+
+{title_abstract_markdown}
+
+## Resumo de decisoes por etapa
+
+{screening_markdown}
+
+> As contagens de texto integral e corpus final dependem das proximas etapas de leitura e evidencia.
 """,
         encoding="utf-8",
     )
