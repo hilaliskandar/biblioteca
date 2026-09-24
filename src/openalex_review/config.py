@@ -138,17 +138,24 @@ def load_search_config(path: Path) -> SearchConfig:
                 raise ValueError(f"max_records deve ser positivo em {query_id}.")
         if mode == "semantic" and (max_records is None or max_records > 50):
             max_records = 50
+        from_publication_date = _validate_date(
+            item.get("from_publication_date"), "from_publication_date"
+        )
+        to_publication_date = _validate_date(
+            item.get("to_publication_date"), "to_publication_date"
+        )
+        if mode == "semantic" and (from_publication_date or to_publication_date):
+            raise ValueError(
+                f"Busca semantica em {query_id} nao aceita filtros de data no OpenAlex. "
+                "Use o modo lexical ou remova from_publication_date e to_publication_date."
+            )
         queries.append(
             QuerySpec(
                 id=query_id,
                 search=search,
                 mode=mode,
-                from_publication_date=_validate_date(
-                    item.get("from_publication_date"), "from_publication_date"
-                ),
-                to_publication_date=_validate_date(
-                    item.get("to_publication_date"), "to_publication_date"
-                ),
+                from_publication_date=from_publication_date,
+                to_publication_date=to_publication_date,
                 types=_as_tuple(item.get("types"), "types"),
                 languages=_as_tuple(item.get("languages"), "languages"),
                 open_access_only=bool(item.get("open_access_only", False)),
@@ -194,6 +201,13 @@ def override_config(
             values["from_publication_date"] = _validate_date(from_date, "from_date")
         if to_date is not None:
             values["to_publication_date"] = _validate_date(to_date, "to_date")
+        if spec.mode == "semantic" and (
+            values["from_publication_date"] or values["to_publication_date"]
+        ):
+            raise ValueError(
+                f"Busca semantica em {spec.id} nao aceita filtros de data no OpenAlex. "
+                "Use o modo lexical ou remova os parametros --from-publication-date e --to-publication-date."
+            )
         if max_records is not None:
             values["max_records"] = min(max_records, 50) if spec.mode == "semantic" else max_records
         if progress_every is not None:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from openalex_review.config import load_search_config
+from openalex_review.config import load_search_config, override_config
 
 
 def write(tmp_path: Path, content: str) -> Path:
@@ -50,3 +50,25 @@ queries:
 """)
     with pytest.raises(ValueError, match="AAAA-MM-DD"):
         load_search_config(path)
+
+
+def test_semantic_search_with_dates_fails(tmp_path):
+    path = write(tmp_path, """
+defaults:
+  from_publication_date: 2021-01-01
+queries:
+  - {id: s01, mode: semantic, search: a research description}
+""")
+
+    with pytest.raises(ValueError, match="semantica.*filtros de data"):
+        load_search_config(path)
+
+
+def test_override_rejects_dates_for_semantic_search(tmp_path):
+    path = write(tmp_path, """
+queries:
+  - {id: s01, mode: semantic, search: a research description}
+""")
+
+    with pytest.raises(ValueError, match="semantica.*filtros de data"):
+        override_config(load_search_config(path), from_date="2021-01-01")

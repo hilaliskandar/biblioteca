@@ -39,6 +39,17 @@ def test_save_guided_config_writes_valid_custom_yaml(tmp_path):
     assert config.queries[0].max_records == 50
 
 
+def test_guided_config_rejects_dates_for_semantic_search():
+    with pytest.raises(ValueError, match="semantica.*filtros de data"):
+        guided_config_payload(
+            project_name="Revisao IA",
+            query_id="q01",
+            mode="semantic",
+            expression="Artificial intelligence applied to regulation.",
+            from_publication_date="2021-01-01",
+        )
+
+
 def test_save_guided_config_requires_explicit_overwrite(tmp_path):
     payload = guided_config_payload(
         project_name="Revisao IA",
