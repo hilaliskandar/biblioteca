@@ -24,6 +24,11 @@ def _require_dependencies():
     return duckdb, pd
 
 
+def _replace_missing_values(frame, pd):
+    """Converte valores ausentes do pandas para None antes das exportacoes."""
+    return frame.astype(object).where(pd.notna(frame), None)
+
+
 def _ris_type(work_type: Any) -> str:
     return {
         "article": "JOUR",
@@ -104,6 +109,7 @@ def export_records(filter_name: str = "all", root: Path | None = None) -> int:
     con.close()
     if frame.empty:
         raise RuntimeError("A selecao nao retornou registros.")
+    frame = _replace_missing_values(frame, pd)
     zotero = base / "exports" / "zotero"
     asreview = base / "exports" / "asreview"
     bibliometrix = base / "exports" / "bibliometrix"
