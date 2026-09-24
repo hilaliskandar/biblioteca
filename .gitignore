@@ -3,6 +3,7 @@
 .env
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -15,6 +16,7 @@ htmlcov/
 Thumbs.db
 
 # Dados e resultados gerados
+/config/custom/*
 /data/raw/*
 /data/manifests/*
 /data/db/*
@@ -27,6 +29,7 @@ Thumbs.db
 /reports/*
 
 # Mantém a estrutura vazia
+!/config/custom/.gitkeep
 !/data/raw/.gitkeep
 !/data/manifests/.gitkeep
 !/data/db/.gitkeep

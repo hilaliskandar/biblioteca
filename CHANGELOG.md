@@ -8,6 +8,10 @@ de integração e os critérios de aceite das próximas entregas.
 
 ### Added
 
+- interface Streamlit local opcional para criar estratégias guiadas, contar,
+  executar o pipeline, consultar produtos e importar triagem ASReview;
+- comando `openalex-review-ui` e extra opcional `ui`;
+- YAMLs personalizados locais em `config/custom/`, ignorados pelo Git;
 - importação validada de decisões de triagem exportadas do ASReview;
 - identificação de obras por `record_key`, OpenAlex ID, DOI ou título;
 - idempotência de importação e opção `--replace` por revisor e etapa;

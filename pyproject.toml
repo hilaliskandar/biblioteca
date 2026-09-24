@@ -26,9 +26,13 @@ dev = [
   "pytest-cov>=5,<7",
   "ruff>=0.9,<1",
 ]
+ui = [
+  "streamlit>=1.39,<2",
+]
 
 [project.scripts]
 openalex-review = "openalex_review.cli:main"
+openalex-review-ui = "openalex_review.ui:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

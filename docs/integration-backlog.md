@@ -48,13 +48,23 @@ A importação de triagem, a preservação de controles e o relatório de triage
 
 ## P2: evidência, fontes e interface
 
-| Ordem | Issue sugerida | Dependência | Critério de aceite |
+| Ordem sugerida | Issue planejada | Dependência | Critério de aceite |
 |---:|---|---|---|
-| 13 | `feat: importar matriz de evidências com validação referencial` | 10 | Evidências referenciam obras existentes e importam atomicamente. |
-| 14 | `feat: reportar evidências não verificadas e uso no manuscrito` | 13 | Relatório identifica falta de localização ou conferência. |
-| 15 | `feat: suportar importação RIS e BibTeX de buscas manuais` | 4 | Proveniência e deduplicação auditável são preservadas. |
-| 16 | `feat: adicionar fontes externas e deduplicação multibase` | 15 | Fonte/origem e reconciliação têm testes. |
-| 17 | `feat: painel local para cobertura e andamento` | 12, 14 | Interface local não substitui CSV/DuckDB como fonte de verdade. |
+| P2.1 | `feat: importar matriz de evidências com validação referencial` | 10 | Evidências referenciam obras existentes e importam atomicamente. |
+| P2.2 | `feat: reportar evidências não verificadas e uso no manuscrito` | P2.1 | Relatório identifica falta de localização ou conferência. |
+| P2.3 | `feat: suportar importação RIS e BibTeX de buscas manuais` | 4 | Proveniência e deduplicação auditável são preservadas. |
+| P2.4 | `feat: adicionar fontes externas e deduplicação multibase` | P2.3 | Fonte/origem e reconciliação têm testes. |
+| P2.5 | `feat: painel local para cobertura e andamento` | 12, P2.2 | Interface local não substitui CSV/DuckDB como fonte de verdade. |
+
+## Interface: MVP local em andamento
+
+| Issue | Entrega | Critério de aceite |
+|---:|---|---|
+| 13 | painel Streamlit local para estratégias guiadas, execução, produtos e importação ASReview | Dependência opcional; YAML criado pelo usuário valida no mesmo carregador; a interface não publica dados e não substitui a CLI. |
+
+O MVP da issue 13 antecede o painel de cobertura temática P2.5. Ele não
+inclui hospedagem pública, autenticação remota, múltiplos usuários ou decisões
+automáticas de triagem.
 
 ## Plano de execução
 

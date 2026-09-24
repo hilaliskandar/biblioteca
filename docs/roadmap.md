@@ -35,7 +35,7 @@
 
 ## Prioridade 5 — interface
 
-- painel local com Streamlit ou aplicação web leve;
-- editor de estratégias;
-- painel de cobertura temática;
+- painel local Streamlit para estratégia guiada, execução e produtos; **MVP em andamento na issue #13**;
+- editor de estratégias com YAML local auditável; **MVP em andamento na issue #13**;
+- painel de cobertura temática após o MVP da issue #13;
 - acompanhamento de leituras e lacunas.
