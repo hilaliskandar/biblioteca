@@ -6,8 +6,10 @@ import random
 import sys
 import time
 import traceback
+from collections.abc import Callable, Iterable
+from itertools import islice
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from .common import project_root, sha256_file, utc_now_iso, write_json_atomic
 from .config import QuerySpec, SearchConfig
@@ -74,21 +76,26 @@ def iter_records(query, spec: QuerySpec) -> Iterable[dict[str, Any]]:
     if spec.mode == "semantic":
         limit = min(spec.max_records or 50, 50)
         records = _retry(lambda: query.get(per_page=limit))
-        yield from records
+        yield from islice(records, limit)
         return
     generator = query.paginate(per_page=200, n_max=spec.max_records)
+    yielded = 0
     while True:
         try:
             page = _retry(lambda: next(generator))
         except StopIteration:
             break
-        yield from page
+        for record in page:
+            if spec.max_records is not None and yielded >= spec.max_records:
+                return
+            yield record
+            yielded += 1
 
 
 def count_config(config: SearchConfig) -> list[tuple[str, int]]:
     counts: list[tuple[str, int]] = []
     for spec in config.queries:
-        total = int(_retry(lambda: build_query(spec).count()))
+        total = int(_retry(lambda spec=spec: build_query(spec).count()))
         counts.append((spec.id, total))
         print(f"[{spec.id}] {total} resultados no universo filtrado")
     return counts

@@ -4,9 +4,10 @@ import hashlib
 import json
 import os
 import re
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 def project_root() -> Path:
