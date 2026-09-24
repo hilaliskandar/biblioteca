@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from .common import ensure_directories, env_api_key, project_root, run_id_now
 from .config import load_search_config, override_config
-from .control import init_control
+from .control import import_screening_decisions, init_control
 
 
 def _config_from_args(args):
@@ -54,6 +54,13 @@ def build_parser() -> argparse.ArgumentParser:
     seeds.add_argument("--fail-on-missing", action="store_true")
     control = sub.add_parser("init-control")
     control.add_argument("--overwrite", action="store_true")
+
+    screening = sub.add_parser("import-screening", help="Importa decisoes do ASReview para CSV e DuckDB.")
+    screening.add_argument("--input", required=True, help="CSV exportado pelo ASReview.")
+    screening.add_argument("--reviewer", required=True, help="Identificador do revisor ou da rodada.")
+    screening.add_argument("--stage", default="titulo_resumo")
+    screening.add_argument("--decision-column", help="Coluna com decisao/label; detectada automaticamente.")
+    screening.add_argument("--replace", action="store_true", help="Substitui decisoes anteriores da mesma etapa e revisor.")
 
     pipeline = sub.add_parser("pipeline")
     pipeline.add_argument("--config", required=True)
@@ -126,6 +133,23 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "init-control":
         for path in init_control(root, args.overwrite):
             print(path)
+    elif args.command == "import-screening":
+        source = Path(args.input)
+        if not source.is_absolute():
+            source = root / source
+        result = import_screening_decisions(
+            source,
+            reviewer=args.reviewer,
+            stage=args.stage,
+            decision_column=args.decision_column,
+            root=root,
+            replace=args.replace,
+        )
+        print(
+            f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
+            f"Sem decisao: {result.skipped_unlabeled} | Ja existentes: {result.skipped_existing}\n"
+            f"Controle: {result.control_path}\nErros: {result.errors_path}"
+        )
     elif args.command == "pipeline":
         from .collector import collect_config
         from .database import build_database
