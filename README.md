@@ -199,6 +199,30 @@ cp .env.example .env
 openalex-review check
 ```
 
+### Interface visual local (opcional)
+
+A interface é local e opcional: a CLI continua sendo adequada para automação,
+CI e uso avançado. Instale a dependência visual no mesmo ambiente do projeto:
+
+```powershell
+Set-Location F:\ale_2_0\openalex\biblioteca
+.\.venv\Scripts\python.exe -m pip install -e '.[dev,ui]'
+.\.venv\Scripts\openalex-review-ui.exe
+```
+
+O painel abre no navegador, mas os dados permanecem no computador local. Ele
+permite criar uma estratégia guiada, contar resultados, executar o pipeline,
+baixar produtos existentes e importar CSV rotulado do ASReview.
+
+Ao salvar uma estratégia criada pelo formulário, o painel grava um YAML em
+`config/custom/`. Esse diretório é deliberadamente ignorado pelo Git: copie ou
+versione uma estratégia somente após revisão metodológica, sem incluir JSONL,
+DuckDB, exportações, relatórios, credenciais ou decisões reais.
+
+Para evitar perda de rastreabilidade, o painel bloqueia a sobrescrita de um
+YAML personalizado existente até que a opção de substituição seja marcada
+explicitamente.
+
 ## Referência da CLI e fluxos
 
 Use `--root` se necessário:
@@ -247,6 +271,30 @@ openalex-review report
 ```
 
 Use `--decision-column minha_coluna` para cabeçalho não reconhecido e `--replace` somente para substituir decisões anteriores do mesmo revisor e etapa.
+
+## Interface visual local
+
+O comando `openalex-review-ui` inicia um painel Streamlit local em quatro
+etapas:
+
+1. **Nova estratégia:** recebe palavras-chave por blocos de sinônimos ou uma
+   expressão booleana avançada, aplica filtros e valida o YAML antes da coleta;
+2. **Contar e executar:** consulta a contagem na OpenAlex e, mediante ação
+   explícita, executa coleta, banco, exportações, relatório e modelos de
+   controle usando as mesmas funções da CLI;
+3. **Produtos:** lista somente arquivos locais existentes em `data/processed`,
+   `exports/`, `reports/`, manifestos e controles, com prévia e download;
+4. **Triagem ASReview:** recebe CSV rotulado, revisor, etapa e opção explícita
+   de substituição, delegando a validação ao importador já existente.
+
+O formulário não envia uma busca descartável: antes de contar ou coletar, a
+estratégia é persistida como YAML. A busca lexical combina sinônimos de um
+mesmo bloco com `OR` e blocos distintos com `AND`. Buscas semânticas continuam
+suplementares e o teto é limitado a 50 registros por consulta.
+
+Não exponha o painel à internet, não compartilhe a pasta do projeto com
+credenciais e não trate a interface como substituta da revisão humana ou do
+protocolo metodológico.
 
 ## Formato de configuração
 
