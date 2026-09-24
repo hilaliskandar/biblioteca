@@ -42,10 +42,16 @@ def _download_mime(path: Path) -> str:
 def _render_search(root: Path) -> None:
     st.header("Nova estratégia")
     st.caption("A estratégia será salva como YAML local em config/custom/ antes de qualquer coleta.")
+    mode = st.radio(
+        "Modo",
+        ("lexical", "semantic"),
+        horizontal=True,
+        help="Buscas semânticas do OpenAlex não aceitam filtros por data.",
+    )
+    semantic_search = mode == "semantic"
     with st.form("guided-search"):
         project_name = st.text_input("Nome do projeto", value="minha_revisao")
         query_id = st.text_input("Identificador da consulta", value="q01_busca_guiada")
-        mode = st.radio("Modo", ("lexical", "semantic"), horizontal=True)
         advanced_expression = st.text_area(
             "Expressão booleana avançada (opcional)",
             help="Quando preenchida, substitui os blocos de palavras-chave.",
@@ -55,8 +61,10 @@ def _render_search(root: Path) -> None:
             group_one = st.text_area("Bloco 1: tema e sinônimos", value="artificial intelligence, AI")
         with right:
             group_two = st.text_area("Bloco 2: contexto e sinônimos", value="legislation, regulation")
-        from_date = st.date_input("Publicados a partir de", value=None)
-        to_date = st.date_input("Publicados até", value=None)
+        if semantic_search:
+            st.info("Filtros de data não são compatíveis com busca semântica no OpenAlex.")
+        from_date = st.date_input("Publicados a partir de", value=None, disabled=semantic_search)
+        to_date = st.date_input("Publicados até", value=None, disabled=semantic_search)
         types = st.multiselect("Tipos", ("article", "review", "book-chapter", "preprint"), default=("article", "review"))
         languages = st.text_input("Idiomas (separados por vírgula)", value="")
         checks = st.columns(3)
@@ -75,8 +83,12 @@ def _render_search(root: Path) -> None:
             query_id=query_id,
             mode=mode,
             expression=expression,
-            from_publication_date=from_date.isoformat() if isinstance(from_date, date) else None,
-            to_publication_date=to_date.isoformat() if isinstance(to_date, date) else None,
+            from_publication_date=(
+                from_date.isoformat() if not semantic_search and isinstance(from_date, date) else None
+            ),
+            to_publication_date=(
+                to_date.isoformat() if not semantic_search and isinstance(to_date, date) else None
+            ),
             types=types,
             languages=split_terms(languages),
             open_access_only=open_access,

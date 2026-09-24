@@ -78,6 +78,11 @@ def guided_config_payload(
     if max_records <= 0:
         raise ValueError("max_records deve ser positivo.")
     if mode == "semantic":
+        if from_publication_date or to_publication_date:
+            raise ValueError(
+                "Busca semantica nao aceita filtros de data no OpenAlex. "
+                "Use o modo lexical ou remova as datas."
+            )
         max_records = min(max_records, 50)
     return {
         "project_name": project,

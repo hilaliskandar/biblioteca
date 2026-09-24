@@ -1,4 +1,6 @@
-from openalex_review.collector import iter_records
+import pytest
+
+from openalex_review.collector import build_query, iter_records
 from openalex_review.config import QuerySpec
 
 
@@ -50,3 +52,15 @@ def test_iter_records_enforces_semantic_limit():
 
     assert len(records) == 50
     assert query.received_per_page == 50
+
+
+def test_build_query_rejects_dates_for_semantic_search_before_calling_openalex():
+    spec = QuerySpec(
+        id="s1",
+        search="test",
+        mode="semantic",
+        from_publication_date="2021-01-01",
+    )
+
+    with pytest.raises(ValueError, match="semantica.*filtros de data"):
+        build_query(spec)

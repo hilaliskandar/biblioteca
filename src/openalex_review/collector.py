@@ -28,6 +28,13 @@ def package_versions() -> dict[str, str]:
 def build_query(spec: QuerySpec):
     from pyalex import Works
 
+    if spec.mode == "semantic" and (
+        spec.from_publication_date or spec.to_publication_date
+    ):
+        raise ValueError(
+            "Busca semantica nao aceita filtros de data no OpenAlex. "
+            "Use o modo lexical ou remova as datas."
+        )
     query = Works().similar(spec.search) if spec.mode == "semantic" else Works().search(spec.search)
     filters: dict[str, Any] = {}
     if spec.from_publication_date:

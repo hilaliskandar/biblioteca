@@ -92,7 +92,7 @@ Cada operação de API recebe até cinco tentativas, com espera:
 min(60 segundos, 2^tentativa + valor_aleatório)
 ```
 
-Buscas lexicais usam páginas de até 200 itens, mas `max_records` é conferido **registro a registro**. Portanto, `max_records=50` grava no máximo 50 itens mesmo se a API devolver 200. Buscas semânticas são suplementares e limitadas a 50 itens por consulta.
+Buscas lexicais usam páginas de até 200 itens, mas `max_records` é conferido **registro a registro**. Portanto, `max_records=50` grava no máximo 50 itens mesmo se a API devolver 200. Buscas semânticas são suplementares e limitadas a 50 itens por consulta. A API OpenAlex não aceita `from_publication_date` nem `to_publication_date` em buscas semânticas: na interface esses campos ficam desabilitados, e YAMLs ou opções de CLI incompatíveis são rejeitados antes da coleta.
 
 Por consulta, o coletor cria manifesto `running`, grava JSONL temporário, renomeia o arquivo somente após sucesso, calcula SHA-256 e grava manifesto `completed`. Em erro, remove o temporário e registra `failed`, tipo, mensagem e rastreio. Um `run_id` já existente é bloqueado; use `--overwrite` apenas com justificativa metodológica explícita.
 
