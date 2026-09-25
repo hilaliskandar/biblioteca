@@ -35,6 +35,11 @@ def build_query(spec: QuerySpec):
             "Busca semantica nao aceita filtros de data no OpenAlex. "
             "Use o modo lexical ou remova as datas."
         )
+    if spec.mode == "semantic" and spec.has_doi_only:
+        raise ValueError(
+            "Busca semantica nao aceita o filtro has_doi no OpenAlex. "
+            "Use o modo lexical ou remova Exigir DOI."
+        )
     query = Works().similar(spec.search) if spec.mode == "semantic" else Works().search(spec.search)
     filters: dict[str, Any] = {}
     if spec.from_publication_date:

@@ -64,6 +64,18 @@ queries:
         load_search_config(path)
 
 
+def test_semantic_search_with_doi_filter_fails(tmp_path):
+    path = write(tmp_path, """
+defaults:
+  has_doi_only: true
+queries:
+  - {id: s01, mode: semantic, search: a research description}
+""")
+
+    with pytest.raises(ValueError, match="semantica.*filtro has_doi"):
+        load_search_config(path)
+
+
 def test_override_rejects_dates_for_semantic_search(tmp_path):
     path = write(tmp_path, """
 queries:

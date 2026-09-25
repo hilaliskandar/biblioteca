@@ -149,6 +149,11 @@ def load_search_config(path: Path) -> SearchConfig:
                 f"Busca semantica em {query_id} nao aceita filtros de data no OpenAlex. "
                 "Use o modo lexical ou remova from_publication_date e to_publication_date."
             )
+        if mode == "semantic" and bool(item.get("has_doi_only", False)):
+            raise ValueError(
+                f"Busca semantica em {query_id} nao aceita o filtro has_doi no OpenAlex. "
+                "Use o modo lexical ou defina has_doi_only como false."
+            )
         queries.append(
             QuerySpec(
                 id=query_id,

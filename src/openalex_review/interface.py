@@ -83,6 +83,11 @@ def guided_config_payload(
                 "Busca semantica nao aceita filtros de data no OpenAlex. "
                 "Use o modo lexical ou remova as datas."
             )
+        if has_doi_only:
+            raise ValueError(
+                "Busca semantica nao aceita o filtro de DOI no OpenAlex. "
+                "Use o modo lexical ou desmarque Exigir DOI."
+            )
         max_records = min(max_records, 50)
     return {
         "project_name": project,

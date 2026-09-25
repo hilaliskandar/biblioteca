@@ -64,3 +64,15 @@ def test_build_query_rejects_dates_for_semantic_search_before_calling_openalex()
 
     with pytest.raises(ValueError, match="semantica.*filtros de data"):
         build_query(spec)
+
+
+def test_build_query_rejects_doi_filter_for_semantic_search_before_calling_openalex():
+    spec = QuerySpec(
+        id="s1",
+        search="test",
+        mode="semantic",
+        has_doi_only=True,
+    )
+
+    with pytest.raises(ValueError, match="semantica.*filtro has_doi"):
+        build_query(spec)
