@@ -20,6 +20,37 @@ YAML de estratégia
 
 O software automatiza rastreabilidade bibliográfica; não substitui protocolo de revisão, julgamento humano, validação metodológica ou acesso legal a textos completos.
 
+Para o fluxo implementado em detalhe — validação, retentativas, JSONL e
+manifestos, normalização, quarentena, deduplicação, DuckDB, exportações,
+relatórios e triagem — consulte [`docs/pipeline-algorithm.md`](docs/pipeline-algorithm.md).
+
+## Validação operacional recente
+
+Em **25 de setembro de 2026**, duas rodadas locais de teste sobre vazios urbanos
+confirmaram a estrutura operacional de configuração, filtros, coleta limitada,
+JSONL e manifestos:
+
+| Estratégia local | Modo | Rodada | Registros | Evidência preservada localmente |
+|---|---|---|---:|---|
+| `revisao_vazios.yaml` | semântico | `20260925T155913Z` | 49 | JSONL, manifesto `completed` e SHA-256 |
+| `revisao_vazios_lexical_teste2.yaml` | lexical | `revisao_vazios_lexical_20260925_teste2` | 50 | JSONL, manifesto `completed` e SHA-256 |
+
+A rodada semântica validou a coleta suplementar sem filtros incompatíveis de
+data/DOI. A lexical validou filtros de período, artigo, periódico publicado,
+acesso aberto, resumo e DOI. A lexical alcançou o teto de 50 registros, logo a
+amostra não representa o universo completo da expressão.
+
+Esses testes são **validação operacional**, não validação metodológica final:
+eles não demonstram cobertura exaustiva, não substituem estudo-semente,
+calibração de critérios de elegibilidade ou triagem humana. Também não foram
+incorporados aos produtos cumulativos: a execução de `build-db`, `export` e
+`report` é necessária localmente antes de analisá-los no DuckDB, exportações e
+relatórios.
+
+Os YAMLs personalizados, JSONL, manifestos, DuckDB e produtos gerados continuam
+fora do Git por desenho. A tabela acima registra apenas os parâmetros e os
+resultados agregados, sem publicar corpus, metadados de obras ou credenciais.
+
 ## Estado da rodada real
 
 O caso de uso ativo é **IA aplicada à legislação e entraves regulatórios**. Consulte [`docs/real-research-ia-entraves.md`](docs/real-research-ia-entraves.md).
@@ -256,6 +287,21 @@ openalex-review export
 openalex-review init-control
 openalex-review report
 ```
+
+Depois de executar `collect` em uma ou mais rodadas compatíveis, incorpore os
+produtos brutos locais ao banco e gere derivados atualizados:
+
+```powershell
+openalex-review build-db
+openalex-review export
+openalex-review report
+openalex-review init-control
+```
+
+`build-db` lê todos os arquivos `data/raw/*.jsonl` existentes. Não misture
+rodadas de perguntas ou protocolos distintos sem decisão metodológica
+documentada. Para executar uma rodada nova e já encadear essas etapas, prefira
+`openalex-review pipeline --config <yaml> --run-id <id>`.
 
 Fluxo integrado:
 
