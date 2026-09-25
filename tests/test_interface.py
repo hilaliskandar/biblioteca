@@ -50,6 +50,17 @@ def test_guided_config_rejects_dates_for_semantic_search():
         )
 
 
+def test_guided_config_rejects_doi_filter_for_semantic_search():
+    with pytest.raises(ValueError, match="semantica.*filtro de DOI"):
+        guided_config_payload(
+            project_name="Revisao IA",
+            query_id="q01",
+            mode="semantic",
+            expression="Artificial intelligence applied to regulation.",
+            has_doi_only=True,
+        )
+
+
 def test_save_guided_config_requires_explicit_overwrite(tmp_path):
     payload = guided_config_payload(
         project_name="Revisao IA",

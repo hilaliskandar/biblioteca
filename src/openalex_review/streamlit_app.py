@@ -46,7 +46,7 @@ def _render_search(root: Path) -> None:
         "Modo",
         ("lexical", "semantic"),
         horizontal=True,
-        help="Buscas semânticas do OpenAlex não aceitam filtros por data.",
+        help="Buscas semânticas do OpenAlex não aceitam filtros por data ou DOI.",
     )
     semantic_search = mode == "semantic"
     with st.form("guided-search"):
@@ -62,7 +62,7 @@ def _render_search(root: Path) -> None:
         with right:
             group_two = st.text_area("Bloco 2: contexto e sinônimos", value="legislation, regulation")
         if semantic_search:
-            st.info("Filtros de data não são compatíveis com busca semântica no OpenAlex.")
+            st.info("Filtros de data e DOI não são compatíveis com busca semântica no OpenAlex.")
         from_date = st.date_input("Publicados a partir de", value=None, disabled=semantic_search)
         to_date = st.date_input("Publicados até", value=None, disabled=semantic_search)
         types = st.multiselect("Tipos", ("article", "review", "book-chapter", "preprint"), default=("article", "review"))
@@ -70,7 +70,7 @@ def _render_search(root: Path) -> None:
         checks = st.columns(3)
         open_access = checks[0].checkbox("Somente acesso aberto")
         has_abstract = checks[1].checkbox("Exigir resumo")
-        has_doi = checks[2].checkbox("Exigir DOI")
+        has_doi = checks[2].checkbox("Exigir DOI", disabled=semantic_search)
         max_records = st.number_input("Máximo de registros", min_value=1, max_value=10000, value=200)
         overwrite_config = st.checkbox("Substituir YAML personalizado com o mesmo nome")
         submitted = st.form_submit_button("Salvar e validar estratégia")

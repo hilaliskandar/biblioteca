@@ -292,6 +292,9 @@ estratégia é persistida como YAML. A busca lexical combina sinônimos de um
 mesmo bloco com `OR` e blocos distintos com `AND`. Buscas semânticas continuam
 suplementares e o teto é limitado a 50 registros por consulta.
 
+O OpenAlex não aceita filtros de data nem `has_doi` em buscas semânticas. Para
+restringir por data ou exigir DOI, use o modo `lexical`.
+
 Não exponha o painel à internet, não compartilhe a pasta do projeto com
 credenciais e não trate a interface como substituta da revisão humana ou do
 protocolo metodológico.

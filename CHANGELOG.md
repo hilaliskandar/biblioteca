@@ -21,9 +21,9 @@ de integração e os critérios de aceite das próximas entregas.
 
 ### Changed
 
-- a interface desabilita filtros de data para buscas semânticas, e validação
-  central bloqueia YAMLs, opções de CLI e chamadas do coletor incompatíveis com
-  essa limitação da API OpenAlex;
+- a interface desabilita filtros de data e DOI para buscas semânticas, e a
+  validação central bloqueia YAMLs, opções de CLI e chamadas do coletor
+  incompatíveis com essa limitação da API OpenAlex;
 - reconstrução do DuckDB preserva `screening_decisions`, `reading_status` e
   `evidence_notes` existentes;
 - limites de coleta são respeitados registro a registro, inclusive quando a
