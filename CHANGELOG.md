@@ -18,6 +18,8 @@ de integração e os critérios de aceite das próximas entregas.
 - resumo de decisões, conflitos e pendências de `titulo_resumo` no relatório;
 - `reports/screening_summary.csv`;
 - documentação operacional da rodada real e backlog de integração.
+- documento técnico com o algoritmo implementado, diagrama Mermaid e limites
+  de rastreabilidade, deduplicação, exportação e triagem.
 
 ### Changed
 
@@ -32,6 +34,8 @@ de integração e os critérios de aceite das próximas entregas.
   ou CSL JSON;
 - documentação do modelo de dados distingue o esquema implementado das
   estruturas planejadas.
+- README registra a validação operacional local de 25 de setembro de 2026 e
+  distingue testes de infraestrutura de validação metodológica de uma revisão.
 
 ## 0.2.0 — 2026-07-21
 
