@@ -1,117 +1,140 @@
-# Backlog de integração: issues e pull requests
+# Backlog de integração
 
-**Preparado em:** 24 de setembro de 2026
+**Atualizado em:** 25 de setembro de 2026
+
+**Base verificada:** `origin/main` em `d55ade0db3fb395aa246b6b45ee3efeb2a2d0206`
 
 **Repositório:** `hilaliskandar/biblioteca`
-**Uso:** registro de planejamento, critérios de aceite e próximas entregas; confirme
-o estado de issues, pull requests e da branch `main` diretamente no GitHub antes
-de iniciar uma nova tarefa.
 
-## Objetivo e regras
+Este documento é a referência para identificar o que já está integrado e qual
+é a próxima entrega funcional. O [roadmap](roadmap.md) mantém a visão de médio
+prazo; o [algoritmo operacional](pipeline-algorithm.md) descreve o fluxo já
+implementado.
 
-Integrar as alterações locais validadas em PRs pequenos, revisáveis e seguros.
+## Regras de integração
 
-1. Nunca commitar `.env`, JSONL, DuckDB, PDFs, exportações, relatórios ou decisões reais.
-2. Toda issue deve registrar problema, evidência, escopo, não escopo, risco e critérios de aceite verificáveis.
+1. Nunca commitar `.env`, JSONL, manifestos, DuckDB, PDFs, exportações,
+   relatórios ou decisões reais.
+2. Toda issue deve registrar contexto, evidência, escopo, não escopo, risco e
+   critérios de aceite verificáveis.
 3. Todo PR deve ter uma issue principal e incluir `Closes #<número>`.
-4. Mudança de comportamento exige teste; mudança de CLI ou formato exige documentação.
-5. Antes de abrir PR: pytest, Ruff, compileall e `git diff --check`.
+4. Mudança de comportamento exige testes; mudança de CLI, formato ou operação
+   exige documentação correspondente.
+5. Antes de abrir PR, validar o escopo alterado, executar testes e confirmar
+   `git diff --check`; a política para o lint dos scripts legados é P0.
 
-## P0: histórico de integração concluída
+## Entregas concluídas e integradas
 
-| Ordem | Issue sugerida | Branch/PR sugerido | Dependência | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | `fix: aplicar max_records por registro na coleta OpenAlex` | `fix/1-collector-record-limit` | — | Busca lexical não excede o teto com página de 200; semântica não excede 50. |
-| 2 | `fix: exportar registros com publication_year ausente` | `fix/2-export-missing-publication-year` | — | RIS e CSL JSON são gerados para `pandas.NA`, sem valores inválidos. |
-| 3 | `feat: importar decisões ASReview com validação e idempotência` | `feat/3-import-screening-decisions` | 1 recomendada | Resolve chave/OpenAlex/DOI/título; cancela CSV inválido; evita duplicação; `--replace` funciona. |
-| 4 | `fix: preservar controles ao reconstruir o DuckDB` | `fix/4-preserve-control-tables` | 3 | Teste cria decisões, leitura e evidências, reconstrói banco e confirma preservação das três tabelas. |
-| 5 | `feat: adicionar resumo de triagem ao relatório PRISMA inicial` | `feat/5-prisma-screening-summary` | 3 e 4 | Gera CSV e reporta inclusão, exclusão, conflito e pendência. |
-| 6 | `docs: documentar pipeline real, algoritmo e operação` | `docs/6-operational-readme-and-backlog` | 1–5 | README corresponde ao código e não contém segredos ou produtos gerados. |
+As entregas abaixo estão na `main`; a tabela preserva o histórico sem tratá-las
+como backlog pendente.
 
-## P0.1: release
-
-| Issue sugerida | Branch/PR sugerido | Dependência | Critério de aceite |
-|---|---|---|---|
-| `chore: preparar release 0.3.0 do fluxo de triagem` | `chore/7-release-0.3.0` | 1–6 | Atualiza versão, changelog e docs; CI verde. |
-
-A importação de triagem, a preservação de controles e o relatório de triagem justificam a versão menor `0.3.0`, sem quebra planejada de CLI.
-
-## P1: fechar triagem e texto integral
-
-| Ordem | Issue sugerida | Dependência | Critério de aceite |
-|---:|---|---|---|
-| 8 | `feat: validar vocabulários de etapa, decisão e exclusão` | 3 | Valores inválidos são recusados; taxonomia documentada. |
-| 9 | `feat: calcular concordância e fila de resolução entre revisores` | 8 | Reporta pares comparáveis, concordância e conflitos. |
-| 10 | `feat: importar e validar status de leitura integral` | 4 | CSV de leitura validado, importado e preservado. |
-| 11 | `feat: registrar aquisição e disponibilidade de texto integral` | 10 | Registra URL, hash, tentativa e falha sem versionar PDFs. |
-| 12 | `feat: completar métricas PRISMA para texto integral` | 8, 10, 11 | Inclui elegibilidade, exclusões por motivo e incluídos finais. |
-
-## P2: evidência, fontes e interface
-
-| Ordem sugerida | Issue planejada | Dependência | Critério de aceite |
-|---:|---|---|---|
-| P2.1 | `feat: importar matriz de evidências com validação referencial` | 10 | Evidências referenciam obras existentes e importam atomicamente. |
-| P2.2 | `feat: reportar evidências não verificadas e uso no manuscrito` | P2.1 | Relatório identifica falta de localização ou conferência. |
-| P2.3 | `feat: suportar importação RIS e BibTeX de buscas manuais` | 4 | Proveniência e deduplicação auditável são preservadas. |
-| P2.4 | `feat: adicionar fontes externas e deduplicação multibase` | P2.3 | Fonte/origem e reconciliação têm testes. |
-| P2.5 | `feat: painel local para cobertura e andamento` | 12, P2.2 | Interface local não substitui CSV/DuckDB como fonte de verdade. |
-
-## Interface: MVP local em andamento
-
-| Issue | Entrega | Critério de aceite |
+| PR integrado | Entrega | Estado observável |
 |---:|---|---|
-| 13 | painel Streamlit local para estratégias guiadas, execução, produtos e importação ASReview | Dependência opcional; YAML criado pelo usuário valida no mesmo carregador; a interface não publica dados e não substitui a CLI. |
+| #7 | Limite `max_records` por registro | Coleta lexical não excede o teto mesmo com páginas de 200; semântica limita a 50. |
+| #8 | Tolerância a `publication_year` ausente | RIS e CSL JSON não falham com valores ausentes do pandas. |
+| #9 | Importação ASReview | Decisões são validadas, resolvidas por chave/OpenAlex/DOI/título, idempotentes por revisor/etapa e suportam `--replace`. |
+| #10 | Preservação de controles | Reconstrução do DuckDB preserva `screening_decisions`, `reading_status` e `evidence_notes`. |
+| #11 | Resumo PRISMA de título/resumo | Relatório apresenta inclusão, exclusão, conflito e pendência; gera `screening_summary.csv`. |
+| #12 | Documentação operacional inicial | Fluxo real, operação e backlog foram documentados. |
+| #14 | Interface Streamlit local | Estratégias guiadas, contagem, pipeline, consulta de produtos e importação ASReview funcionam localmente. |
+| #16 | Proteção de datas no semântico | Datas incompatíveis são bloqueadas no formulário, validação, CLI e coletor. |
+| #18 | Proteção de DOI no semântico | `has_doi` incompatível é bloqueado no formulário, validação, CLI e coletor. |
+| #20 | Validação operacional e algoritmo | README registra as rodadas de teste; diagrama e regras detalhadas estão em `docs/pipeline-algorithm.md`. |
 
-O MVP da issue 13 antecede o painel de cobertura temática P2.5. Ele não
-inclui hospedagem pública, autenticação remota, múltiplos usuários ou decisões
-automáticas de triagem.
+## Parcialmente implementado
 
-## Plano de execução
+| Eixo | Já existe | Próxima lacuna funcional |
+|---|---|---|
+| Triagem | Importação ASReview, decisões `incluir`/`excluir`, resolução de registros, idempotência, conflito básico e resumo de `titulo_resumo`. | Vocabulários controlados, exportação de decisões, concordância e adjudicação. |
+| Texto integral | Tabela `reading_status` e modelo CSV são criados e preservados. | Importação/validação, ativos de texto, disponibilidade, hash, aquisição, leitura e elegibilidade. |
+| Evidências | Tabela `evidence_notes` e modelo CSV são criados e preservados. | Importação, validação referencial, fichamento estruturado e relatórios de rastreabilidade. |
+| PRISMA | Identificação, deduplicação, sobreposição e título/resumo são reportados. | Texto integral, exclusões por motivo e corpus final. |
+| Interface | Painel Streamlit local para estratégia, execução, produtos e importação. | Cobertura temática, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
+| Fontes e deduplicação | Coleta e normalização OpenAlex; deduplicação por `record_key` e proveniência por consulta. | Importação multibase e reconciliação avançada de identificadores/versões. |
 
-1. Confirmar que produtos locais continuam ignorados.
-2. Para uma nova entrega, criar issue com título, dependências e critérios verificáveis.
-3. Separar alterações por branches/commits temáticos.
-4. Abrir e integrar o PR somente após a validação local e a CI verde.
-5. Após cada merge: atualizar de `origin/main`, revalidar, confirmar o fechamento da issue e só então iniciar a dependência seguinte.
+## Próximo ciclo de desenvolvimento
+
+### P0 — consolidação
+
+| Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|
+| Reconciliar documentação de planejamento | — | Backlog e roadmap distinguem concluído, parcial, próximo ciclo e médio prazo. |
+| Preparar release `0.3.0` | Reconciliação documental | Versão, changelog e documentação de release correspondem à `main`; CI verde. |
+| Decidir política de lint para scripts legados | — | A política para `ruff check .` é documentada e implementada em configuração ou correções, sem ambiguidade entre validação local e CI. |
+| Documentar política de composição de rodadas em `data/raw` | Algoritmo atual | Define compatibilidade de protocolo, registro da decisão, separação/arquivamento e momento de executar `build-db`. |
+
+`build-db` incorpora todos os JSONL locais. Até a política P0 estar formalizada,
+só combine rodadas quando pertencem ao mesmo protocolo e registre a justificativa
+metodológica; use raiz ou armazenamento separado para experimentos incompatíveis.
+
+### P1 — triagem completa
+
+| Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|
+| Validar vocabulários de etapa, decisão e exclusão | Importação ASReview existente | Valores inválidos são recusados e a taxonomia é documentada. |
+| Exportar decisões de triagem | Vocabulários controlados | Exportação reproduzível contém chaves, decisões, motivos, revisores e datas. |
+| Calcular concordância entre revisores | Vocabulários e decisões exportáveis | Reporta pares comparáveis, métrica definida e divergências. |
+| Adjudicar conflitos | Concordância | Fluxo registra decisão final, responsável, justificativa e preserva decisões originais. |
+
+### P2 — texto integral
+
+| Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|
+| Modelar ativos de texto integral | — | Estrutura registra obra, URL/local, tipo, origem e estado sem versionar conteúdo protegido. |
+| Registrar disponibilidade, aquisição e hash | Modelo de ativos | Tentativas, falhas, disponibilidade e hashes são auditáveis. |
+| Importar e validar leitura integral | Vocabulários P1 e ativos | Estado de leitura e responsável são validados, importados e preservados. |
+| Registrar elegibilidade de texto integral | Leitura integral | Inclusão/exclusão final e motivo ficam associados à obra. |
+
+### P3 — evidências e FAFAT+
+
+| Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|
+| Importar matriz de evidências | Obras e decisões estáveis | Importação é atômica e cada evidência referencia uma obra existente. |
+| Validar matriz e fichamentos estruturados | Importação da matriz | Campos obrigatórios, vocabulários e localização da fonte são validados. |
+| Rastrear evidência para síntese/FAFAT+ | Fichamentos validados | Relatórios identificam evidência não conferida, uso no manuscrito e lacunas. |
+
+### P4 — PRISMA completo
+
+| Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|
+| Completar fluxo PRISMA | P1 e P2 | Reporta identificação, deduplicação, triagem, texto integral, exclusões por motivo e incluídos finais. |
+
+### P5 — multibase e deduplicação avançada
+
+| Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|
+| Importar RIS/BibTeX e fontes autorizadas | Política de proveniência | Registros externos preservam fonte, consulta e dados brutos necessários à auditoria. |
+| Integrar múltiplas bases | Importação externa | Crossref, Semantic Scholar, Lens ou outra fonte autorizada são adicionados por conectores testados. |
+| Deduplicação avançada | Multibase | Reconcilia identificadores e possíveis versões distintas com regras auditáveis e revisão humana quando necessário. |
+
+## Sequência imediata
+
+1. Concluir a reconciliação documental atual.
+2. Preparar a release `0.3.0` sem misturar mudanças funcionais.
+3. Definir a política de lint dos scripts legados e a composição de rodadas.
+4. Iniciar P1 pela taxonomia de triagem, que é pré-requisito para concordância e adjudicação.
+
+## Checklist para novos PRs
 
 ```powershell
+git fetch --all --prune
 git status --short
-git check-ignore data/db/openalex.duckdb data/raw/*.jsonl reports/*.md
+git rev-parse origin/main
 F:\ale_2_0\openalex\.venv\Scripts\python.exe -m pytest --cov=openalex_review --cov-report=term-missing
-F:\ale_2_0\openalex\.venv\Scripts\python.exe -m ruff check .
 F:\ale_2_0\openalex\.venv\Scripts\python.exe -m compileall -q src tests
 git diff --check
 ```
 
-## Checklist de PR
+Execute a checagem Ruff que estiver definida pela política vigente. Até a decisão
+P0, registre no PR se a validação foi limitada ao pacote suportado (`src` e
+`tests`) e não alegue que os scripts legados foram corrigidos sem alteração
+correspondente.
 
-```markdown
-## Contexto
-Closes #<numero>
+## Fora do escopo deste ciclo
 
-## Alteração
-- [ ] escopo funcional explicado
-- [ ] arquivos e formatos afetados identificados
-
-## Segurança e dados
-- [ ] nenhum segredo incluído
-- [ ] nenhum JSONL, DuckDB, PDF, exportação ou decisão real incluído
-
-## Validação
-- [ ] testes criados ou atualizados
-- [ ] pytest passou
-- [ ] ruff check passou
-- [ ] compileall passou
-- [ ] git diff --check passou
-
-## Risco e reversão
-- [ ] risco descrito
-- [ ] reversão possível com revert do PR
-```
-
-## Fora do escopo desta série
-
-- importar ou publicar decisões reais sem arquivo rotulado e autorização;
-- publicar credenciais, corpus bruto ou PDFs;
+- publicar credenciais, corpus bruto, PDFs ou decisões reais;
 - alegar cobertura exaustiva para rodadas limitadas;
-- criar interface web antes de consolidar triagem, texto integral e evidências.
+- hospedar a interface publicamente, implementar autenticação remota ou decisões
+  automáticas de triagem;
+- alterar Python, banco, comandos, Streamlit ou YAMLs metodológicos durante a
+  reconciliação documental.

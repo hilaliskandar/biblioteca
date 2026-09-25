@@ -1,41 +1,77 @@
 # Roadmap
 
-> Para a sequência imediata de issues e pull requests, com critérios de aceite e dependências, consulte [integration-backlog.md](integration-backlog.md).
-> Este documento mantém a visão funcional de médio prazo.
+> Para critérios de aceite, dependências imediatas e histórico de PRs
+> integrados, consulte [integration-backlog.md](integration-backlog.md). Este
+> documento apresenta a direção funcional após a `main` de 25 de setembro de
+> 2026.
 
-## Prioridade 1 — controle da triagem
+## Estado atual
 
-- importar decisões do ASReview; **concluído no código, pendente de integração**;
-- exportar decisões do ASReview;
-- validar vocabulários controlados;
-- calcular concordância entre revisores;
-- gerar o fluxo PRISMA completo; **identificação e título/resumo iniciados**.
+O pipeline já coleta OpenAlex, preserva JSONL e manifestos, normaliza e
+deduplica no DuckDB, exporta para Zotero/ASReview/Bibliometrix, importa decisões
+ASReview e gera identificação, deduplicação e resumo de triagem de
+título/resumo. A interface Streamlit local já permite criar estratégias guiadas,
+contar, executar o pipeline, consultar produtos e importar triagem.
 
-## Prioridade 2 — gestão dos textos integrais
+Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
+bloqueiam filtros incompatíveis de data e DOI. O PRISMA completo, a gestão de
+texto integral, a matriz de evidências operacional e a deduplicação multibase
+ainda não existem como fluxos completos.
 
-- registrar arquivos sem enviá-los ao Git;
-- calcular hash e verificar duplicatas;
-- integrar disponibilidade de PDF e TEI no OpenAlex;
-- registrar tentativas e motivos de falha de obtenção.
+## P0 — consolidação e release
 
-## Prioridade 3 — matriz de evidências
+1. Manter documentação de planejamento reconciliada com a `main`.
+2. Preparar a release `0.3.0` a partir das entregas já integradas.
+3. Definir e aplicar a política de lint para scripts legados.
+4. Formalizar a política de composição de rodadas em `data/raw`, pois
+   `build-db` incorpora todos os JSONL locais.
 
-- importar os CSVs de controle para o DuckDB;
-- validar campos obrigatórios;
-- relacionar evidências às seções da revisão;
-- produzir relatório de fontes citadas sem evidência conferida.
+## P1 — triagem completa
 
-## Prioridade 4 — expansão das bases
+Já existe importação ASReview, resolução de registros, idempotência, conflitos
+básicos e resumo de `titulo_resumo`. As próximas capacidades são:
 
-- Crossref;
-- Semantic Scholar;
-- Lens ou outras bases autorizadas;
-- importação RIS/BibTeX de buscas manuais;
-- deduplicação multibase.
+- vocabulários controlados para etapa, decisão e motivo de exclusão;
+- exportação reproduzível das decisões;
+- concordância entre revisores;
+- adjudicação de conflitos com justificativa e preservação das decisões
+  originais.
 
-## Prioridade 5 — interface
+## P2 — texto integral
 
-- painel local Streamlit para estratégia guiada, execução e produtos; **MVP em andamento na issue #13**;
-- editor de estratégias com YAML local auditável; **MVP em andamento na issue #13**;
-- painel de cobertura temática após o MVP da issue #13;
-- acompanhamento de leituras e lacunas.
+O banco preserva a estrutura de leitura, mas ainda não controla o ciclo de texto
+integral. O objetivo é:
+
+- modelar ativos de texto sem versionar PDFs ou conteúdo protegido;
+- registrar disponibilidade, origem, tentativa, falha e hash;
+- importar e validar estado de leitura integral;
+- registrar elegibilidade e exclusões de texto integral.
+
+## P3 — evidências e FAFAT+
+
+A tabela e o modelo de matriz de evidências existem, mas a operação ainda é
+planejada. O ciclo inclui:
+
+- importar a matriz com validação referencial;
+- validar campos, vocabulários e fichamentos estruturados;
+- relacionar evidência à localização da fonte, síntese e FAFAT+;
+- relatar evidência não conferida, lacunas e uso no manuscrito.
+
+## P4 — PRISMA completo
+
+Expandir o relatório atual para incluir leitura/elegibilidade de texto integral,
+exclusões por motivo e estudos incluídos no corpus final.
+
+## P5 — multibase e deduplicação avançada
+
+Depois de consolidar proveniência e triagem, ampliar a recuperação com RIS,
+BibTeX e bases autorizadas, como Crossref, Semantic Scholar, Lens ou outras
+fontes permitidas. A deduplicação deverá reconciliar identificadores e versões
+entre bases com regras auditáveis e revisão humana quando necessária.
+
+## Capacidades deliberadamente fora do horizonte imediato
+
+- interface hospedada publicamente;
+- autenticação remota e múltiplos usuários;
+- decisões automáticas de triagem;
+- publicação de produtos locais, credenciais ou textos protegidos.
