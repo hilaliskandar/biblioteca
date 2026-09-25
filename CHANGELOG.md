@@ -2,40 +2,39 @@
 
 ## Unreleased
 
-Alterações ainda não lançadas. Consulte
+Sem alterações ainda não lançadas. Consulte
 [`docs/integration-backlog.md`](docs/integration-backlog.md) para o histórico
-de integração e os critérios de aceite das próximas entregas.
+de integração e o backlog futuro.
+
+## 0.3.0 — 2026-09-25
 
 ### Added
 
-- interface Streamlit local opcional para criar estratégias guiadas, contar,
-  executar o pipeline, consultar produtos e importar triagem ASReview;
-- comando `openalex-review-ui` e extra opcional `ui`;
-- YAMLs personalizados locais em `config/custom/`, ignorados pelo Git;
-- importação validada de decisões de triagem exportadas do ASReview;
-- identificação de obras por `record_key`, OpenAlex ID, DOI ou título;
-- idempotência de importação e opção `--replace` por revisor e etapa;
-- resumo de decisões, conflitos e pendências de `titulo_resumo` no relatório;
-- `reports/screening_summary.csv`;
-- documentação operacional da rodada real e backlog de integração.
-- documento técnico com o algoritmo implementado, diagrama Mermaid e limites
-  de rastreabilidade, deduplicação, exportação e triagem.
+- Interface Streamlit local opcional e comando `openalex-review-ui`, com criação
+  guiada de estratégias YAML personalizadas, contagem, execução do pipeline,
+  consulta de produtos e importação de triagem ASReview. Estratégias e execuções
+  permanecem auditáveis por configuração versionável e manifestos de coleta.
+- Importação validada de decisões ASReview, resolvidas por `record_key`, OpenAlex
+  ID, DOI ou título; reimportação idempotente e opção `--replace` por revisor e
+  etapa.
+- Resumo de decisões, conflitos e pendências de `titulo_resumo` no relatório e
+  em `reports/screening_summary.csv`.
 
 ### Changed
 
-- a interface desabilita filtros de data e DOI para buscas semânticas, e a
-  validação central bloqueia YAMLs, opções de CLI e chamadas do coletor
-  incompatíveis com essa limitação da API OpenAlex;
-- reconstrução do DuckDB preserva `screening_decisions`, `reading_status` e
-  `evidence_notes` existentes;
-- limites de coleta são respeitados registro a registro, inclusive quando a
-  API ou PyAlex retorna páginas de 200 itens;
-- exportadores tratam valores ausentes de `publication_year` sem falhar em RIS
-  ou CSL JSON;
-- documentação do modelo de dados distingue o esquema implementado das
+- Reconstrução do DuckDB preserva as tabelas existentes `screening_decisions`,
+  `reading_status` e `evidence_notes`.
+- Restrições de buscas semânticas bloqueiam filtros incompatíveis de data e DOI
+  na interface, validação de estratégia, CLI e coletor.
+- Limites de coleta são aplicados registro a registro mesmo quando a API/PyAlex
+  retorna páginas maiores; buscas semânticas permanecem limitadas a 50 registros
+  por consulta.
+- Exportadores RIS e CSL JSON toleram `publication_year` ausente.
+- A documentação operacional registra a validação de rodadas e distingue
+  validação operacional de validação metodológica; o documento do algoritmo
+  detalha fluxo, rastreabilidade, deduplicação, exportação e triagem.
+- A documentação do modelo de dados distingue o esquema implementado das
   estruturas planejadas.
-- README registra a validação operacional local de 25 de setembro de 2026 e
-  distingue testes de infraestrutura de validação metodológica de uma revisão.
 
 ## 0.2.0 — 2026-07-21
 

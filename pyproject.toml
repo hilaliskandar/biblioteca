@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openalex-review-pipeline"
-version = "0.2.0"
+version = "0.3.0"
 description = "Pipeline reprodutivel para busca, controle e exportacao de revisoes bibliograficas com OpenAlex."
 readme = "README.md"
 requires-python = ">=3.10"
