@@ -156,8 +156,13 @@ movido para `data/db/openalex.duckdb`.
 `export` lê `works_with_queries` e gera produtos deduplicados para Zotero,
 ASReview, Bibliometrix e CSV local. `report` produz as contagens de
 identificação/deduplicação, resultados por consulta, sobreposição e o resumo de
-triagem. O PRISMA implementado cobre identificação, deduplicação e triagem
-inicial; texto integral e síntese final dependem de etapas posteriores.
+triagem. Também gera `reports/reviewer_agreement.csv` e uma seção Markdown de
+concordância por etapa. A concordância percentual usa apenas obras avaliadas por
+ambos; decisões individuais, discordâncias e adjudicação não são misturadas.
+Cohen's kappa só é calculado para exatamente dois revisores comparáveis e pelo
+menos dois casos comparáveis. O PRISMA implementado cobre identificação,
+deduplicação e triagem inicial; adjudicação, texto integral e síntese final
+dependem de etapas posteriores.
 
 ### 5. Triagem humana
 
@@ -177,6 +182,15 @@ controlado. Valores desconhecidos cancelam o lote inteiro antes de gravar no
 DuckDB ou substituir o CSV de controle. O código do motivo fica em
 `motivo_exclusao`, sua descrição humana em `descricao_motivo` e notas livres em
 `observacoes`. Dados históricos não são convertidos automaticamente.
+
+### Concordância entre revisores
+
+O relatório de concordância é descritivo. Para cada etapa, ele separa obras
+avaliadas por ambos, acordos em incluir, acordos em excluir, discordâncias,
+avaliações por apenas um revisor e pendências. As linhas de discordância
+preservam `record_key`, identificador OpenAlex, título e decisões por revisor,
+permitindo localizar exatamente os casos que exigem adjudicação. O sistema não
+escolhe uma decisão final nem altera `screening_decisions`.
 
 ## Limites operacionais importantes
 

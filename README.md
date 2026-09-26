@@ -197,7 +197,21 @@ exclusão e nenhuma inclusão -> excluir
 inclusão e exclusão         -> conflito
 ```
 
-Para `titulo_resumo`, pendentes são obras deduplicadas menos obras com ao menos uma decisão. O PRISMA atual cobre identificação, deduplicação e triagem inicial; texto integral e síntese final são incrementos futuros.
+`report` também gera `reports/reviewer_agreement.csv` e acrescenta a seção
+**Concordância entre revisores** ao Markdown. O CSV contém linhas de resumo por
+etapa e linhas por registro, incluindo decisões individuais, discordâncias,
+avaliações feitas por apenas um revisor e pendências. Discordâncias permanecem
+identificáveis por `record_key`, OpenAlex ID e título; nenhuma é convertida em
+decisão final.
+
+A concordância percentual é calculada somente sobre as obras avaliadas por
+ambos, como `(acordos em incluir + acordos em excluir) / obras avaliadas por
+ambos`. Cohen's kappa só é apresentado quando há exatamente dois revisores
+comparáveis e pelo menos dois casos comparáveis; nos demais casos o relatório
+registra o motivo da não aplicação. Para `titulo_resumo`, pendentes são obras
+deduplicadas sem decisão. O PRISMA atual cobre identificação, deduplicação e
+triagem inicial; adjudicação, texto integral e síntese final são incrementos
+futuros.
 
 ## Ferramentas e requisitos
 
