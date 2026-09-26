@@ -44,6 +44,11 @@ Cada JSONL possui um manifesto em `data/manifests/`, com `project_name`, `run_id
 
 > A tabela `runs` ainda **não existe** no DuckDB. O manifesto é a fonte de rastreabilidade de rodadas e consultas até que uma migração implemente essa tabela.
 
+Cada execução de `build-db` também grava `database_build_manifest` no DuckDB,
+com data, `run_id` selecionados, caminho e SHA-256 de cada JSONL e manifesto
+utilizado. Isso identifica a composição exata do banco sem substituir os
+manifestos originais como evidência de origem.
+
 ## 4. Esquema DuckDB implementado
 
 ### `works_stage`
@@ -96,7 +101,17 @@ record_key, stage, decision, exclusion_reason,
 reviewer, decided_at, notes
 ```
 
-A importação ASReview aceita decisões `incluir` e `excluir`, resolve obras por `record_key`, OpenAlex ID, DOI ou título e identifica conflito quando existe inclusão e exclusão para a mesma obra e etapa. A etapa operacional atualmente reportada é `titulo_resumo`.
+A importação ASReview aceita apenas os códigos definidos em
+`src/openalex_review/screening_vocabulary.py`. Etapas: `titulo_resumo` e
+`texto_integral`; decisões: `incluir` e `excluir`. Motivos controlados:
+`fora_escopo`, `populacao_inadequada`, `intervencao_inadequada`,
+`desfecho_inadequado`, `tipo_documental`, `sem_texto_integral`, `idioma`,
+`duplicata` e `outro`. Descrições humanas ficam em `descricao_motivo`, código em
+`motivo_exclusao` e contexto livre em `observacoes`; importações antigas não são
+recodificadas automaticamente. Inclusões não exigem motivo; exclusões em
+`texto_integral` exigem código válido. Motivos informados em qualquer etapa são
+validados. A resolução por `record_key`, OpenAlex ID, DOI ou título e a detecção
+de conflitos por obra/etapa permanecem disponíveis.
 
 ### `reading_status`
 

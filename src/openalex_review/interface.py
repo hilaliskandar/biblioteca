@@ -149,7 +149,7 @@ def run_guided_pipeline(
     config = load_search_config(config_path)
     actual_run_id = safe_id(run_id or run_id_now())
     raw_files = collect_config(config, actual_run_id, overwrite=overwrite, root=root)
-    database = build_database(root)
+    database = build_database(root, run_ids=[actual_run_id])
     exported = export_records("all", root)
     report = generate_report(root)
     controls = init_control(root)

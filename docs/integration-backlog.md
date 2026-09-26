@@ -61,11 +61,11 @@ como backlog pendente.
 | Reconciliar documentação de planejamento | — | Backlog e roadmap distinguem concluído, parcial, próximo ciclo e médio prazo. |
 | Preparar release `0.3.0` | Reconciliação documental | Versão, changelog e documentação de release correspondem à `main`; CI verde. |
 | Decidir política de lint para scripts legados | — | A política para `ruff check .` é documentada e implementada em configuração ou correções, sem ambiguidade entre validação local e CI. |
-| Documentar política de composição de rodadas em `data/raw` | Algoritmo atual | Define compatibilidade de protocolo, registro da decisão, separação/arquivamento e momento de executar `build-db`. |
+| Definir composição explícita de rodadas em `data/raw` | Algoritmo atual | `build-db` aceita `--run-id` repetido, registra manifesto de composição no DuckDB e preserva modo cumulativo legado. **Concluído nesta branch (#27).** |
 
-`build-db` incorpora todos os JSONL locais. Até a política P0 estar formalizada,
-só combine rodadas quando pertencem ao mesmo protocolo e registre a justificativa
-metodológica; use raiz ou armazenamento separado para experimentos incompatíveis.
+Por padrão, `build-db` ainda incorpora todos os JSONL locais. Para controlar a
+composição, informe `--run-id` uma ou mais vezes; o pesquisador/equipe decide a
+compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 
 ### P1 — triagem completa
 
@@ -111,8 +111,7 @@ metodológica; use raiz ou armazenamento separado para experimentos incompatíve
 
 1. Concluir a reconciliação documental atual.
 2. Preparar a release `0.3.0` sem misturar mudanças funcionais.
-3. Definir a política de lint dos scripts legados e a composição de rodadas.
-4. Iniciar P1 pela taxonomia de triagem, que é pré-requisito para concordância e adjudicação.
+3. Iniciar P1 pela taxonomia de triagem, que é pré-requisito para concordância e adjudicação.
 
 ## Checklist para novos PRs
 
@@ -136,5 +135,5 @@ correspondente.
 - alegar cobertura exaustiva para rodadas limitadas;
 - hospedar a interface publicamente, implementar autenticação remota ou decisões
   automáticas de triagem;
-- alterar Python, banco, comandos, Streamlit ou YAMLs metodológicos durante a
-  reconciliação documental.
+- introduzir `review_id`/`project_id` ou migração estrutural ampla para controlar
+  a composição de rodadas nesta entrega.

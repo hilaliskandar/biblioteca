@@ -96,13 +96,35 @@ tests/                   testes automatizados
 |---|---|---|
 | `count` | YAML | Conta o universo filtrado; não grava registros. |
 | `collect` | YAML + `run_id` | Cria JSONL e manifesto por consulta. |
-| `build-db` | `data/raw/*.jsonl` | Reconstrói DuckDB e quarentena. |
+| `build-db` | JSONL em `data/raw/` | Reconstrói DuckDB cumulativamente ou com `--run-id` repetido. |
 | `export` | DuckDB | Gera arquivos para ferramentas externas. |
 | `report` | DuckDB | Gera identificação, sobreposição e triagem. |
 | `import-screening` | CSV + DuckDB | Importa decisões validadas. |
 | `pipeline` | YAML + `run_id` | Executa coleta, banco, exportação, relatório e controles. |
 
+Em `pipeline`, a rodada coletada é usada para construir o banco por padrão.
+Para compor o banco com outras rodadas já coletadas, informe `--build-run-id`
+uma ou mais vezes; por exemplo, `pipeline --config config.yaml --run-id nova
+--build-run-id anterior --build-run-id nova`.
+
 ## Algoritmo e regras operacionais
+
+### Composição de rodadas no banco
+
+Sem opções, `build-db` mantém compatibilidade e incorpora todos os JSONL em
+`data/raw/`. Para definir o corpus, informe cada rodada desejada explicitamente:
+
+```powershell
+openalex-review build-db --run-id rodada1 --run-id rodada2
+```
+
+O DuckDB registra em `database_build_manifest` os IDs, arquivos e hashes dos
+manifestos e JSONL usados; entradas sem manifesto concluído falham com erro. A
+composição cabe ao pesquisador/equipe conforme o protocolo: combine rodadas que
+compartilham pergunta e critérios compatíveis quando isso estiver planejado;
+não trate como um corpus único rodadas metodologicamente incompatíveis. Use
+seleção explícita ou raízes separadas nesses casos. O sistema não avalia essa
+compatibilidade.
 
 ### Consulta, filtros e contagem
 
@@ -165,7 +187,7 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 `export` aceita `all`, `open_access`, `with_abstract`, `with_doi` e `not_retracted`, produzindo RIS/CSL JSON para Zotero, CSV/RIS para ASReview, CSV para Bibliometrix e `works_deduplicated.csv`. Valores ausentes do pandas são convertidos antes de gerar RIS e CSL JSON.
 
-`import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza o rótulo para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Decisão inválida ou obra desconhecida cancela toda a importação. Reimportação do mesmo revisor e etapa não duplica registros; `--replace` substitui deliberadamente a importação anterior.
+`import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza rótulos ASReview para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Etapas e motivos usam os códigos de `screening_vocabulary.py`; exclusão em `texto_integral` requer motivo válido. Use `--stage-column`/`--reason-column` para indicar colunas no CSV. Valores inválidos ou obra desconhecida cancelam o lote sem escrita parcial. Inclusões não exigem motivo; motivos históricos não são recodificados automaticamente.
 
 No relatório, por obra e etapa:
 

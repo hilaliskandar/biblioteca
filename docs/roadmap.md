@@ -23,8 +23,9 @@ ainda não existem como fluxos completos.
 1. Manter documentação de planejamento reconciliada com a `main`.
 2. Preparar a release `0.3.0` a partir das entregas já integradas.
 3. Definir e aplicar a política de lint para scripts legados.
-4. Formalizar a política de composição de rodadas em `data/raw`, pois
-   `build-db` incorpora todos os JSONL locais.
+4. **Concluído nesta branch (#27):** selecionar rodadas com `build-db --run-id`
+   repetido; a ausência da opção mantém a composição cumulativa legada, e o
+   banco registra arquivos e hashes usados.
 
 ## P1 — triagem completa
 

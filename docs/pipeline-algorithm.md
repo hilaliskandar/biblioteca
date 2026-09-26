@@ -51,7 +51,7 @@ flowchart TD
     X --> Y{Comando pipeline?}
     Y -- não --> Z[Produtos brutos locais<br/>prontos para build-db]
     Y -- sim --> AA[build_database]
-    AA --> AB[Lê todos os JSONL em data/raw]
+    AA --> AB[Lê todos os JSONL por padrão ou os run_id selecionados]
     AB --> AC[Normaliza cada linha em works_stage]
     AC --> AD{Linha normalizável?}
     AD -- não --> AE[Registra erro em quarantine<br/>continua a construção]
@@ -126,8 +126,10 @@ limite mínimo entre `max_records` e 50.
 
 ### 3. Normalização, quarentena e deduplicação
 
-`build-db` lê todos os JSONL presentes em `data/raw/`, não somente a rodada
-mais recente. Cada linha válida é normalizada e inserida em `works_stage` com
+`build-db` lê todos os JSONL presentes em `data/raw/` por padrão, preservando o
+comportamento cumulativo anterior. Para selecionar composição explicitamente,
+repita `--run-id`; por exemplo, `openalex-review build-db --run-id rodada1
+--run-id rodada2`. Cada linha válida dos arquivos selecionados é normalizada e inserida em `works_stage` com
 `run_id`, `query_id` e posição na consulta. Uma falha de normalização vai para
 `data/quarantine/normalization_errors.jsonl`; as demais linhas continuam sendo
 processadas.
@@ -137,6 +139,12 @@ linha por chave e escolhe a ocorrência com maior número de citações; em empa
 a de data de publicação mais recente. `work_queries` preserva todas as origens
 distintas e `works_with_queries` agrega os IDs de consulta para exportação e
 auditoria.
+
+O comando grava `database_build_manifest` no DuckDB, com os `run_id` escolhidos,
+caminhos e SHA-256 de cada JSONL e manifesto. Cada entrada bruta precisa ter
+manifesto `completed` correspondente; ausência, incompatibilidade ou rodada
+solicitada sem arquivo interrompe a construção. Os manifestos continuam sendo a
+evidência de origem metodológica.
 
 ### 4. Banco, exportações e relatórios
 
@@ -160,6 +168,16 @@ ou título. Se houver registro desconhecido ou decisão inválida, a importaçã
 cancelada para evitar estado parcial. Importações repetidas são idempotentes por
 revisor e etapa, salvo uso explícito de `--replace`.
 
+Os códigos são centralizados em `screening_vocabulary.py`: etapas
+`titulo_resumo`/`texto_integral`, decisões `incluir`/`excluir` e motivos de
+exclusão controlados. O CSV pode fornecer etapa e motivo por linha (colunas
+`stage`/`etapa` e `exclusion_reason`/`motivo_exclusao`, ou via opções da CLI).
+Inclusões não exigem motivo; exclusões em `texto_integral` exigem código
+controlado. Valores desconhecidos cancelam o lote inteiro antes de gravar no
+DuckDB ou substituir o CSV de controle. O código do motivo fica em
+`motivo_exclusao`, sua descrição humana em `descricao_motivo` e notas livres em
+`observacoes`. Dados históricos não são convertidos automaticamente.
+
 ## Limites operacionais importantes
 
 - Um teto de coleta é um limite de execução, não demonstra cobertura exaustiva.
@@ -167,7 +185,15 @@ revisor e etapa, salvo uso explícito de `--replace`.
 - A deduplicação atual é centrada em `record_key`; versões diferentes ou
   registros OpenAlex distintos do mesmo trabalho podem requerer auditoria
   humana.
-- `build-db` incorpora todos os JSONL locais. Antes de combinar rodadas de
-  protocolos diferentes, registre e aprove essa decisão metodológica.
+- Rodadas com a mesma pergunta, protocolo, critérios e estratégia compatível
+  podem ser combinadas quando a atualização/replicação ou ampliação planejada da
+  busca fizer parte do protocolo; use todos os `--run-id` pretendidos e registre
+  a justificativa.
+- É metodologicamente inválido combinar no mesmo corpus rodadas com perguntas,
+  critérios de elegibilidade, estratégias ou fases incompatíveis como se fossem
+  uma única busca. Selecione apenas as rodadas aprovadas ou mantenha raízes de
+  projeto separadas.
+- A composição do corpus é decisão do pesquisador responsável e da equipe da
+  revisão, conforme protocolo aprovado; a ferramenta não decide compatibilidade.
 - A presença em uma exportação não equivale a inclusão na revisão; a inclusão
   depende de critérios e triagem humana documentados.
