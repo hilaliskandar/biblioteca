@@ -61,6 +61,45 @@ def test_build_database_defaults_to_combining_runs_and_preserves_provenance(tmp_
     con.close()
 
 
+def test_build_database_materializes_authors_and_work_authors(tmp_path):
+    work = _raw_work()
+    work["authorships"] = [
+        {
+            "author_position": "first",
+            "is_corresponding": True,
+            "author": {
+                "id": "https://openalex.org/A1",
+                "display_name": "Ana Silva",
+                "orcid": "https://orcid.org/0000-0001-0000-0001",
+            },
+        },
+        {
+            "author_position": "last",
+            "is_corresponding": False,
+            "author": {"id": "https://openalex.org/A2", "display_name": "Bruno Souza"},
+        },
+    ]
+    _write_run(tmp_path, "run1", "q1", work)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT author_id, openalex_author_id, orcid, display_name FROM authors ORDER BY author_id"
+    ).fetchall() == [
+        ("openalex:A1", "A1", "0000-0001-0000-0001", "Ana Silva"),
+        ("openalex:A2", "A2", None, "Bruno Souza"),
+    ]
+    assert con.execute(
+        "SELECT record_key, author_id, author_position, author_order, is_corresponding "
+        "FROM work_authors ORDER BY author_order"
+    ).fetchall() == [
+        ("openalex:W123", "openalex:A1", "first", 1, True),
+        ("openalex:W123", "openalex:A2", "last", 2, False),
+    ]
+    con.close()
+
+
 def test_build_database_explicitly_excludes_unselected_run(tmp_path):
     _write_run(tmp_path, "run1", "q1", _raw_work())
     work = _raw_work()

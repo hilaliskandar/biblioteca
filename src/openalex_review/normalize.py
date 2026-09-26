@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,57 @@ def record_key(record: dict[str, Any]) -> str:
     if title:
         return f"title:{title}|year:{year}"
     raise ValueError("Registro sem OpenAlex ID, DOI ou titulo.")
+
+
+def normalize_author_name(value: Any) -> str:
+    """Create a stable comparison name without changing the displayed name."""
+    text = str(value or "").strip()
+    decomposed = unicodedata.normalize("NFKD", text)
+    return " ".join(
+        "".join(char for char in decomposed if not unicodedata.combining(char)).lower().split()
+    )
+
+
+def normalize_orcid(value: Any) -> str | None:
+    if value is None:
+        return None
+    orcid = str(value).strip().rstrip("/")
+    for prefix in ("https://orcid.org/", "http://orcid.org/", "orcid:"):
+        if orcid.lower().startswith(prefix):
+            orcid = orcid[len(prefix) :]
+    return orcid or None
+
+
+def normalize_authorships(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize OpenAlex authorships while preserving author order and flags."""
+    normalized: list[dict[str, Any]] = []
+    for order, authorship in enumerate(record.get("authorships") or [], start=1):
+        author = authorship.get("author") or {}
+        openalex_author_id = openalex_short_id(author.get("id"))
+        orcid = normalize_orcid(author.get("orcid"))
+        display_name = str(author.get("display_name") or "").strip()
+        normalized_name = normalize_author_name(display_name)
+        if openalex_author_id:
+            author_id = f"openalex:{openalex_author_id}"
+        elif orcid:
+            author_id = f"orcid:{orcid}"
+        elif normalized_name:
+            author_id = f"name:{normalized_name}"
+        else:
+            continue
+        normalized.append(
+            {
+                "author_id": author_id,
+                "openalex_author_id": openalex_author_id,
+                "orcid": orcid,
+                "display_name": display_name or None,
+                "normalized_name": normalized_name or None,
+                "author_position": authorship.get("author_position"),
+                "author_order": order,
+                "is_corresponding": bool(authorship.get("is_corresponding", False)),
+            }
+        )
+    return normalized
 
 
 def normalize_work(record: dict[str, Any], *, run_id: str, query_id: str, rank: int) -> dict[str, Any]:

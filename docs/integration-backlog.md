@@ -87,7 +87,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B00 | Reconciliar roadmap bibliométrico | — | README, roadmap, backlog e arquitetura distinguem implementado, parcial e futuro. |
 | B01 | **Concluído e integrado na `main`:** selecionar corpus `identified`, `screened`, `included` ou `custom` | Decisões e obras estáveis | `resolve_corpus` retorna conjunto ordenado e único de `record_key`; corpus vazio, escopo inválido, tabela ausente e registros inexistentes têm comportamento testado. |
 | B02 | **Concluído e integrado na `main`:** calcular hash reproduzível do corpus | B01 | `hash_record_keys` e `CorpusSelection.corpus_hash` produzem SHA-256 canônico; ordem e duplicidades não alteram o resultado, e alteração de uma obra altera o hash. |
-| B03 | Normalizar autores e autoria | B01 | Preserva OpenAlex ID, ORCID, nome original, posição de autoria e relação obra-autor. |
+| B03 | **Concluído nesta branch:** normalizar autores e autoria | B01 | `authors` e `work_authors` preservam OpenAlex ID, ORCID, nome original, posição, ordem, autoria correspondente e relação obra-autor. |
 | B04 | Normalizar instituições e afiliações | B03 | Preserva OpenAlex ID, ROR, país e vínculo autor-instituição quando recuperável. |
 | B05 | Normalizar fontes | B01 | Preserva OpenAlex source ID, ISSN-L, nome e tipo em tabelas próprias. |
 | B06 | Normalizar keywords | B01 | Preserva termo bruto, termo normalizado, origem e score quando disponível. |

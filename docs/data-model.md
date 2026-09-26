@@ -78,6 +78,22 @@ ROW_NUMBER() OVER (
 )
 ```
 
+### `authors` e `work_authors`
+
+O B03 materializa autoria a partir de `authorships` do JSON bruto, sem remover
+os campos agregados `authors` e `institutions` de `works`. `authors` deduplica
+entidades por OpenAlex Author ID, ORCID ou nome normalizado, nessa ordem de
+prioridade. `work_authors` preserva a relação com a obra, a posição textual, a
+ordem original e a indicação de autoria correspondente.
+
+```text
+authors
+  author_id, openalex_author_id, orcid, display_name, normalized_name
+
+work_authors
+  record_key, author_id, author_position, author_order, is_corresponding
+```
+
 ### `work_queries`
 
 Tabela de origem distinta:
