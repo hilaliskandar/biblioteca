@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
 
 from .common import project_root
@@ -20,6 +21,23 @@ class CorpusSelection:
     @property
     def record_count(self) -> int:
         return len(self.record_keys)
+
+    @property
+    def corpus_hash(self) -> str:
+        return hash_record_keys(self.record_keys)
+
+
+def hash_record_keys(record_keys: Iterable[str]) -> str:
+    """Return the canonical SHA-256 digest for a corpus key set.
+
+    Keys are stripped, deduplicated, sorted, joined with one LF separator and
+    encoded as UTF-8. The canonical representation has no trailing newline.
+    """
+    normalized = sorted({str(key).strip() for key in record_keys if str(key).strip()})
+    if not normalized:
+        raise ValueError("Nao e possivel calcular hash de um corpus vazio.")
+    payload = "\n".join(normalized).encode("utf-8")
+    return sha256(payload).hexdigest()
 
 
 def resolve_corpus(
