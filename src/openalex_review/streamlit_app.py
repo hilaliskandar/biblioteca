@@ -17,6 +17,7 @@ from openalex_review.interface import (
     save_guided_config,
     split_terms,
 )
+from openalex_review.screening_vocabulary import STAGE_CODES
 
 
 def _root() -> Path:
@@ -162,7 +163,7 @@ def _render_products(root: Path) -> None:
 def _render_screening(root: Path) -> None:
     st.header("Importar triagem ASReview")
     reviewer = st.text_input("Revisor ou rodada", value="revisor_01")
-    stage = st.text_input("Etapa", value="titulo_resumo")
+    stage = st.selectbox("Etapa", options=STAGE_CODES)
     replace = st.checkbox("Substituir decisões anteriores deste revisor e etapa")
     uploaded = st.file_uploader("CSV rotulado exportado pelo ASReview", type="csv")
     if uploaded is None:

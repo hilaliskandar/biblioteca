@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from .common import ensure_directories, env_api_key, project_root, run_id_now
 from .config import load_search_config, override_config
 from .control import import_screening_decisions, init_control
+from .screening_vocabulary import STAGE_CODES
 
 
 def _config_from_args(args):
@@ -46,10 +47,12 @@ def build_parser() -> argparse.ArgumentParser:
             cmd.add_argument("--run-id")
             cmd.add_argument("--overwrite", action="store_true")
 
-    sub.add_parser("build-db")
+    build_db = sub.add_parser("build-db", help="Reconstrói DuckDB com todas ou rodadas selecionadas.")
+    build_db.add_argument("--run-id", action="append", help="Rodada a incluir; repita para combinar rodadas.")
     export = sub.add_parser("export")
     export.add_argument("--filter", default="all", choices=["all", "open_access", "with_abstract", "with_doi", "not_retracted"])
     sub.add_parser("report")
+    sub.add_parser("export-screening", help="Exporta estado, pendencias e conflitos da triagem do DuckDB.")
     seeds = sub.add_parser("validate-seeds")
     seeds.add_argument("--fail-on-missing", action="store_true")
     control = sub.add_parser("init-control")
@@ -58,7 +61,9 @@ def build_parser() -> argparse.ArgumentParser:
     screening = sub.add_parser("import-screening", help="Importa decisoes do ASReview para CSV e DuckDB.")
     screening.add_argument("--input", required=True, help="CSV exportado pelo ASReview.")
     screening.add_argument("--reviewer", required=True, help="Identificador do revisor ou da rodada.")
-    screening.add_argument("--stage", default="titulo_resumo")
+    screening.add_argument("--stage", default="titulo_resumo", choices=STAGE_CODES)
+    screening.add_argument("--stage-column", help="Coluna opcional de etapa no CSV.")
+    screening.add_argument("--reason-column", help="Coluna opcional de motivo de exclusao no CSV.")
     screening.add_argument("--decision-column", help="Coluna com decisao/label; detectada automaticamente.")
     screening.add_argument("--replace", action="store_true", help="Substitui decisoes anteriores da mesma etapa e revisor.")
 
@@ -70,6 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
     pipeline.add_argument("--to-publication-date")
     pipeline.add_argument("--progress-every", type=int)
     pipeline.add_argument("--overwrite", action="store_true")
+    pipeline.add_argument("--build-run-id", action="append", help="Rodada a incluir no banco; repita para combinar.")
     return parser
 
 
@@ -116,13 +122,17 @@ def main(argv: list[str] | None = None) -> None:
         collect_config(config, args.run_id or run_id_now(), overwrite=args.overwrite, root=root)
     elif args.command == "build-db":
         from .database import build_database
-        print(build_database(root))
+        print(build_database(root, run_ids=args.run_id))
     elif args.command == "export":
         from .exporter import export_records
         print(f"Exportados: {export_records(args.filter, root)}")
     elif args.command == "report":
         from .report import generate_report
         print(generate_report(root))
+    elif args.command == "export-screening":
+        from .screening_export import export_screening
+        for path in export_screening(root).values():
+            print(path)
     elif args.command == "validate-seeds":
         from .report import validate_seeds
         found, missing = validate_seeds(root, args.fail_on_missing)
@@ -142,6 +152,8 @@ def main(argv: list[str] | None = None) -> None:
             reviewer=args.reviewer,
             stage=args.stage,
             decision_column=args.decision_column,
+            stage_column=args.stage_column,
+            reason_column=args.reason_column,
             root=root,
             replace=args.replace,
         )
@@ -155,8 +167,10 @@ def main(argv: list[str] | None = None) -> None:
         from .database import build_database
         from .exporter import export_records
         from .report import generate_report
-        collect_config(config, args.run_id or run_id_now(), overwrite=args.overwrite, root=root)
-        build_database(root)
+        effective_run_id = args.run_id or run_id_now()
+        collect_config(config, effective_run_id, overwrite=args.overwrite, root=root)
+        build_run_ids = args.build_run_id or [effective_run_id]
+        build_database(root, run_ids=build_run_ids)
         export_records("all", root)
         generate_report(root)
         init_control(root)
