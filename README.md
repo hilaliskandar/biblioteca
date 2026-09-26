@@ -20,6 +20,57 @@ YAML de estratégia
 
 O software automatiza rastreabilidade bibliográfica; não substitui protocolo de revisão, julgamento humano, validação metodológica ou acesso legal a textos completos.
 
+## Direção estratégica
+
+O `biblioteca` está evoluindo de um pipeline centrado em OpenAlex, deduplicação,
+exportação e triagem para uma infraestrutura reprodutível de corpus,
+bibliometria, leitura e síntese de evidências. A responsabilidade principal do
+projeto é preservar proveniência, identificadores, contratos de dados, rodadas,
+decisões humanas e artefatos auditáveis, sem reimplementar ferramentas
+especializadas quando elas já atendem melhor a uma etapa do processo.
+
+O plano geral e a separação entre o que já existe e o que ainda é planejado
+estão em [`docs/roadmap.md`](docs/roadmap.md),
+[`docs/integration-backlog.md`](docs/integration-backlog.md) e
+[`docs/bibliometric-architecture.md`](docs/bibliometric-architecture.md).
+
+### Papel das ferramentas externas
+
+| Ferramenta | Papel no ecossistema | Responsabilidade do `biblioteca` |
+|---|---|---|
+| **ASReview** | Triagem assistida por aprendizado ativo | Preparar corpus, registrar rodada, importar decisões, preservar conflitos/adjudicações, hashes e metadados de reprodutibilidade. |
+| **Zotero** | Referências, coleções e anexos | Exportar RIS/CSL JSON, validar interoperabilidade e futuramente reconciliar coleções, identificadores e anexos. |
+| **Bibliometrix/Biblioshiny** | Análise bibliométrica exploratória | Exportar dados ricos e internalizar métricas essenciais com parâmetros registrados. |
+| **VOSviewer** | Redes e mapas bibliométricos | Exportar nós/arestas, thesaurus e metadados; documentar o intercâmbio. |
+| **CiteSpace** | Bursts e tendências temporais | Integração secundária, posterior à consolidação de Bibliometrix e VOSviewer. |
+
+O `biblioteca` não deve duplicar o priorizador do ASReview nem transformar RIS
+em formato canônico interno. Bibliometria pode orientar prioridade de leitura,
+mas nunca decide inclusão metodológica.
+
+### Arquitetura-alvo
+
+```text
+fontes -> corpus e proveniência -> triagem e bibliometria
+                                      |             |
+                                      +------+------+
+                                             |
+                                  prioridade de leitura
+                                             |
+                                      texto integral
+                                             |
+                                           FAFAT+
+                                             |
+                                  matriz de evidências
+                                             |
+                                      síntese / PRISMA
+```
+
+As análises futuras deverão ser reproduzíveis a partir de tabelas persistentes,
+e não de imagens ou sessões externas. A visualização será uma camada de
+apresentação; nós, arestas, parâmetros, corpus e hashes permanecerão
+independentes da biblioteca visual.
+
 Para o fluxo implementado em detalhe — validação, retentativas, JSONL e
 manifestos, normalização, quarentena, deduplicação, DuckDB, exportações,
 relatórios e triagem — consulte [`docs/pipeline-algorithm.md`](docs/pipeline-algorithm.md).
@@ -100,6 +151,7 @@ tests/                   testes automatizados
 | `export` | DuckDB | Gera arquivos para ferramentas externas. |
 | `report` | DuckDB | Gera identificação, sobreposição e triagem. |
 | `import-screening` | CSV + DuckDB | Importa decisões validadas. |
+| `import-resolutions` | CSV + DuckDB | Importa resoluções e decisões finais manuais sem alterar decisões individuais. |
 | `pipeline` | YAML + `run_id` | Executa coleta, banco, exportação, relatório e controles. |
 
 Em `pipeline`, a rodada coletada é usada para construir o banco por padrão.
@@ -242,6 +294,29 @@ registra o motivo da não aplicação. Para `titulo_resumo`, pendentes são obra
 deduplicadas sem decisão. O PRISMA atual cobre identificação, deduplicação e
 triagem inicial; adjudicação, texto integral e síntese final são incrementos
 futuros.
+
+## Próximos marcos
+
+O próximo ciclo não implementa ainda cálculos bibliométricos ou redes. Ele está
+organizado em marcos pequenos e reversíveis:
+
+1. **Fundação bibliométrica:** escopos de corpus (`identified`, `screened`,
+   `included`, `custom`), hash reproduzível, autores, instituições, fontes,
+   keywords, tópicos, referências, identificadores e registro de execuções.
+2. **Cálculos:** desempenho, coautoria, coocorrência, acoplamento bibliográfico,
+   cocitação, métricas de rede, clustering e layouts reproduzíveis.
+3. **Interoperabilidade:** exportações enriquecidas para Bibliometrix e
+   VOSviewer, registro de resultados externos, metadados de reprodutibilidade do
+   ASReview e estudo de Zotero RDF.
+4. **Interface:** painel bibliométrico, gráficos de desempenho, protótipo local
+   e depois componente Cytoscape.js via Streamlit Components v2. PyVis fica
+   restrito a prova de conceito; Sigma.js é uma otimização futura para redes
+   grandes, condicionada a benchmark.
+5. **Leitura e síntese:** prioridade bibliométrica auxiliar, ativos de texto
+   integral, FAFAT+, matriz de evidências e PRISMA completo.
+
+Nenhum desses marcos deve ser interpretado como funcionalidade disponível até
+que exista implementação, teste, documentação operacional e validação na CI.
 
 ## Ferramentas e requisitos
 
