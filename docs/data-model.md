@@ -113,6 +113,11 @@ recodificadas automaticamente. Inclusões não exigem motivo; exclusões em
 validados. A resolução por `record_key`, OpenAlex ID, DOI ou título e a detecção
 de conflitos por obra/etapa permanecem disponíveis.
 
+O relatório derivado `reports/reviewer_agreement.csv` não é uma tabela de
+decisão: possui linhas de resumo por etapa e detalhes por obra para concordância
+descritiva. Ele preserva as decisões individuais e identifica discordâncias para
+adjudicação sem registrar uma resolução final.
+
 ### `reading_status`
 
 ```text

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .common import project_root, utc_now_iso
+from .reviewer_agreement import agreement_markdown, write_reviewer_agreement
 
 
 def _screening_summary(con):
@@ -79,6 +80,8 @@ def generate_report(root: Path | None = None) -> Path:
            ) GROUP BY number_of_queries ORDER BY number_of_queries"""
     ).df()
     screening = _screening_summary(con)
+    agreement_path = base / "reports" / "reviewer_agreement.csv"
+    agreement_summaries, agreement_details = write_reviewer_agreement(con, agreement_path)
     con.close()
     reports = base / "reports"
     reports.mkdir(parents=True, exist_ok=True)
@@ -102,6 +105,7 @@ def generate_report(root: Path | None = None) -> Path:
 - Conflitos entre decisoes: **{int(values['conflitos'])}**
 - Pendentes de triagem: **{pending}**"""
     path = reports / "quality_and_prisma_report.md"
+    reviewer_agreement_markdown = agreement_markdown(agreement_summaries, agreement_details)
     path.write_text(
         f"""# Relatorio de identificacao e qualidade
 
@@ -129,6 +133,10 @@ Gerado em: {utc_now_iso()}
 ## Resumo de decisoes por etapa
 
 {screening_markdown}
+
+## Concordância entre revisores
+
+{reviewer_agreement_markdown}
 
 > As contagens de texto integral e corpus final dependem das proximas etapas de leitura e evidencia.
 """,
