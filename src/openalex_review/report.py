@@ -7,8 +7,28 @@ from .reviewer_agreement import agreement_markdown, write_reviewer_agreement
 
 
 def _screening_summary(con):
+    has_resolutions = bool(
+        con.execute(
+            """
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'main' AND table_name = 'screening_resolutions'
+            """
+        ).fetchone()
+    )
+    resolution_join = (
+        "LEFT JOIN screening_resolutions AS sr USING (record_key, stage)"
+        if has_resolutions
+        else ""
+    )
+    resolution_columns = (
+        "COUNT(*) FILTER (WHERE resolved_decision = 'conflito' AND sr.record_key IS NULL) AS conflitos_nao_resolvidos,\n"
+        "           COUNT(*) FILTER (WHERE resolved_decision = 'conflito' AND sr.record_key IS NOT NULL) AS conflitos_resolvidos,\n"
+        "           COUNT(*) FILTER (WHERE resolved_decision = 'conflito' AND sr.record_key IS NOT NULL) AS decisoes_finais,\n"
+        if has_resolutions
+        else "           0 AS conflitos_nao_resolvidos,\n           0 AS conflitos_resolvidos,\n           0 AS decisoes_finais,\n"
+    )
     return con.execute(
-        """
+        f"""
         WITH decisions AS (
           SELECT
             stage,
@@ -39,9 +59,11 @@ def _screening_summary(con):
           COUNT(*) FILTER (WHERE resolved_decision = 'incluir') AS incluidos,
           COUNT(*) FILTER (WHERE resolved_decision = 'excluir') AS excluidos,
           COUNT(*) FILTER (WHERE resolved_decision = 'conflito') AS conflitos,
+           {resolution_columns}
           SUM(decisions) AS decisoes_registradas,
           COUNT(*) FILTER (WHERE reviewers > 1) AS registros_com_multiplos_revisores
         FROM classified
+        {resolution_join}
         GROUP BY stage
         ORDER BY stage
         """
@@ -103,6 +125,9 @@ def generate_report(root: Path | None = None) -> Path:
 - Incluidos para a proxima etapa: **{int(values['incluidos'])}**
 - Excluidos: **{int(values['excluidos'])}**
 - Conflitos entre decisoes: **{int(values['conflitos'])}**
+- Conflitos nao resolvidos: **{int(values['conflitos_nao_resolvidos'])}**
+- Conflitos resolvidos: **{int(values['conflitos_resolvidos'])}**
+- Decisoes finais registradas: **{int(values['decisoes_finais'])}**
 - Pendentes de triagem: **{pending}**"""
     path = reports / "quality_and_prisma_report.md"
     reviewer_agreement_markdown = agreement_markdown(agreement_summaries, agreement_details)

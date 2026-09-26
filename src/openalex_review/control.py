@@ -26,6 +26,10 @@ TEMPLATES: dict[str, list[str]] = {
         "record_key", "etapa", "decisao", "motivo_exclusao", "descricao_motivo",
         "revisor", "data", "observacoes",
     ],
+    "screening_resolutions.csv": [
+        "record_key", "stage", "final_decision", "exclusion_reason",
+        "resolver", "resolved_at", "notes",
+    ],
     "reading_status.csv": [
         "record_key", "prioridade", "status", "responsavel", "data_inicio", "data_conclusao",
         "local_fichamento", "necessita_conferencia", "observacoes",

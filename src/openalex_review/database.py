@@ -16,7 +16,7 @@ def _require_duckdb():
     return duckdb
 
 
-CONTROL_TABLES = ("screening_decisions", "reading_status", "evidence_notes")
+CONTROL_TABLES = ("screening_decisions", "screening_resolutions", "reading_status", "evidence_notes")
 
 
 def _existing_control_rows(db_path: Path, duckdb) -> dict[str, list[tuple]]:
@@ -192,6 +192,11 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         CREATE TABLE screening_decisions (
             record_key VARCHAR, stage VARCHAR, decision VARCHAR, exclusion_reason VARCHAR,
             reviewer VARCHAR, decided_at TIMESTAMP, notes VARCHAR
+        );
+        CREATE TABLE screening_resolutions (
+            record_key VARCHAR, stage VARCHAR, final_decision VARCHAR, exclusion_reason VARCHAR,
+            resolver VARCHAR, resolved_at TIMESTAMP, notes VARCHAR,
+            UNIQUE(record_key, stage)
         );
         CREATE TABLE reading_status (
             record_key VARCHAR, priority VARCHAR, status VARCHAR, responsible VARCHAR,

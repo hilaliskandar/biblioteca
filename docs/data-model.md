@@ -115,8 +115,29 @@ de conflitos por obra/etapa permanecem disponíveis.
 
 O relatório derivado `reports/reviewer_agreement.csv` não é uma tabela de
 decisão: possui linhas de resumo por etapa e detalhes por obra para concordância
-descritiva. Ele preserva as decisões individuais e identifica discordâncias para
-adjudicação sem registrar uma resolução final.
+descritiva. Ele preserva as decisões individuais, distingue acordos, conflitos
+resolvidos e não resolvidos, e exibe a decisão final somente quando houver uma
+linha correspondente em `screening_resolutions`.
+
+### `screening_resolutions`
+
+```text
+record_key, stage, final_decision, exclusion_reason,
+resolver, resolved_at, notes
+```
+
+Registra uma resolução humana ou decisão final manual de uma obra e etapa sem
+modificar `screening_decisions`. Há no máximo uma resolução vigente por
+`(record_key, stage)`. A resolução só pode ser importada quando existir decisão
+individual para a mesma obra e etapa; ela não exige que as decisões individuais
+sejam divergentes. Etapa, decisão e motivo obedecem aos vocabulários controlados.
+A importação é idempotente para conteúdo igual e exige opção explícita
+`--replace` para substituir conteúdo diferente. O DuckDB é a fonte de verdade;
+`data/control/screening_resolutions.csv` é uma projeção regenerável, preservada
+durante a reconstrução do banco. A atualização coordena a troca do CSV com a
+transação e restaura o estado anterior em falhas normais, mas não constitui uma
+transação distribuída entre dois arquivos independentes em caso de encerramento
+abrupto.
 
 ### `reading_status`
 
