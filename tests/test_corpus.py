@@ -1,7 +1,7 @@
 import duckdb
 import pytest
 
-from openalex_review.corpus import resolve_corpus
+from openalex_review.corpus import hash_record_keys, resolve_corpus
 
 
 def make_database(tmp_path):
@@ -30,6 +30,33 @@ def test_identified_is_sorted_and_deduplicated(tmp_path):
 
     assert selection.record_keys == ("openalex:W1", "openalex:W2", "openalex:W3")
     assert selection.record_count == 3
+
+
+def test_corpus_hash_is_order_independent_and_deduplicated():
+    first = hash_record_keys(["openalex:W3", "openalex:W1", "openalex:W1", "openalex:W2"])
+    second = hash_record_keys(["openalex:W2", "openalex:W3", "openalex:W1"])
+
+    assert first == second
+
+
+def test_corpus_hash_changes_when_a_record_changes():
+    original = hash_record_keys(["openalex:W1", "openalex:W2"])
+    changed = hash_record_keys(["openalex:W1", "openalex:W3"])
+
+    assert original != changed
+
+
+def test_selection_exposes_corpus_hash(tmp_path):
+    make_database(tmp_path)
+
+    selection = resolve_corpus("identified", root=tmp_path)
+
+    assert selection.corpus_hash == hash_record_keys(selection.record_keys)
+
+
+def test_corpus_hash_rejects_empty_input():
+    with pytest.raises(ValueError, match="corpus vazio"):
+        hash_record_keys([])
 
 
 def test_screened_includes_decisions_and_reading_state(tmp_path):
