@@ -1,6 +1,6 @@
 # Arquitetura bibliométrica e de interoperabilidade
 
-**Status:** B01 e B02 implementados na `main`; os contratos seguintes continuam
+**Status:** B01 e B02 implementados na `main`; B03 implementado nesta branch; os contratos seguintes continuam
 planejados e não representam tabelas ou comandos já disponíveis na `main`.
 
 **Data de referência:** 26 de setembro de 2026.
@@ -51,6 +51,11 @@ ordenados e serializados em UTF-8 com separador `LF`, sem quebra final. A ordem
 de entrada e duplicidades não alteram o hash; qualquer alteração no conjunto de
 obras deve alterá-lo.
 
+O B03 materializa `authors` e `work_authors` durante `build-db`. O identificador
+interno prioriza OpenAlex Author ID, depois ORCID e, por fim, nome normalizado.
+Nome original, ORCID, posição, ordem e autoria correspondente são preservados;
+autores sem identidade ou nome são ignorados.
+
 ## Entidades normalizadas
 
 Para redes robustas, os campos agregados de `works` devem ser materializados em
@@ -60,7 +65,7 @@ entidades e tabelas de relação:
 authors
   author_id, openalex_author_id, orcid, display_name, normalized_name
 work_authors
-  record_key, author_id, author_position, is_corresponding
+  record_key, author_id, author_position, author_order, is_corresponding
 
 institutions
   institution_id, openalex_institution_id, ror, display_name,

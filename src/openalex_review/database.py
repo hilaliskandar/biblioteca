@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .common import project_root, sha256_file, utc_now_iso, write_text_atomic
-from .normalize import normalize_work, parse_raw_filename
+from .normalize import normalize_authorships, normalize_work, parse_raw_filename
 
 
 def _require_duckdb():
@@ -117,6 +117,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     temp_db.unlink(missing_ok=True)
     quarantine = base / "data" / "quarantine" / "normalization_errors.jsonl"
     quarantine_lines: list[str] = []
+    authorship_rows: list[tuple] = []
     duckdb = _require_duckdb()
     control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
@@ -146,6 +147,20 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                     record = json.loads(line)
                     normalized = normalize_work(record, run_id=run_id, query_id=query_id, rank=rank)
                     con.execute(insert_sql, [normalized[column] for column in columns])
+                    authorship_rows.extend(
+                        (
+                            normalized["record_key"],
+                            item["author_id"],
+                            item["openalex_author_id"],
+                            item["orcid"],
+                            item["display_name"],
+                            item["normalized_name"],
+                            item["author_position"],
+                            item["author_order"],
+                            item["is_corresponding"],
+                        )
+                        for item in normalize_authorships(record)
+                    )
                 except Exception as exc:
                     quarantine_lines.append(
                         json.dumps(
@@ -169,6 +184,38 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         """
     )
     con.execute("ALTER TABLE works DROP COLUMN chosen_rank")
+    con.execute(
+        """
+        CREATE TABLE authors (
+            author_id VARCHAR PRIMARY KEY, openalex_author_id VARCHAR, orcid VARCHAR,
+            display_name VARCHAR, normalized_name VARCHAR
+        );
+        CREATE TABLE work_authors (
+            record_key VARCHAR, author_id VARCHAR, author_position VARCHAR,
+            author_order INTEGER, is_corresponding BOOLEAN,
+            UNIQUE(record_key, author_id)
+        );
+        """
+    )
+    existing_keys = {row[0] for row in con.execute("SELECT record_key FROM works").fetchall()}
+    author_rows: dict[str, tuple] = {}
+    relationship_rows: dict[tuple[str, str], tuple] = {}
+    for row in authorship_rows:
+        record_key, author_id, *author_values = row
+        if record_key not in existing_keys:
+            continue
+        author_rows.setdefault(author_id, (author_id, *author_values[:4]))
+        relationship_key = (record_key, author_id)
+        relationship = (record_key, author_id, *author_values[4:])
+        previous = relationship_rows.get(relationship_key)
+        if previous is None or relationship[3] < previous[3]:
+            relationship_rows[relationship_key] = relationship
+        elif relationship[4] and not previous[4]:
+            relationship_rows[relationship_key] = (*previous[:4], True)
+    if author_rows:
+        con.executemany("INSERT INTO authors VALUES (?, ?, ?, ?, ?)", author_rows.values())
+    if relationship_rows:
+        con.executemany("INSERT INTO work_authors VALUES (?, ?, ?, ?, ?)", relationship_rows.values())
     con.execute(
         """
         CREATE TABLE work_queries AS
