@@ -45,8 +45,11 @@ corpus_hash
 O B01 expõe `resolve_corpus(scope, root, custom_record_keys)` e retorna chaves
 ordenadas, únicas e acompanhadas de definição e contagem. Banco ausente, tabela
 `works` ausente, escopo inválido, corpus vazio e chaves customizadas inexistentes
-são erros explícitos. O `corpus_hash` deve ser SHA-256 de `record_key` ordenados e serializados de
-forma determinística. A ordem de entrada não pode alterar o hash.
+são erros explícitos. O B02 expõe `hash_record_keys(record_keys)` e a propriedade
+`CorpusSelection.corpus_hash`: SHA-256 de `record_key` normalizados, únicos,
+ordenados e serializados em UTF-8 com separador `LF`, sem quebra final. A ordem
+de entrada e duplicidades não alteram o hash; qualquer alteração no conjunto de
+obras deve alterá-lo.
 
 ## Entidades normalizadas
 
