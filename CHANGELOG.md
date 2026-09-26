@@ -10,6 +10,12 @@ de integração e o backlog futuro.
 
 ### Added
 
+- Registro separado de resoluções humanas em `screening_resolutions`, com
+  importação idempotente por `import-resolutions`, substituição somente com
+  `--replace`, validação referencial e preservação durante `build-db`.
+- Relatórios distinguem acordos, conflitos não resolvidos, conflitos resolvidos
+  e decisões finais sem sobrescrever o histórico individual.
+
 - Interface Streamlit local opcional e comando `openalex-review-ui`, com criação
   guiada de estratégias YAML personalizadas, contagem, execução do pipeline,
   consulta de produtos e importação de triagem ASReview. Estratégias e execuções

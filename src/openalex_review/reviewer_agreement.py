@@ -17,6 +17,8 @@ AGREEMENT_COLUMNS = (
     "numero_revisores",
     "decisoes",
     "classificacao",
+    "status_resolucao",
+    "decisao_final",
     "obras_avaliadas_por_ambos",
     "acordo_incluir",
     "acordo_excluir",
@@ -100,6 +102,19 @@ def _format_decisions(by_reviewer: dict[str, str]) -> str:
     )
 
 
+def _table_exists(con, table_name: str) -> bool:
+    return bool(
+        con.execute(
+            """
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_schema = 'main' AND table_name = ?
+            """,
+            [table_name],
+        ).fetchone()
+    )
+
+
 def build_reviewer_agreement(con) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Return CSV-ready summary and record-detail rows for every screening stage."""
     universes = _stage_universe(con)
@@ -115,6 +130,12 @@ def build_reviewer_agreement(con) -> tuple[list[dict[str, Any]], list[dict[str, 
         """
     ).fetchall():
         decisions_by_stage[stage][record_key][reviewer] = decision
+    resolutions = {
+        (record_key, stage): (final_decision, resolver)
+        for record_key, stage, final_decision, resolver in con.execute(
+            "SELECT record_key, stage, final_decision, resolver FROM screening_resolutions"
+        ).fetchall()
+    } if _table_exists(con, "screening_resolutions") else {}
 
     summaries: list[dict[str, Any]] = []
     details: list[dict[str, Any]] = []
@@ -158,10 +179,11 @@ def build_reviewer_agreement(con) -> tuple[list[dict[str, Any]], list[dict[str, 
                 counts["obras_avaliadas_por_ambos"] += 1
                 counts["acordo_excluir"] += 1
             else:
-                classification = "discordancia"
+                classification = "conflito_resolvido" if (item["record_key"], stage) in resolutions else "discordancia"
                 counts["obras_avaliadas_por_ambos"] += 1
                 counts["discordancias"] += 1
             openalex_id, title = metadata.get(item["record_key"], ("", ""))
+            resolution = resolutions.get((item["record_key"], stage))
             details.append(
                 {
                     "tipo_linha": "registro",
@@ -173,7 +195,9 @@ def build_reviewer_agreement(con) -> tuple[list[dict[str, Any]], list[dict[str, 
                     "numero_revisores": len(decisions),
                     "decisoes": _format_decisions(decisions),
                     "classificacao": classification,
-                    **{key: "" for key in AGREEMENT_COLUMNS[9:]},
+                    "status_resolucao": "resolvido" if resolution else "nao_resolvido",
+                    "decisao_final": resolution[0] if resolution else "",
+                    **{key: "" for key in AGREEMENT_COLUMNS[11:]},
                 }
             )
         kappa, kappa_status, comparable_cases = _kappa(stage_decisions, reviewers)
@@ -236,23 +260,46 @@ def agreement_markdown(summaries: list[dict[str, Any]], details: list[dict[str, 
             f"{row['acordo_excluir']} | {row['discordancias']} | {row['avaliados_por_apenas_um']} | "
             f"{row['pendentes']} | {percent} | {kappa} | {row['kappa_status']} |"
         )
-    disagreements = [row for row in details if row["classificacao"] == "discordancia"]
+    unresolved = [row for row in details if row["classificacao"] == "discordancia"]
+    resolved = [row for row in details if row["classificacao"] == "conflito_resolvido"]
     lines.extend(
         [
             "",
             "### Discordâncias para adjudicação",
             "",
-            "As linhas abaixo são apenas divergências entre decisões individuais; nenhuma foi convertida em decisão final.",
+            "As discordâncias são separadas abaixo entre conflitos não resolvidos e conflitos resolvidos.",
+            "",
+            "### Conflitos não resolvidos",
+            "",
+            "As linhas abaixo são divergências entre decisões individuais sem resolução registrada.",
             "",
             "| Etapa | record_key | OpenAlex | Título | Decisões individuais |",
             "|---|---|---|---|---|",
         ]
     )
-    if disagreements:
+    if unresolved:
         lines.extend(
             f"| {row['etapa']} | {row['record_key']} | {row['openalex_id']} | {row['titulo']} | {row['decisoes']} |"
-            for row in disagreements
+            for row in unresolved
         )
     else:
-        lines.append("| — | — | — | Nenhuma discordância registrada. | — |")
+        lines.append("| — | — | — | Nenhum conflito não resolvido. | — |")
+    lines.extend(
+        [
+            "",
+            "### Conflitos resolvidos",
+            "",
+            "As decisões individuais permanecem auditáveis; a decisão final abaixo vem exclusivamente de `screening_resolutions`.",
+            "",
+            "| Etapa | record_key | OpenAlex | Título | Decisões individuais | Decisão final |",
+            "|---|---|---|---|---|---|",
+        ]
+    )
+    if resolved:
+        lines.extend(
+            f"| {row['etapa']} | {row['record_key']} | {row['openalex_id']} | {row['titulo']} | {row['decisoes']} | {row['decisao_final']} |"
+            for row in resolved
+        )
+    else:
+        lines.append("| — | — | — | Nenhum conflito resolvido. | — | — |")
     return "\n".join(lines)

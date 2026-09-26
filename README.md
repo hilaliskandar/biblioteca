@@ -177,6 +177,7 @@ O banco é criado primeiro como `openalex.duckdb.tmp`; depois de `CHECKPOINT`, s
 
 ```text
 screening_decisions
+screening_resolutions
 reading_status
 evidence_notes
 ```
@@ -189,6 +190,31 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 `import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza rótulos ASReview para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Etapas e motivos usam os códigos de `screening_vocabulary.py`; exclusão em `texto_integral` requer motivo válido. Use `--stage-column`/`--reason-column` para indicar colunas no CSV. Valores inválidos ou obra desconhecida cancelam o lote sem escrita parcial. Inclusões não exigem motivo; motivos históricos não são recodificados automaticamente.
 
+Resoluções ou decisões finais manuais são registradas separadamente com:
+
+```text
+screening_resolutions
+record_key, stage, final_decision, exclusion_reason,
+resolver, resolved_at, notes
+```
+
+Use `openalex-review import-resolutions --input resolucoes.csv` para registrar
+uma resolução de conflito ou uma decisão final manual. A obra e a etapa precisam
+ter pelo menos uma linha em `screening_decisions`; portanto, o importador também
+aceita casos em consenso ou avaliados por apenas um revisor quando houver uma
+decisão final manual explicitamente registrada. Os valores seguem os mesmos
+vocabulários controlados, e `resolved_at` é obrigatório. Reimportações idênticas
+são ignoradas. Uma substituição diferente exige `--replace`; em nenhum caso as
+decisões individuais são alteradas ou apagadas.
+
+O DuckDB é a fonte de verdade persistente. O comando atualiza também
+`data/control/screening_resolutions.csv`, que funciona como projeção legível e
+trilha de controle regenerável. A gravação prepara o CSV e coordena a troca com
+a transação do DuckDB; falhas normais provocam rollback e restauração do estado
+anterior. Como DuckDB e CSV são arquivos independentes, um encerramento abrupto
+exatamente entre a troca do CSV e o commit ainda exige tratar o DuckDB como
+autoridade e regenerar o CSV a partir da tabela.
+
 No relatório, por obra e etapa:
 
 ```text
@@ -199,10 +225,14 @@ inclusão e exclusão         -> conflito
 
 `report` também gera `reports/reviewer_agreement.csv` e acrescenta a seção
 **Concordância entre revisores** ao Markdown. O CSV contém linhas de resumo por
-etapa e linhas por registro, incluindo decisões individuais, discordâncias,
-avaliações feitas por apenas um revisor e pendências. Discordâncias permanecem
-identificáveis por `record_key`, OpenAlex ID e título; nenhuma é convertida em
-decisão final.
+etapa e linhas por registro, distinguindo acordo, conflito não resolvido,
+conflito resolvido e decisão final. As decisões individuais permanecem
+identificáveis por `record_key`, OpenAlex ID, título, revisor e decisão; a
+decisão final vem exclusivamente de `screening_resolutions`. Uma linha de
+resolução pode aparecer como decisão final mesmo quando a classificação das
+decisões individuais é acordo ou avaliação por apenas um revisor; nesse caso,
+ela deve ser interpretada como decisão manual registrada, não necessariamente
+como adjudicação de uma divergência.
 
 A concordância percentual é calculada somente sobre as obras avaliadas por
 ambos, como `(acordos em incluir + acordos em excluir) / obras avaliadas por

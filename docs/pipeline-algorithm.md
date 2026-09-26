@@ -150,8 +150,8 @@ evidência de origem metodológica.
 
 O DuckDB é construído em arquivo temporário. Antes da substituição, o processo
 salva e restaura linhas já existentes de `screening_decisions`,
-`reading_status` e `evidence_notes`. Após `CHECKPOINT`, o banco temporário é
-movido para `data/db/openalex.duckdb`.
+`screening_resolutions`, `reading_status` e `evidence_notes`. Após `CHECKPOINT`,
+o banco temporário é movido para `data/db/openalex.duckdb`.
 
 `export` lê `works_with_queries` e gera produtos deduplicados para Zotero,
 ASReview, Bibliometrix e CSV local. `report` produz as contagens de
@@ -183,14 +183,25 @@ DuckDB ou substituir o CSV de controle. O código do motivo fica em
 `motivo_exclusao`, sua descrição humana em `descricao_motivo` e notas livres em
 `observacoes`. Dados históricos não são convertidos automaticamente.
 
+Resoluções humanas ou decisões finais manuais entram por `import-resolutions`. O
+importador exige decisão individual existente, mas não exige divergência entre
+revisores; valida os vocabulários, rejeita `resolved_at` ausente e mantém
+`screening_decisions` imutável. Conteúdo idêntico é idempotente; conteúdo
+diferente só pode substituir a resolução vigente com `--replace`. O DuckDB é a
+fonte de verdade persistente e o CSV `data/control/screening_resolutions.csv` é
+uma projeção legível regenerável. A escrita coordena a troca do CSV com a
+transação e restaura o estado anterior em falhas normais. Como os artefatos são
+arquivos independentes, um encerramento abrupto entre a troca e o commit pode
+exigir a regeneração do CSV a partir do DuckDB.
+
 ### Concordância entre revisores
 
 O relatório de concordância é descritivo. Para cada etapa, ele separa obras
-avaliadas por ambos, acordos em incluir, acordos em excluir, discordâncias,
-avaliações por apenas um revisor e pendências. As linhas de discordância
-preservam `record_key`, identificador OpenAlex, título e decisões por revisor,
-permitindo localizar exatamente os casos que exigem adjudicação. O sistema não
-escolhe uma decisão final nem altera `screening_decisions`.
+avaliadas por ambos, acordos em incluir, acordos em excluir, conflitos não
+resolvidos, conflitos resolvidos, decisões finais, avaliações por apenas um
+revisor e pendências. As linhas preservam `record_key`, identificador OpenAlex,
+título e decisões por revisor, permitindo auditar a decisão individual e a
+resolução final separadamente. O sistema não altera `screening_decisions`.
 
 ## Limites operacionais importantes
 
