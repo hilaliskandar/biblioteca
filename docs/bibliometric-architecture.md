@@ -1,6 +1,6 @@
 # Arquitetura bibliométrica e de interoperabilidade
 
-**Status:** B01 implementado nesta branch; os contratos seguintes continuam
+**Status:** B01 e B02 implementados na `main`; os contratos seguintes continuam
 planejados e não representam tabelas ou comandos já disponíveis na `main`.
 
 **Data de referência:** 26 de setembro de 2026.
@@ -42,7 +42,7 @@ record_count
 corpus_hash
 ```
 
-O B01 expõe `resolve_corpus(scope, root, custom_record_keys)` e retorna chaves
+O B01 integrado em `main` expõe `resolve_corpus(scope, root, custom_record_keys)` e retorna chaves
 ordenadas, únicas e acompanhadas de definição e contagem. Banco ausente, tabela
 `works` ausente, escopo inválido, corpus vazio e chaves customizadas inexistentes
 são erros explícitos. O B02 expõe `hash_record_keys(record_keys)` e a propriedade
