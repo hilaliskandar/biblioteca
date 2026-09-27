@@ -1,0 +1,150 @@
+project_name: revolucao_verde_cinza_semantic_bridges
+
+# Descoberta semantica suplementar. Cada consulta procura mecanismos ou pontes
+# entre literaturas, evitando depender apenas do vocabulario usado no manuscrito.
+defaults:
+  from_publication_date: null
+  to_publication_date: null
+  types:
+    - article
+    - review
+    - book-chapter
+    - preprint
+  languages: []
+  open_access_only: false
+  max_records: 50
+
+queries:
+  - id: rvc_s01_norm_to_implementation
+    mode: semantic
+    search: >-
+      Studies explaining why local governments fail to implement land-use or
+      property-related policy instruments even when legal authority and formal
+      regulations already exist, including administrative, organizational,
+      informational, coordination, enforcement, and implementation barriers.
+
+  - id: rvc_s02_resources_to_recurring_action
+    mode: semantic
+    search: >-
+      Research explaining why public organizations may possess staff, budgets,
+      cadastral data, technology, contracts, expertise, and legal powers but
+      still be unable to perform a public policy function consistently and
+      repeatedly over time, and how resources become durable organizational
+      capabilities through routines, responsibilities, documentation and learning.
+
+  - id: rvc_s03_interface_bottlenecks
+    mode: semantic
+    search: >-
+      Public policies in which implementation bottlenecks arise because
+      information, authority, responsibilities and decisions are distributed
+      across multiple government departments or organizations, even when the
+      participating units individually possess adequate resources or expertise.
+
+  - id: rvc_s04_removable_burden_process_design
+    mode: semantic
+    search: >-
+      Administrative processes where implementation difficulty results from
+      redundant procedures, unclear responsibilities, incompatible information
+      systems, weak identifiers, duplicated checks or poorly designed workflows
+      rather than from an intrinsic lack of organizational capacity, including
+      evidence on process redesign and burden reduction.
+
+  - id: rvc_s05_external_capacity_absorption
+    mode: semantic
+    search: >-
+      How local governments use expertise, data, technology or staff controlled
+      by universities, consultants, public companies, higher levels of government
+      or other organizations, and under what conditions those external resources
+      are accessed, translated, absorbed, institutionalized and sustained as
+      usable public-sector capability.
+
+  - id: rvc_s06_underused_land_public_value
+    mode: semantic
+    search: >-
+      Reuse or reoccupation of vacant and underused urban land and buildings that
+      seeks to improve access to existing infrastructure, services and
+      opportunities without assuming that higher density, more construction or
+      higher real-estate values necessarily constitute better urban outcomes.
+
+  - id: rvc_s07_coercion_vs_enablement
+    mode: semantic
+    search: >-
+      Research distinguishing situations where owners do not develop vacant or
+      underused urban property because they are unwilling to act from situations
+      where development is constrained by ownership fragmentation, land assembly,
+      finance, infrastructure, regulation, contamination, market demand or
+      physical feasibility, and comparing coercive and enabling policy responses.
+
+  - id: rvc_s08_automation_human_judgment
+    mode: semantic
+    search: >-
+      Automation, geospatial analysis, integrated data or decision-support
+      systems that reduce repetitive administrative work in urban planning and
+      land management while preserving human judgment, accountability,
+      explainability, data governance, error correction and rights of appeal.
+
+  - id: rvc_s09_vacancy_to_intervention_chain
+    mode: semantic
+    search: >-
+      Studies that treat urban vacancy or underuse as a sequence of decisions
+      from detection and classification through legal eligibility, ownership and
+      control, feasibility, prioritization, instrument selection, implementation,
+      redevelopment or reuse, and monitoring of social and territorial outcomes.
+
+  - id: rvc_s10_priority_vs_readiness
+    mode: semantic
+    search: >-
+      Research distinguishing the territorial priority of a vacant, derelict or
+      underused urban site from its readiness or maturity for intervention,
+      including ownership control, information gaps, feasibility, financing,
+      infrastructure, environmental constraints and implementation sequencing.
+
+  - id: rvc_s11_spatial_institutional_fit
+    mode: semantic
+    search: >-
+      Studies on mismatches between the geography of an urban problem and the
+      jurisdiction, authority or organizational boundaries of institutions
+      responsible for addressing it, including compensating arrangements such as
+      shared systems, delegation, agreements or intergovernmental coordination.
+
+  - id: rvc_s12_capacity_performance_results
+    mode: semantic
+    search: >-
+      Research that analytically separates government capacity from mobilization,
+      implementation performance and policy outcomes, including cases where
+      capable organizations obtain weak outcomes because of context, markets or
+      downstream constraints and cases where good outcomes occur without durable
+      institutional capacity.
+
+  - id: rvc_s13_land_policy_capacity_bridge
+    mode: semantic
+    search: >-
+      Studies connecting urban land policy, land activation, vacant property
+      reuse, brownfield redevelopment or central-city regeneration with the
+      organizational and institutional capabilities of local governments needed
+      to identify cases, coordinate actors, make decisions, implement instruments
+      and monitor results.
+
+  - id: rvc_s14_regeneration_distributional_safeguards
+    mode: semantic
+    search: >-
+      Urban regeneration, adaptive reuse, infill or densification policies that
+      explicitly examine who gains access, who remains or is displaced, housing
+      affordability, distribution of land-value gains, public space, social use
+      and other safeguards against treating physical transformation as public value.
+
+  - id: rvc_s15_land_value_creation_capture_governance
+    mode: semantic
+    search: >-
+      Research on how local governments create land value through planning or
+      development rights and capture part of that value for public purposes,
+      including institutional requirements for valuation, negotiation,
+      transparency, proportionality, accountability and distribution of benefits.
+
+  - id: rvc_s16_institutional_learning_continuity
+    mode: semantic
+    search: >-
+      Studies of public organizations where learning becomes durable capacity
+      only when experience is retained in rules, routines, systems, protocols,
+      documentation, training, redundancy or organizational memory, especially
+      under staff turnover, political change or withdrawal of external support.
