@@ -124,6 +124,40 @@ def normalize_affiliations(record: dict[str, Any]) -> list[dict[str, Any]]:
     return normalized
 
 
+def normalize_issn(value: Any) -> str | None:
+    if value is None:
+        return None
+    issn = "".join(char for char in str(value).strip().upper() if char.isalnum())
+    if not issn:
+        return None
+    return issn
+
+
+def normalize_source(record: dict[str, Any]) -> dict[str, Any] | None:
+    """Normalize the primary OpenAlex source associated with a work."""
+    source = (record.get("primary_location") or {}).get("source") or {}
+    openalex_source_id = openalex_short_id(source.get("id"))
+    issn_l = normalize_issn(source.get("issn_l"))
+    display_name = str(source.get("display_name") or "").strip()
+    normalized_name = normalize_author_name(display_name)
+    if openalex_source_id:
+        source_id = f"openalex:{openalex_source_id}"
+    elif issn_l:
+        source_id = f"issn:{issn_l}"
+    elif normalized_name:
+        source_id = f"name:{normalized_name}"
+    else:
+        return None
+    return {
+        "source_id": source_id,
+        "openalex_source_id": openalex_source_id,
+        "issn_l": issn_l,
+        "display_name": display_name or None,
+        "normalized_name": normalized_name or None,
+        "source_type": source.get("type"),
+    }
+
+
 def normalize_work(record: dict[str, Any], *, run_id: str, query_id: str, rank: int) -> dict[str, Any]:
     primary_location = record.get("primary_location") or {}
     source = primary_location.get("source") or {}
