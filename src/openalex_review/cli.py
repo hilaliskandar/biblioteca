@@ -56,6 +56,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("export-screening", help="Exporta estado, pendencias e conflitos da triagem do DuckDB.")
     seeds = sub.add_parser("validate-seeds")
     seeds.add_argument("--fail-on-missing", action="store_true")
+    seeds.add_argument(
+        "--seeds-file",
+        help="Arquivo de DOIs-semente; relativo a raiz do projeto ou caminho absoluto.",
+    )
     control = sub.add_parser("init-control")
     control.add_argument("--overwrite", action="store_true")
 
@@ -140,7 +144,11 @@ def main(argv: list[str] | None = None) -> None:
             print(path)
     elif args.command == "validate-seeds":
         from .report import validate_seeds
-        found, missing = validate_seeds(root, args.fail_on_missing)
+        found, missing = validate_seeds(
+            root,
+            args.fail_on_missing,
+            seeds_file=args.seeds_file,
+        )
         print(f"Recuperadas: {len(found)}")
         print(f"Nao recuperadas: {len(missing)}")
         for doi in missing:
