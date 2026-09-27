@@ -133,9 +133,7 @@ def normalize_issn(value: Any) -> str | None:
     return issn
 
 
-def normalize_source(record: dict[str, Any]) -> dict[str, Any] | None:
-    """Normalize the primary OpenAlex source associated with a work."""
-    source = (record.get("primary_location") or {}).get("source") or {}
+def _normalize_source_entity(source: dict[str, Any]) -> dict[str, Any] | None:
     openalex_source_id = openalex_short_id(source.get("id"))
     issn_l = normalize_issn(source.get("issn_l"))
     display_name = str(source.get("display_name") or "").strip()
@@ -156,6 +154,34 @@ def normalize_source(record: dict[str, Any]) -> dict[str, Any] | None:
         "normalized_name": normalized_name or None,
         "source_type": source.get("type"),
     }
+
+
+def normalize_sources(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize distinct sources found in primary, alternate, and legacy locations."""
+    candidates: list[dict[str, Any]] = []
+    primary_source = (record.get("primary_location") or {}).get("source")
+    if isinstance(primary_source, dict):
+        candidates.append(primary_source)
+    for location in record.get("locations") or []:
+        source = (location or {}).get("source")
+        if isinstance(source, dict):
+            candidates.append(source)
+    host_venue = record.get("host_venue")
+    if isinstance(host_venue, dict):
+        candidates.append(host_venue)
+
+    normalized: dict[str, dict[str, Any]] = {}
+    for source in candidates:
+        item = _normalize_source_entity(source)
+        if item is not None:
+            normalized.setdefault(item["source_id"], item)
+    return list(normalized.values())
+
+
+def normalize_source(record: dict[str, Any]) -> dict[str, Any] | None:
+    """Normalize the first source associated with a work."""
+    sources = normalize_sources(record)
+    return sources[0] if sources else None
 
 
 def normalize_work(record: dict[str, Any], *, run_id: str, query_id: str, rank: int) -> dict[str, Any]:

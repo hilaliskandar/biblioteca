@@ -186,6 +186,33 @@ def test_build_database_materializes_and_deduplicates_sources(tmp_path):
     con.close()
 
 
+def test_build_database_materializes_sources_from_all_location_shapes(tmp_path):
+    work = _raw_work()
+    work["primary_location"] = {}
+    work["locations"] = [
+        {"source": {"id": "https://openalex.org/S2", "display_name": "Alternativa"}}
+    ]
+    work["host_venue"] = {
+        "id": "https://openalex.org/S3",
+        "display_name": "Legada",
+        "type": "journal",
+    }
+    _write_run(tmp_path, "run1", "q1", work)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute("SELECT source_id FROM sources ORDER BY source_id").fetchall() == [
+        ("openalex:S2",),
+        ("openalex:S3",),
+    ]
+    assert con.execute("SELECT source_id FROM work_sources ORDER BY source_id").fetchall() == [
+        ("openalex:S2",),
+        ("openalex:S3",),
+    ]
+    con.close()
+
+
 def test_build_database_omits_missing_source_relationship(tmp_path):
     work = _raw_work()
     work["primary_location"] = {}

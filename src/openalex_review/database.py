@@ -8,7 +8,7 @@ from .common import project_root, sha256_file, utc_now_iso, write_text_atomic
 from .normalize import (
     normalize_affiliations,
     normalize_authorships,
-    normalize_source,
+    normalize_sources,
     normalize_work,
     parse_raw_filename,
 )
@@ -183,8 +183,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                         )
                         for item in normalize_affiliations(record)
                     )
-                    source = normalize_source(record)
-                    if source is not None:
+                    for source in normalize_sources(record):
                         source_rows.append(
                             (
                                 normalized["record_key"],

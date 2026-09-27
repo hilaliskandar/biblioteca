@@ -113,11 +113,11 @@ work_institutions
 
 ### `sources` e `work_sources`
 
-O B05 materializa a fonte primária presente em `primary_location.source`.
-As entidades são deduplicadas por OpenAlex Source ID, ISSN-L ou nome
-normalizado, nessa ordem de prioridade. A relação mantém a associação entre
-obra e fonte; quando não há fonte primária identificável, nenhuma relação é
-criada.
+O B05 materializa fontes encontradas em `primary_location.source`,
+`locations[].source` e `host_venue`. As entidades são deduplicadas por
+OpenAlex Source ID, ISSN-L ou nome normalizado, nessa ordem de prioridade.
+A relação mantém a associação entre obra e fonte e é única por par; quando
+não há fonte identificável, nenhuma relação é criada.
 
 ```text
 sources

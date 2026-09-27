@@ -2,6 +2,7 @@ from openalex_review.normalize import (
     normalize_affiliations,
     normalize_authorships,
     normalize_source,
+    normalize_sources,
     normalize_work,
     record_key,
 )
@@ -170,3 +171,20 @@ def test_normalize_source_uses_issn_or_name_fallback_and_ignores_empty_source():
         "source_id"
     ] == "name:revista"
     assert normalize_source({"primary_location": {}}) is None
+
+
+def test_normalize_sources_collects_locations_and_host_venue_without_duplicates():
+    record = {
+        "primary_location": {"source": {"id": "https://openalex.org/S1", "display_name": "Primaria"}},
+        "locations": [
+            {"source": {"id": "https://openalex.org/S1", "display_name": "Duplicada"}},
+            {"source": {"id": "https://openalex.org/S2", "display_name": "Alternativa"}},
+        ],
+        "host_venue": {"id": "https://openalex.org/S3", "display_name": "Legada", "type": "journal"},
+    }
+
+    assert [(item["source_id"], item["display_name"]) for item in normalize_sources(record)] == [
+        ("openalex:S1", "Primaria"),
+        ("openalex:S2", "Alternativa"),
+        ("openalex:S3", "Legada"),
+    ]
