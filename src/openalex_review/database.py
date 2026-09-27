@@ -5,7 +5,12 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .common import project_root, sha256_file, utc_now_iso, write_text_atomic
-from .normalize import normalize_authorships, normalize_work, parse_raw_filename
+from .normalize import (
+    normalize_affiliations,
+    normalize_authorships,
+    normalize_work,
+    parse_raw_filename,
+)
 
 
 def _require_duckdb():
@@ -118,6 +123,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     quarantine = base / "data" / "quarantine" / "normalization_errors.jsonl"
     quarantine_lines: list[str] = []
     authorship_rows: list[tuple] = []
+    affiliation_rows: list[tuple] = []
     duckdb = _require_duckdb()
     control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
@@ -160,6 +166,20 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                             item["is_corresponding"],
                         )
                         for item in normalize_authorships(record)
+                    )
+                    affiliation_rows.extend(
+                        (
+                            normalized["record_key"],
+                            item["institution_id"],
+                            item["openalex_institution_id"],
+                            item["ror"],
+                            item["display_name"],
+                            item["normalized_name"],
+                            item["country_code"],
+                            item["institution_type"],
+                            item["author_id"],
+                        )
+                        for item in normalize_affiliations(record)
                     )
                 except Exception as exc:
                     quarantine_lines.append(
@@ -216,6 +236,36 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         con.executemany("INSERT INTO authors VALUES (?, ?, ?, ?, ?)", author_rows.values())
     if relationship_rows:
         con.executemany("INSERT INTO work_authors VALUES (?, ?, ?, ?, ?)", relationship_rows.values())
+    con.execute(
+        """
+        CREATE TABLE institutions (
+            institution_id VARCHAR PRIMARY KEY, openalex_institution_id VARCHAR,
+            ror VARCHAR, display_name VARCHAR, normalized_name VARCHAR,
+            country_code VARCHAR, institution_type VARCHAR
+        );
+        CREATE TABLE work_institutions (
+            record_key VARCHAR, institution_id VARCHAR, author_id VARCHAR,
+            UNIQUE(record_key, institution_id, author_id)
+        );
+        """
+    )
+    institution_rows: dict[str, tuple] = {}
+    institution_relationships: dict[tuple[str, str, str | None], tuple] = {}
+    for row in affiliation_rows:
+        record_key, institution_id, *institution_values, author_id = row
+        if record_key not in existing_keys:
+            continue
+        institution_rows.setdefault(institution_id, (institution_id, *institution_values[:6]))
+        relationship_key = (record_key, institution_id, author_id)
+        institution_relationships.setdefault(relationship_key, relationship_key)
+    if institution_rows:
+        con.executemany(
+            "INSERT INTO institutions VALUES (?, ?, ?, ?, ?, ?, ?)", institution_rows.values()
+        )
+    if institution_relationships:
+        con.executemany(
+            "INSERT INTO work_institutions VALUES (?, ?, ?)", institution_relationships.values()
+        )
     con.execute(
         """
         CREATE TABLE work_queries AS

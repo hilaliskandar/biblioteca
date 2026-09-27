@@ -73,6 +73,12 @@ institutions
 work_institutions
   record_key, institution_id, author_id nullable
 
+O B04 materializa instituições e afiliações durante `build-db`. O identificador
+interno prioriza OpenAlex Institution ID, depois ROR e, por fim, nome normalizado.
+`work_institutions` preserva o vínculo obra–instituição e, quando recuperável,
+o vínculo autor–instituição; uma instituição pode aparecer ligada a vários
+autores da mesma obra.
+
 sources
   source_id, openalex_source_id, issn_l, display_name, source_type
 work_sources
