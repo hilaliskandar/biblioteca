@@ -154,6 +154,13 @@ tests/                   testes automatizados
 | `import-resolutions` | CSV + DuckDB | Importa resoluções e decisões finais manuais sem alterar decisões individuais. |
 | `pipeline` | YAML + `run_id` | Executa coleta, banco, exportação, relatório e controles. |
 
+Durante `build-db`, a fundação bibliométrica já materializa autores, instituições,
+fontes, keywords e tópicos OpenAlex em tabelas normalizadas e relações por obra.
+Para tópicos, `topics` preserva o identificador OpenAlex quando disponível ou usa
+o nome normalizado como fallback; `work_topics` preserva o vínculo com a obra e o
+maior `score` observado. A hierarquia `subfield`, `field` e `domain` também é
+preservada. O esquema completo está em [`docs/data-model.md`](docs/data-model.md).
+
 Em `pipeline`, a rodada coletada é usada para construir o banco por padrão.
 Para compor o banco com outras rodadas já coletadas, informe `--build-run-id`
 uma ou mais vezes; por exemplo, `pipeline --config config.yaml --run-id nova
@@ -300,9 +307,10 @@ futuros.
 O próximo ciclo não implementa ainda cálculos bibliométricos ou redes. Ele está
 organizado em marcos pequenos e reversíveis:
 
-1. **Fundação bibliométrica:** escopos de corpus (`identified`, `screened`,
-   `included`, `custom`), hash reproduzível, autores, instituições, fontes,
-   keywords, tópicos, referências, identificadores e registro de execuções.
+1. **Conclusão da fundação bibliométrica:** referências, identificadores e registro
+   de execuções, após os escopos de corpus (`identified`, `screened`, `included`,
+   `custom`), hash reproduzível, autores, instituições, fontes, keywords e tópicos
+   já implementados.
 2. **Cálculos:** desempenho, coautoria, coocorrência, acoplamento bibliográfico,
    cocitação, métricas de rede, clustering e layouts reproduzíveis.
 3. **Interoperabilidade:** exportações enriquecidas para Bibliometrix e
