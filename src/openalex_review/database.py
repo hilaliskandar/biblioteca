@@ -8,6 +8,7 @@ from .common import project_root, sha256_file, utc_now_iso, write_text_atomic
 from .normalize import (
     normalize_affiliations,
     normalize_authorships,
+    normalize_keywords,
     normalize_sources,
     normalize_work,
     parse_raw_filename,
@@ -126,6 +127,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     authorship_rows: list[tuple] = []
     affiliation_rows: list[tuple] = []
     source_rows: list[tuple] = []
+    keyword_rows: list[tuple] = []
     duckdb = _require_duckdb()
     control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
@@ -193,6 +195,17 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                                 source["display_name"],
                                 source["normalized_name"],
                                 source["source_type"],
+                            )
+                        )
+                    for keyword in normalize_keywords(record):
+                        keyword_rows.append(
+                            (
+                                normalized["record_key"],
+                                keyword["keyword_id"],
+                                keyword["raw_term"],
+                                keyword["normalized_term"],
+                                keyword["origin"],
+                                keyword["score"],
                             )
                         )
                 except Exception as exc:
@@ -307,6 +320,36 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     if source_relationships:
         con.executemany(
             "INSERT INTO work_sources VALUES (?, ?)", source_relationships.values()
+        )
+    con.execute(
+        """
+        CREATE TABLE keywords (
+            keyword_id VARCHAR PRIMARY KEY, raw_term VARCHAR, normalized_term VARCHAR
+        );
+        CREATE TABLE work_keywords (
+            record_key VARCHAR, keyword_id VARCHAR, origin VARCHAR, score DOUBLE,
+            UNIQUE(record_key, keyword_id, origin)
+        );
+        """
+    )
+    keyword_entities: dict[str, tuple] = {}
+    keyword_relationships: dict[tuple[str, str, str], tuple] = {}
+    for row in keyword_rows:
+        record_key, keyword_id, raw_term, normalized_term, origin, score = row
+        if record_key not in existing_keys:
+            continue
+        keyword_entities.setdefault(keyword_id, (keyword_id, raw_term, normalized_term))
+        relationship_key = (record_key, keyword_id, origin)
+        previous = keyword_relationships.get(relationship_key)
+        if previous is None or (
+            score is not None and (previous[3] is None or score > previous[3])
+        ):
+            keyword_relationships[relationship_key] = relationship_key + (score,)
+    if keyword_entities:
+        con.executemany("INSERT INTO keywords VALUES (?, ?, ?)", keyword_entities.values())
+    if keyword_relationships:
+        con.executemany(
+            "INSERT INTO work_keywords VALUES (?, ?, ?, ?)", keyword_relationships.values()
         )
     con.execute(
         """

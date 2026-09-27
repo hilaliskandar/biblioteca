@@ -213,6 +213,33 @@ def test_build_database_materializes_sources_from_all_location_shapes(tmp_path):
     con.close()
 
 
+def test_build_database_materializes_and_deduplicates_keywords(tmp_path):
+    work = _raw_work()
+    work["keywords"] = [
+        {"display_name": " Inteligência Artificial ", "score": 0.4},
+        {"display_name": "inteligencia artificial", "score": 0.9},
+        {"display_name": "Direito", "score": 0.7},
+    ]
+    _write_run(tmp_path, "run1", "q1", work)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT keyword_id, raw_term, normalized_term FROM keywords ORDER BY keyword_id"
+    ).fetchall() == [
+        ("term:direito", "Direito", "direito"),
+        ("term:inteligencia artificial", " Inteligência Artificial ", "inteligencia artificial"),
+    ]
+    assert con.execute(
+        "SELECT record_key, keyword_id, origin, score FROM work_keywords ORDER BY keyword_id"
+    ).fetchall() == [
+        ("openalex:W123", "term:direito", "openalex", 0.7),
+        ("openalex:W123", "term:inteligencia artificial", "openalex", 0.9),
+    ]
+    con.close()
+
+
 def test_build_database_omits_missing_source_relationship(tmp_path):
     work = _raw_work()
     work["primary_location"] = {}
