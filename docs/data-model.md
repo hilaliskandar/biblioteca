@@ -153,6 +153,21 @@ record_key, run_id, query_id, rank_in_query
 
 Permite medir sobreposição e localizar como a obra foi identificada.
 
+### `topics` e `work_topics`
+
+O B07 materializa os tópicos OpenAlex do JSON bruto. A entidade é identificada
+por OpenAlex Topic ID ou, quando ausente, pelo nome normalizado. A hierarquia
+`subfield`, `field` e `domain` é preservada; relações repetidas para a mesma obra
+e tópico mantêm o maior `score` disponível.
+
+```text
+topics
+  topic_id, openalex_topic_id, display_name, subfield, field, domain
+
+work_topics
+  record_key, topic_id, score nullable
+```
+
 ### `works_with_queries`
 
 Visão derivada de `works` e `work_queries`. Agrega `query_ids` e `number_of_queries`, sendo a fonte principal das exportações.

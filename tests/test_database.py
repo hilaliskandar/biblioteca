@@ -240,6 +240,53 @@ def test_build_database_materializes_and_deduplicates_keywords(tmp_path):
     con.close()
 
 
+def test_build_database_materializes_and_deduplicates_topics(tmp_path):
+    work = _raw_work()
+    work["topics"] = [
+        {
+            "id": "https://openalex.org/T1",
+            "display_name": "Housing Policy",
+            "score": 0.4,
+            "subfield": {"display_name": "Urban Studies"},
+            "field": {"display_name": "Social Sciences"},
+            "domain": {"display_name": "Social Sciences"},
+        },
+        {"id": "https://openalex.org/T1", "display_name": "Housing Policy", "score": 0.9},
+        {"display_name": "Ética em IA", "score": 0.7},
+    ]
+    second = _raw_work()
+    second["id"] = "https://openalex.org/W456"
+    second["topics"] = [
+        {
+            "id": "https://openalex.org/T1",
+            "display_name": "Housing Policy",
+            "score": 0.6,
+            "subfield": {"display_name": "Urban Studies"},
+        }
+    ]
+    _write_run(tmp_path, "run1", "q1", work)
+    _write_run(tmp_path, "run2", "q2", second)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT topic_id, openalex_topic_id, display_name, subfield, field, domain "
+        "FROM topics ORDER BY topic_id"
+    ).fetchall() == [
+        ("name:etica em ia", None, "Ética em IA", None, None, None),
+        ("openalex:T1", "T1", "Housing Policy", "Urban Studies", "Social Sciences", "Social Sciences"),
+    ]
+    assert con.execute(
+        "SELECT record_key, topic_id, score FROM work_topics ORDER BY record_key, topic_id"
+    ).fetchall() == [
+        ("openalex:W123", "name:etica em ia", 0.7),
+        ("openalex:W123", "openalex:T1", 0.9),
+        ("openalex:W456", "openalex:T1", 0.6),
+    ]
+    con.close()
+
+
 def test_build_database_omits_missing_source_relationship(tmp_path):
     work = _raw_work()
     work["primary_location"] = {}

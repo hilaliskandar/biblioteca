@@ -10,6 +10,7 @@ from .normalize import (
     normalize_authorships,
     normalize_keywords,
     normalize_sources,
+    normalize_topics,
     normalize_work,
     parse_raw_filename,
 )
@@ -128,6 +129,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     affiliation_rows: list[tuple] = []
     source_rows: list[tuple] = []
     keyword_rows: list[tuple] = []
+    topic_rows: list[tuple] = []
     duckdb = _require_duckdb()
     control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
@@ -206,6 +208,19 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                                 keyword["normalized_term"],
                                 keyword["origin"],
                                 keyword["score"],
+                            )
+                        )
+                    for topic in normalize_topics(record):
+                        topic_rows.append(
+                            (
+                                normalized["record_key"],
+                                topic["topic_id"],
+                                topic["openalex_topic_id"],
+                                topic["display_name"],
+                                topic["subfield"],
+                                topic["field"],
+                                topic["domain"],
+                                topic["score"],
                             )
                         )
                 except Exception as exc:
@@ -350,6 +365,47 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     if keyword_relationships:
         con.executemany(
             "INSERT INTO work_keywords VALUES (?, ?, ?, ?)", keyword_relationships.values()
+        )
+    con.execute(
+        """
+        CREATE TABLE topics (
+            topic_id VARCHAR PRIMARY KEY, openalex_topic_id VARCHAR,
+            display_name VARCHAR, subfield VARCHAR, field VARCHAR, domain VARCHAR
+        );
+        CREATE TABLE work_topics (
+            record_key VARCHAR, topic_id VARCHAR, score DOUBLE,
+            UNIQUE(record_key, topic_id)
+        );
+        """
+    )
+    topic_entities: dict[str, tuple] = {}
+    topic_relationships: dict[tuple[str, str], tuple] = {}
+    for row in topic_rows:
+        record_key, topic_id, *topic_values, score = row
+        if record_key not in existing_keys:
+            continue
+        entity = topic_entities.get(topic_id)
+        candidate_entity = (topic_id, *topic_values[:5])
+        if entity is None:
+            topic_entities[topic_id] = candidate_entity
+        else:
+            topic_entities[topic_id] = tuple(
+                existing or candidate
+                for existing, candidate in zip(entity, candidate_entity, strict=True)
+            )
+        relationship_key = (record_key, topic_id)
+        previous = topic_relationships.get(relationship_key)
+        if previous is None or (
+            score is not None and (previous[2] is None or score > previous[2])
+        ):
+            topic_relationships[relationship_key] = relationship_key + (score,)
+    if topic_entities:
+        con.executemany(
+            "INSERT INTO topics VALUES (?, ?, ?, ?, ?, ?)", topic_entities.values()
+        )
+    if topic_relationships:
+        con.executemany(
+            "INSERT INTO work_topics VALUES (?, ?, ?)", topic_relationships.values()
         )
     con.execute(
         """

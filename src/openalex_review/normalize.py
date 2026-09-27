@@ -214,6 +214,40 @@ def normalize_keywords(record: dict[str, Any]) -> list[dict[str, Any]]:
     return list(normalized.values())
 
 
+def normalize_topics(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize and deduplicate OpenAlex topics for a work."""
+    normalized: dict[str, dict[str, Any]] = {}
+    for topic in record.get("topics") or []:
+        if not isinstance(topic, dict):
+            continue
+        openalex_topic_id = openalex_short_id(topic.get("id"))
+        display_name = str(topic.get("display_name") or "").strip()
+        normalized_name = normalize_author_name(display_name)
+        if openalex_topic_id:
+            topic_id = f"openalex:{openalex_topic_id}"
+        elif normalized_name:
+            topic_id = f"name:{normalized_name}"
+        else:
+            continue
+        item = {
+            "topic_id": topic_id,
+            "openalex_topic_id": openalex_topic_id,
+            "display_name": display_name or None,
+            "subfield": (topic.get("subfield") or {}).get("display_name"),
+            "field": (topic.get("field") or {}).get("display_name"),
+            "domain": (topic.get("domain") or {}).get("display_name"),
+            "score": _normalize_keyword_score(topic.get("score")),
+        }
+        previous = normalized.get(topic_id)
+        if previous is None:
+            normalized[topic_id] = item
+        elif item["score"] is not None and (
+            previous["score"] is None or item["score"] > previous["score"]
+        ):
+            previous["score"] = item["score"]
+    return list(normalized.values())
+
+
 def normalize_source(record: dict[str, Any]) -> dict[str, Any] | None:
     """Normalize the first source associated with a work."""
     sources = normalize_sources(record)
