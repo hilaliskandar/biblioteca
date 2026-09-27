@@ -170,11 +170,19 @@ Gerado em: {utc_now_iso()}
     return path
 
 
-def validate_seeds(root: Path | None = None, fail_on_missing: bool = False) -> tuple[list[str], list[str]]:
+def validate_seeds(
+    root: Path | None = None,
+    fail_on_missing: bool = False,
+    seeds_file: str | Path | None = None,
+) -> tuple[list[str], list[str]]:
     from .common import normalize_doi
 
     base = root or project_root()
-    doi_path = base / "reference" / "known_relevant_dois.txt"
+    doi_path = Path(seeds_file) if seeds_file else Path("reference") / "known_relevant_dois.txt"
+    if not doi_path.is_absolute():
+        doi_path = base / doi_path
+    if not doi_path.exists():
+        raise FileNotFoundError(f"Arquivo de estudos-semente nao encontrado: {doi_path}")
     expected = [
         normalize_doi(line)
         for line in doi_path.read_text(encoding="utf-8").splitlines()
