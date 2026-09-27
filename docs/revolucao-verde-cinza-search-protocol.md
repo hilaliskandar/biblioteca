@@ -35,7 +35,11 @@ openalex-review collect --config config/searches_revolucao_verde_cinza_adversari
 openalex-review build-db --run-id rvc_lexical_v1 --run-id rvc_semantic_v1 --run-id rvc_adversarial_v1
 openalex-review export
 openalex-review report
+
+openalex-review validate-seeds --seeds-file reference/revolucao_verde_cinza_known_relevant_dois.txt
 ```
+
+Use `--fail-on-missing` quando a recuperação das sementes for tratada como gate de qualidade da rodada.
 
 ## Métricas mínimas
 
