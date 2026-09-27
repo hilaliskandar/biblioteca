@@ -1,0 +1,81 @@
+project_name: revolucao_verde_cinza_lexical
+
+defaults:
+  from_publication_date: null
+  to_publication_date: null
+  types:
+    - article
+    - review
+    - book-chapter
+    - preprint
+  languages: []
+  open_access_only: false
+  max_records: 200
+  progress_every: 50
+  sort_by: relevance_score
+  sort_order: desc
+
+queries:
+  - id: rvc_l01_urban_vacancy_underuse
+    mode: lexical
+    search: '("urban vacancy" OR "vacant land" OR "vacant property" OR "vacant building" OR "underused land" OR "underutilized land" OR "underused property") AND (urban OR city OR cities)'
+
+  - id: rvc_l02_inner_city_reuse_regeneration
+    mode: lexical
+    search: '("inner city" OR "city centre" OR "city center" OR downtown OR "central urban area") AND ("adaptive reuse" OR regeneration OR revitalization OR rehabilitation OR "urban recycling" OR reoccupation OR reuse)'
+
+  - id: rvc_l03_brownfield_land_redevelopment
+    mode: lexical
+    search: '(brownfield OR brownfields OR "previously developed land" OR "derelict land") AND (redevelopment OR regeneration OR reuse OR remediation) AND (ownership OR assembly OR viability OR finance OR infrastructure OR governance)'
+
+  - id: rvc_l04_densification_compact_city_outcomes
+    mode: lexical
+    search: '(densification OR "compact city" OR infill OR "urban intensification") AND (sustainability OR emissions OR accessibility OR infrastructure OR equity OR displacement OR affordability)'
+
+  - id: rvc_l05_sprawl_containment_infill
+    mode: lexical
+    search: '("urban sprawl" OR "urban expansion" OR "urban containment" OR "growth management") AND (infill OR redevelopment OR "central city" OR "existing infrastructure" OR "built-up area")'
+
+  - id: rvc_l06_land_activation_compulsory_development
+    mode: lexical
+    search: '("vacant land tax" OR "vacancy tax" OR "compulsory development" OR "compulsory building" OR "land activation" OR "land value taxation" OR "idle land") AND (urban OR municipal OR "local government")'
+
+  - id: rvc_l07_peuc_funcao_social
+    mode: lexical
+    search: '(PEUC OR "parcelamento edificacao utilizacao compulsorios" OR "IPTU progressivo" OR "funcao social da propriedade" OR "funcao social da propriedade urbana")'
+
+  - id: rvc_l08_land_policy_implementation
+    mode: lexical
+    search: '("urban land policy" OR "land management" OR "land policy" OR "land-use regulation") AND (implementation OR enforcement OR "local government" OR municipality OR municipal) AND (capacity OR governance OR coordination OR administration)'
+
+  - id: rvc_l09_policy_state_institutional_capacity_local
+    mode: lexical
+    search: '("policy capacity" OR "state capacity" OR "institutional capacity" OR "administrative capacity" OR "implementation capacity") AND ("local government" OR municipal OR municipality OR city)'
+
+  - id: rvc_l10_interorganizational_coordination_urban
+    mode: lexical
+    search: '("interorganizational coordination" OR "inter-organizational coordination" OR "institutional collective action" OR "collaborative governance" OR "organizational fragmentation" OR "administrative fragmentation") AND (urban OR planning OR "land use" OR municipal)'
+
+  - id: rvc_l11_institutional_fit_scale_authority
+    mode: lexical
+    search: '("institutional fit" OR "scale mismatch" OR "spatial fit" OR "institutional mismatch" OR jurisdiction OR "authority mismatch") AND (governance OR planning OR urban OR "land use")'
+
+  - id: rvc_l12_digital_planning_gis_automation
+    mode: lexical
+    search: '(GIS OR geospatial OR "data integration" OR automation OR digitalization OR digitization OR "decision support") AND ("urban planning" OR "land-use planning" OR "land management" OR "local government") AND (implementation OR workflow OR capacity OR governance OR accountability)'
+
+  - id: rvc_l13_administrative_burden_process_design
+    mode: lexical
+    search: '("administrative burden" OR "administrative process" OR "process redesign" OR "workflow redesign" OR "organizational routine") AND (implementation OR government OR public) AND (coordination OR data OR authority OR capacity)'
+
+  - id: rvc_l14_value_capture_public_value_equity
+    mode: lexical
+    search: '("land value capture" OR upzoning OR "development rights" OR "urban redevelopment") AND ("public value" OR equity OR affordability OR displacement OR "public benefit" OR distribution)'
+
+  - id: rvc_l15_adaptive_reuse_local_government
+    mode: lexical
+    search: '("adaptive reuse" OR "building reuse" OR retrofit) AND ("local government" OR municipality OR municipal OR governance OR regulation) AND (housing OR residential OR "urban regeneration")'
+
+  - id: rvc_l16_urban_regeneration_governance_capacity
+    mode: lexical
+    search: '("urban regeneration" OR "urban revitalization" OR "central city regeneration") AND (governance OR "institutional capacity" OR "administrative capacity" OR coordination OR implementation)'
