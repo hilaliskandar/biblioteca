@@ -1,6 +1,6 @@
 # Arquitetura bibliométrica e de interoperabilidade
 
-**Status:** B01–B05 implementados na `main`; os contratos seguintes continuam
+**Status:** B01–B06 implementados na `main`; os contratos seguintes continuam
 planejados e não representam tabelas ou comandos já disponíveis na `main`.
 
 **Data de referência:** 27 de setembro de 2026.

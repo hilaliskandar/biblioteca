@@ -2,7 +2,7 @@
 
 **Atualizado em:** 27 de setembro de 2026
 
-**Base verificada:** `origin/main` em `eebcf53`
+**Base verificada:** `origin/main` em `fdf7153`
 
 **Repositório:** `hilaliskandar/biblioteca`
 
@@ -42,6 +42,7 @@ como backlog pendente.
 | #20 | Validação operacional e algoritmo | README registra as rodadas de teste; diagrama e regras detalhadas estão em `docs/pipeline-algorithm.md`. |
 | #29 | Concordância entre revisores | Relatório separa acordos, conflitos, casos incompletos e kappa aplicável. |
 | #30 | Resoluções de triagem | `screening_resolutions` preserva decisões individuais, suporta idempotência/`--replace`, atualiza o CSV de controle e sobrevive a `build-db`. |
+| #39 | Normalização de keywords | `keywords` e `work_keywords` preservam termo bruto, termo normalizado, origem e maior score por obra. |
 
 ## Parcialmente implementado
 
@@ -90,7 +91,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B03 | **Concluído e integrado na `main`:** normalizar autores e autoria | B01 | `authors` e `work_authors` preservam OpenAlex ID, ORCID, nome original, posição, ordem, autoria correspondente e relação obra-autor. |
 | B04 | **Concluído e integrado na `main`:** normalizar instituições e afiliações | B03 | `institutions` e `work_institutions` preservam OpenAlex ID, ROR, nome, país, tipo e vínculo autor-instituição quando recuperável. |
 | B05 | **Concluído e integrado na `main`:** normalizar fontes | B01 | `sources` e `work_sources` preservam OpenAlex Source ID, ISSN-L, nome, tipo e relação obra-fonte. |
-| B06 | **Concluído nesta branch:** normalizar keywords | B01 | Preserva termo bruto, termo normalizado, origem e score quando disponível. |
+| B06 | **Concluído e integrado na `main`:** normalizar keywords | B01 | Preserva termo bruto, termo normalizado, origem e score quando disponível. |
 | B07 | Normalizar tópicos OpenAlex | B01 | Preserva tópico, subfield, field, domain e score. |
 | B08 | Materializar referências | B01 | Referências internas, externas e duplicadas são testadas; obras citadas fora do corpus são preservadas. |
 | B09 | Criar identificadores multibase | B01 | OpenAlex, DOI e futuros identificadores têm normalização, origem, verificação e regras de unicidade. |

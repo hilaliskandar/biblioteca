@@ -27,6 +27,8 @@ de integração e o backlog futuro.
   em `reports/screening_summary.csv`.
 - Normalização de fontes a partir de `primary_location.source`, `locations[].source`
   e `host_venue`, com deduplicação por obra em `work_sources`.
+- Normalização de keywords OpenAlex em `keywords` e `work_keywords`, preservando
+  termo bruto, termo normalizado, origem e maior score disponível por obra.
 
 ### Changed
 
@@ -44,6 +46,8 @@ de integração e o backlog futuro.
 - A documentação do modelo de dados distingue o esquema implementado das
   estruturas planejadas.
 - A documentação bibliométrica e o modelo de dados registram fontes normalizadas
+  e sua relação com as obras.
+- A documentação bibliométrica e o modelo de dados registram keywords normalizadas
   e sua relação com as obras.
 
 ## 0.2.0 — 2026-07-21
