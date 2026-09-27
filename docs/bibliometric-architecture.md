@@ -105,6 +105,11 @@ work_keywords
   record_key, keyword_id, origin, score nullable
 ```
 
+O B07 materializa `topics` e `work_topics` durante `build-db`. O identificador
+prioriza OpenAlex Topic ID e usa o nome normalizado como fallback. A hierarquia
+de subfield, field e domain é preservada; relações duplicadas por obra e tópico
+mantêm o maior score disponível.
+
 ```text
 topics
   topic_id, openalex_topic_id, display_name, subfield, field, domain

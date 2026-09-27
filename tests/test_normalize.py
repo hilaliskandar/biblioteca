@@ -4,6 +4,7 @@ from openalex_review.normalize import (
     normalize_keywords,
     normalize_source,
     normalize_sources,
+    normalize_topics,
     normalize_work,
     record_key,
 )
@@ -215,5 +216,48 @@ def test_normalize_keywords_preserves_raw_term_and_deduplicates_by_normalized_te
             "normalized_term": "direito",
             "origin": "openalex",
             "score": None,
+        },
+    ]
+
+
+def test_normalize_topics_preserves_hierarchy_and_deduplicates_by_identity():
+    record = {
+        "topics": [
+            {
+                "id": "https://openalex.org/T1",
+                "display_name": "Housing Policy",
+                "score": 0.4,
+                "subfield": {"display_name": "Urban Studies"},
+                "field": {"display_name": "Social Sciences"},
+                "domain": {"display_name": "社会科学"},
+            },
+            {
+                "id": "https://openalex.org/T1",
+                "display_name": "Housing Policy",
+                "score": 0.9,
+            },
+            {"display_name": " Ética em IA ", "score": 0.7},
+            {},
+        ]
+    }
+
+    assert normalize_topics(record) == [
+        {
+            "topic_id": "openalex:T1",
+            "openalex_topic_id": "T1",
+            "display_name": "Housing Policy",
+            "subfield": "Urban Studies",
+            "field": "Social Sciences",
+            "domain": "社会科学",
+            "score": 0.9,
+        },
+        {
+            "topic_id": "name:etica em ia",
+            "openalex_topic_id": None,
+            "display_name": "Ética em IA",
+            "subfield": None,
+            "field": None,
+            "domain": None,
+            "score": 0.7,
         },
     ]

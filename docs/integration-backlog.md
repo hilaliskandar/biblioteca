@@ -92,7 +92,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B04 | **Concluído e integrado na `main`:** normalizar instituições e afiliações | B03 | `institutions` e `work_institutions` preservam OpenAlex ID, ROR, nome, país, tipo e vínculo autor-instituição quando recuperável. |
 | B05 | **Concluído e integrado na `main`:** normalizar fontes | B01 | `sources` e `work_sources` preservam OpenAlex Source ID, ISSN-L, nome, tipo e relação obra-fonte. |
 | B06 | **Concluído e integrado na `main`:** normalizar keywords | B01 | Preserva termo bruto, termo normalizado, origem e score quando disponível. |
-| B07 | Normalizar tópicos OpenAlex | B01 | Preserva tópico, subfield, field, domain e score. |
+| B07 | **Concluído nesta branch:** normalizar tópicos OpenAlex | B01 | Preserva tópico, subfield, field, domain e score. |
 | B08 | Materializar referências | B01 | Referências internas, externas e duplicadas são testadas; obras citadas fora do corpus são preservadas. |
 | B09 | Criar identificadores multibase | B01 | OpenAlex, DOI e futuros identificadores têm normalização, origem, verificação e regras de unicidade. |
 | B10 | Registrar `bibliometric_runs` | B01–B09 | Cada análise registra corpus, hash, parâmetros, software, versão, status e saída. |
