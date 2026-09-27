@@ -1,4 +1,9 @@
-from openalex_review.normalize import normalize_authorships, normalize_work, record_key
+from openalex_review.normalize import (
+    normalize_affiliations,
+    normalize_authorships,
+    normalize_work,
+    record_key,
+)
 
 
 def sample():
@@ -70,3 +75,58 @@ def test_normalize_authorships_preserves_identity_order_and_correspondence():
 
 def test_normalize_authorships_ignores_unidentified_authors():
     assert normalize_authorships({"authorships": [{"author": {}}]}) == []
+
+
+def test_normalize_affiliations_preserves_institution_identity_and_author_link():
+    record = {
+        "authorships": [
+            {
+                "author": {"id": "https://openalex.org/A1", "display_name": "Ana Silva"},
+                "institutions": [
+                    {
+                        "id": "https://openalex.org/I1",
+                        "ror": "https://ror.org/01abc2345/",
+                        "display_name": "Universidade Exemplo",
+                        "country_code": "BR",
+                        "type": "education",
+                    }
+                ],
+            }
+        ]
+    }
+
+    assert normalize_affiliations(record) == [
+        {
+            "institution_id": "openalex:I1",
+            "openalex_institution_id": "I1",
+            "ror": "01abc2345",
+            "display_name": "Universidade Exemplo",
+            "normalized_name": "universidade exemplo",
+            "country_code": "BR",
+            "institution_type": "education",
+            "author_id": "openalex:A1",
+        }
+    ]
+
+
+def test_normalize_affiliations_uses_ror_or_name_fallback_and_allows_missing_author():
+    record = {
+        "authorships": [
+            {
+                "author": {},
+                "institutions": [
+                    {"ror": "https://ror.org/02xyz6789", "display_name": "Instituto ROR"},
+                    {"display_name": "Instituto Nome"},
+                    {},
+                ],
+            }
+        ]
+    }
+
+    result = normalize_affiliations(record)
+
+    assert [item["institution_id"] for item in result] == [
+        "ror:02xyz6789",
+        "name:instituto nome",
+    ]
+    assert all(item["author_id"] is None for item in result)

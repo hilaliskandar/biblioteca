@@ -100,6 +100,58 @@ def test_build_database_materializes_authors_and_work_authors(tmp_path):
     con.close()
 
 
+def test_build_database_materializes_institutions_and_author_affiliations(tmp_path):
+    work = _raw_work()
+    work["authorships"] = [
+        {
+            "author": {"id": "https://openalex.org/A1", "display_name": "Ana Silva"},
+            "institutions": [
+                {
+                    "id": "https://openalex.org/I1",
+                    "ror": "https://ror.org/01abc2345",
+                    "display_name": "Universidade Exemplo",
+                    "country_code": "BR",
+                    "type": "education",
+                }
+            ],
+        },
+        {
+            "author": {"id": "https://openalex.org/A2", "display_name": "Bruno Souza"},
+            "institutions": [
+                {
+                    "id": "https://openalex.org/I1",
+                    "ror": "https://ror.org/01abc2345",
+                    "display_name": "Universidade Exemplo",
+                    "country_code": "BR",
+                    "type": "education",
+                },
+                {"display_name": "Instituto Nome"},
+            ],
+        },
+    ]
+    _write_run(tmp_path, "run1", "q1", work)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT institution_id, openalex_institution_id, ror, display_name, country_code, institution_type "
+        "FROM institutions ORDER BY institution_id"
+    ).fetchall() == [
+        ("name:instituto nome", None, None, "Instituto Nome", None, None),
+        ("openalex:I1", "I1", "01abc2345", "Universidade Exemplo", "BR", "education"),
+    ]
+    assert con.execute(
+        "SELECT record_key, institution_id, author_id FROM work_institutions "
+        "ORDER BY institution_id, author_id"
+    ).fetchall() == [
+        ("openalex:W123", "name:instituto nome", "openalex:A2"),
+        ("openalex:W123", "openalex:I1", "openalex:A1"),
+        ("openalex:W123", "openalex:I1", "openalex:A2"),
+    ]
+    con.close()
+
+
 def test_build_database_explicitly_excludes_unselected_run(tmp_path):
     _write_run(tmp_path, "run1", "q1", _raw_work())
     work = _raw_work()

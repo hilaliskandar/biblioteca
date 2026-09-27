@@ -94,6 +94,23 @@ work_authors
   record_key, author_id, author_position, author_order, is_corresponding
 ```
 
+### `institutions` e `work_institutions`
+
+O B04 materializa as instituições presentes em `authorships[].institutions`.
+As entidades são deduplicadas por OpenAlex Institution ID, ROR ou nome
+normalizado, nessa ordem de prioridade. A relação preserva a obra, a
+instituição e o autor quando a autoria correspondente é identificável; o
+`author_id` é nulo para afiliações sem autor identificável.
+
+```text
+institutions
+  institution_id, openalex_institution_id, ror, display_name,
+  normalized_name, country_code, institution_type
+
+work_institutions
+  record_key, institution_id, author_id nullable
+```
+
 ### `work_queries`
 
 Tabela de origem distinta:

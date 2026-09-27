@@ -41,6 +41,19 @@ def normalize_orcid(value: Any) -> str | None:
     return orcid or None
 
 
+def _author_identifier(author: dict[str, Any]) -> str | None:
+    openalex_author_id = openalex_short_id(author.get("id"))
+    orcid = normalize_orcid(author.get("orcid"))
+    normalized_name = normalize_author_name(author.get("display_name"))
+    if openalex_author_id:
+        return f"openalex:{openalex_author_id}"
+    if orcid:
+        return f"orcid:{orcid}"
+    if normalized_name:
+        return f"name:{normalized_name}"
+    return None
+
+
 def normalize_authorships(record: dict[str, Any]) -> list[dict[str, Any]]:
     """Normalize OpenAlex authorships while preserving author order and flags."""
     normalized: list[dict[str, Any]] = []
@@ -50,13 +63,8 @@ def normalize_authorships(record: dict[str, Any]) -> list[dict[str, Any]]:
         orcid = normalize_orcid(author.get("orcid"))
         display_name = str(author.get("display_name") or "").strip()
         normalized_name = normalize_author_name(display_name)
-        if openalex_author_id:
-            author_id = f"openalex:{openalex_author_id}"
-        elif orcid:
-            author_id = f"orcid:{orcid}"
-        elif normalized_name:
-            author_id = f"name:{normalized_name}"
-        else:
+        author_id = _author_identifier(author)
+        if author_id is None:
             continue
         normalized.append(
             {
@@ -70,6 +78,49 @@ def normalize_authorships(record: dict[str, Any]) -> list[dict[str, Any]]:
                 "is_corresponding": bool(authorship.get("is_corresponding", False)),
             }
         )
+    return normalized
+
+
+def normalize_ror(value: Any) -> str | None:
+    if value is None:
+        return None
+    ror = str(value).strip().rstrip("/")
+    for prefix in ("https://ror.org/", "http://ror.org/", "ror:"):
+        if ror.lower().startswith(prefix):
+            ror = ror[len(prefix) :]
+    return ror or None
+
+
+def normalize_affiliations(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize institutions and optional author affiliations from OpenAlex."""
+    normalized: list[dict[str, Any]] = []
+    for authorship in record.get("authorships") or []:
+        author_id = _author_identifier(authorship.get("author") or {})
+        for institution in authorship.get("institutions") or []:
+            openalex_institution_id = openalex_short_id(institution.get("id"))
+            ror = normalize_ror(institution.get("ror"))
+            display_name = str(institution.get("display_name") or "").strip()
+            normalized_name = normalize_author_name(display_name)
+            if openalex_institution_id:
+                institution_id = f"openalex:{openalex_institution_id}"
+            elif ror:
+                institution_id = f"ror:{ror}"
+            elif normalized_name:
+                institution_id = f"name:{normalized_name}"
+            else:
+                continue
+            normalized.append(
+                {
+                    "institution_id": institution_id,
+                    "openalex_institution_id": openalex_institution_id,
+                    "ror": ror,
+                    "display_name": display_name or None,
+                    "normalized_name": normalized_name or None,
+                    "country_code": institution.get("country_code"),
+                    "institution_type": institution.get("type"),
+                    "author_id": author_id,
+                }
+            )
     return normalized
 
 
