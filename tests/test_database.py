@@ -152,6 +152,80 @@ def test_build_database_materializes_institutions_and_author_affiliations(tmp_pa
     con.close()
 
 
+def test_build_database_materializes_and_deduplicates_sources(tmp_path):
+    first = _raw_work()
+    first["primary_location"]["source"] = {
+        "id": "https://openalex.org/S1",
+        "issn_l": "1234-5678",
+        "display_name": "Revista Exemplo",
+        "type": "journal",
+    }
+    second = _raw_work()
+    second["id"] = "https://openalex.org/W456"
+    second["primary_location"]["source"] = {
+        "id": "https://openalex.org/S1",
+        "issn_l": "1234-5678",
+        "display_name": "Revista Exemplo",
+        "type": "journal",
+    }
+    _write_run(tmp_path, "run1", "q1", first)
+    _write_run(tmp_path, "run2", "q2", second)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute("SELECT * FROM sources").fetchall() == [
+        ("openalex:S1", "S1", "12345678", "Revista Exemplo", "revista exemplo", "journal")
+    ]
+    assert con.execute(
+        "SELECT record_key, source_id FROM work_sources ORDER BY record_key"
+    ).fetchall() == [
+        ("openalex:W123", "openalex:S1"),
+        ("openalex:W456", "openalex:S1"),
+    ]
+    con.close()
+
+
+def test_build_database_materializes_sources_from_all_location_shapes(tmp_path):
+    work = _raw_work()
+    work["primary_location"] = {}
+    work["locations"] = [
+        {"source": {"id": "https://openalex.org/S2", "display_name": "Alternativa"}}
+    ]
+    work["host_venue"] = {
+        "id": "https://openalex.org/S3",
+        "display_name": "Legada",
+        "type": "journal",
+    }
+    _write_run(tmp_path, "run1", "q1", work)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute("SELECT source_id FROM sources ORDER BY source_id").fetchall() == [
+        ("openalex:S2",),
+        ("openalex:S3",),
+    ]
+    assert con.execute("SELECT source_id FROM work_sources ORDER BY source_id").fetchall() == [
+        ("openalex:S2",),
+        ("openalex:S3",),
+    ]
+    con.close()
+
+
+def test_build_database_omits_missing_source_relationship(tmp_path):
+    work = _raw_work()
+    work["primary_location"] = {}
+    _write_run(tmp_path, "run1", "q1", work)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute("SELECT COUNT(*) FROM sources").fetchone() == (0,)
+    assert con.execute("SELECT COUNT(*) FROM work_sources").fetchone() == (0,)
+    con.close()
+
+
 def test_build_database_explicitly_excludes_unselected_run(tmp_path):
     _write_run(tmp_path, "run1", "q1", _raw_work())
     work = _raw_work()

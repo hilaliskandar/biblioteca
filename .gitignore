@@ -15,6 +15,7 @@ htmlcov/
 .agents/
 .DS_Store
 Thumbs.db
+*.code-workspace
 
 # Dados e resultados gerados
 /config/custom/*

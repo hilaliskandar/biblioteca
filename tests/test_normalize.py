@@ -1,6 +1,8 @@
 from openalex_review.normalize import (
     normalize_affiliations,
     normalize_authorships,
+    normalize_source,
+    normalize_sources,
     normalize_work,
     record_key,
 )
@@ -130,3 +132,59 @@ def test_normalize_affiliations_uses_ror_or_name_fallback_and_allows_missing_aut
         "name:instituto nome",
     ]
     assert all(item["author_id"] is None for item in result)
+
+
+def test_normalize_source_preserves_identity_metadata_and_normalizes_issn():
+    record = {
+        "primary_location": {
+            "source": {
+                "id": "https://openalex.org/S1",
+                "issn_l": "1234-5678",
+                "display_name": "Revista Exemplo",
+                "type": "journal",
+            }
+        }
+    }
+
+    assert normalize_source(record) == {
+        "source_id": "openalex:S1",
+        "openalex_source_id": "S1",
+        "issn_l": "12345678",
+        "display_name": "Revista Exemplo",
+        "normalized_name": "revista exemplo",
+        "source_type": "journal",
+    }
+
+
+def test_normalize_source_uses_issn_or_name_fallback_and_ignores_empty_source():
+    assert normalize_source(
+        {"primary_location": {"source": {"issn_l": "abcd-efgh", "display_name": "Revista"}}}
+    ) == {
+        "source_id": "issn:ABCDEFGH",
+        "openalex_source_id": None,
+        "issn_l": "ABCDEFGH",
+        "display_name": "Revista",
+        "normalized_name": "revista",
+        "source_type": None,
+    }
+    assert normalize_source({"primary_location": {"source": {"display_name": "Revista"}}})[
+        "source_id"
+    ] == "name:revista"
+    assert normalize_source({"primary_location": {}}) is None
+
+
+def test_normalize_sources_collects_locations_and_host_venue_without_duplicates():
+    record = {
+        "primary_location": {"source": {"id": "https://openalex.org/S1", "display_name": "Primaria"}},
+        "locations": [
+            {"source": {"id": "https://openalex.org/S1", "display_name": "Duplicada"}},
+            {"source": {"id": "https://openalex.org/S2", "display_name": "Alternativa"}},
+        ],
+        "host_venue": {"id": "https://openalex.org/S3", "display_name": "Legada", "type": "journal"},
+    }
+
+    assert [(item["source_id"], item["display_name"]) for item in normalize_sources(record)] == [
+        ("openalex:S1", "Primaria"),
+        ("openalex:S2", "Alternativa"),
+        ("openalex:S3", "Legada"),
+    ]

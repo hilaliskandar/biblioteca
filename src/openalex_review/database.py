@@ -8,6 +8,7 @@ from .common import project_root, sha256_file, utc_now_iso, write_text_atomic
 from .normalize import (
     normalize_affiliations,
     normalize_authorships,
+    normalize_sources,
     normalize_work,
     parse_raw_filename,
 )
@@ -124,6 +125,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     quarantine_lines: list[str] = []
     authorship_rows: list[tuple] = []
     affiliation_rows: list[tuple] = []
+    source_rows: list[tuple] = []
     duckdb = _require_duckdb()
     control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
@@ -181,6 +183,18 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                         )
                         for item in normalize_affiliations(record)
                     )
+                    for source in normalize_sources(record):
+                        source_rows.append(
+                            (
+                                normalized["record_key"],
+                                source["source_id"],
+                                source["openalex_source_id"],
+                                source["issn_l"],
+                                source["display_name"],
+                                source["normalized_name"],
+                                source["source_type"],
+                            )
+                        )
                 except Exception as exc:
                     quarantine_lines.append(
                         json.dumps(
@@ -265,6 +279,34 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     if institution_relationships:
         con.executemany(
             "INSERT INTO work_institutions VALUES (?, ?, ?)", institution_relationships.values()
+        )
+    con.execute(
+        """
+        CREATE TABLE sources (
+            source_id VARCHAR PRIMARY KEY, openalex_source_id VARCHAR, issn_l VARCHAR,
+            display_name VARCHAR, normalized_name VARCHAR, source_type VARCHAR
+        );
+        CREATE TABLE work_sources (
+            record_key VARCHAR, source_id VARCHAR,
+            UNIQUE(record_key, source_id)
+        );
+        """
+    )
+    source_entities: dict[str, tuple] = {}
+    source_relationships: dict[tuple[str, str], tuple] = {}
+    for row in source_rows:
+        record_key, source_id, *source_values = row
+        if record_key not in existing_keys:
+            continue
+        source_entities.setdefault(source_id, (source_id, *source_values))
+        source_relationships.setdefault((record_key, source_id), (record_key, source_id))
+    if source_entities:
+        con.executemany(
+            "INSERT INTO sources VALUES (?, ?, ?, ?, ?, ?)", source_entities.values()
+        )
+    if source_relationships:
+        con.executemany(
+            "INSERT INTO work_sources VALUES (?, ?)", source_relationships.values()
         )
     con.execute(
         """

@@ -111,6 +111,23 @@ work_institutions
   record_key, institution_id, author_id nullable
 ```
 
+### `sources` e `work_sources`
+
+O B05 materializa fontes encontradas em `primary_location.source`,
+`locations[].source` e `host_venue`. As entidades são deduplicadas por
+OpenAlex Source ID, ISSN-L ou nome normalizado, nessa ordem de prioridade.
+A relação mantém a associação entre obra e fonte e é única por par; quando
+não há fonte identificável, nenhuma relação é criada.
+
+```text
+sources
+  source_id, openalex_source_id, issn_l, display_name,
+  normalized_name, source_type
+
+work_sources
+  record_key, source_id
+```
+
 ### `work_queries`
 
 Tabela de origem distinta:

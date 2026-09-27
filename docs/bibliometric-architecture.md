@@ -84,6 +84,12 @@ sources
 work_sources
   record_key, source_id
 
+O B05 materializa fontes durante `build-db`, coletando `primary_location.source`,
+`locations[].source` e `host_venue`. O identificador interno prioriza OpenAlex
+Source ID, depois ISSN-L e, por fim, nome normalizado. `work_sources` preserva
+uma relação por obra e fonte, sem duplicar a mesma fonte dentro da obra; obras
+sem fonte identificável não geram relação.
+
 keywords
   keyword_id, raw_term, normalized_term
 work_keywords
