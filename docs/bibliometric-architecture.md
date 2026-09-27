@@ -72,6 +72,7 @@ institutions
   country_code, institution_type
 work_institutions
   record_key, institution_id, author_id nullable
+```
 
 O B04 materializa instituições e afiliações durante `build-db`. O identificador
 interno prioriza OpenAlex Institution ID, depois ROR e, por fim, nome normalizado.
@@ -79,10 +80,12 @@ interno prioriza OpenAlex Institution ID, depois ROR e, por fim, nome normalizad
 o vínculo autor–instituição; uma instituição pode aparecer ligada a vários
 autores da mesma obra.
 
+```text
 sources
   source_id, openalex_source_id, issn_l, display_name, source_type
 work_sources
   record_key, source_id
+```
 
 O B05 materializa fontes durante `build-db`, coletando `primary_location.source`,
 `locations[].source` e `host_venue`. O identificador interno prioriza OpenAlex
@@ -90,11 +93,19 @@ Source ID, depois ISSN-L e, por fim, nome normalizado. `work_sources` preserva
 uma relação por obra e fonte, sem duplicar a mesma fonte dentro da obra; obras
 sem fonte identificável não geram relação.
 
+O B06 materializa `keywords` e `work_keywords` durante `build-db`. O identificador
+é `term:` seguido do termo normalizado, sem acentos e com espaços colapsados;
+`raw_term` preserva a forma recebida. Relações duplicadas por obra e termo são
+consolidadas, mantendo o maior score disponível e a origem `openalex`.
+
+```text
 keywords
   keyword_id, raw_term, normalized_term
 work_keywords
   record_key, keyword_id, origin, score nullable
+```
 
+```text
 topics
   topic_id, openalex_topic_id, display_name, subfield, field, domain
 work_topics

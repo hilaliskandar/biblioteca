@@ -1,6 +1,7 @@
 from openalex_review.normalize import (
     normalize_affiliations,
     normalize_authorships,
+    normalize_keywords,
     normalize_source,
     normalize_sources,
     normalize_work,
@@ -187,4 +188,32 @@ def test_normalize_sources_collects_locations_and_host_venue_without_duplicates(
         ("openalex:S1", "Primaria"),
         ("openalex:S2", "Alternativa"),
         ("openalex:S3", "Legada"),
+    ]
+
+
+def test_normalize_keywords_preserves_raw_term_and_deduplicates_by_normalized_term():
+    record = {
+        "keywords": [
+            {"display_name": " Inteligência Artificial ", "score": 0.4},
+            {"display_name": "inteligencia   artificial", "score": 0.9},
+            {"display_name": "Direito", "score": None},
+            {},
+        ]
+    }
+
+    assert normalize_keywords(record) == [
+        {
+            "keyword_id": "term:inteligencia artificial",
+            "raw_term": " Inteligência Artificial ",
+            "normalized_term": "inteligencia artificial",
+            "origin": "openalex",
+            "score": 0.9,
+        },
+        {
+            "keyword_id": "term:direito",
+            "raw_term": "Direito",
+            "normalized_term": "direito",
+            "origin": "openalex",
+            "score": None,
+        },
     ]

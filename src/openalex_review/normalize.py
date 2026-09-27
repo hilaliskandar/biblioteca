@@ -178,6 +178,42 @@ def normalize_sources(record: dict[str, Any]) -> list[dict[str, Any]]:
     return list(normalized.values())
 
 
+def _normalize_keyword_score(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def normalize_keywords(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize and deduplicate OpenAlex keywords for a work."""
+    normalized: dict[str, dict[str, Any]] = {}
+    for keyword in record.get("keywords") or []:
+        if not isinstance(keyword, dict):
+            continue
+        raw_term = str(keyword.get("display_name") or "")
+        normalized_term = normalize_author_name(raw_term)
+        if not normalized_term:
+            continue
+        item = {
+            "keyword_id": f"term:{normalized_term}",
+            "raw_term": raw_term,
+            "normalized_term": normalized_term,
+            "origin": "openalex",
+            "score": _normalize_keyword_score(keyword.get("score")),
+        }
+        previous = normalized.get(item["keyword_id"])
+        if previous is None:
+            normalized[item["keyword_id"]] = item
+        elif item["score"] is not None and (
+            previous["score"] is None or item["score"] > previous["score"]
+        ):
+            previous["score"] = item["score"]
+    return list(normalized.values())
+
+
 def normalize_source(record: dict[str, Any]) -> dict[str, Any] | None:
     """Normalize the first source associated with a work."""
     sources = normalize_sources(record)

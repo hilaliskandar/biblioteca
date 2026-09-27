@@ -128,6 +128,21 @@ work_sources
   record_key, source_id
 ```
 
+### `keywords` e `work_keywords`
+
+O B06 materializa os termos de `keywords` do JSON bruto. A entidade é
+deduplicada por termo normalizado, preservando a primeira forma bruta observada;
+quando o mesmo termo aparece mais de uma vez na obra, a relação mantém o maior
+`score` disponível. A origem atual é `openalex`.
+
+```text
+keywords
+  keyword_id, raw_term, normalized_term
+
+work_keywords
+  record_key, keyword_id, origin, score nullable
+```
+
 ### `work_queries`
 
 Tabela de origem distinta:
