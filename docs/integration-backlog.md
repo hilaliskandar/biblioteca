@@ -1,8 +1,8 @@
 # Backlog de integração
 
-**Atualizado em:** 26 de setembro de 2026
+**Atualizado em:** 27 de setembro de 2026
 
-**Base verificada:** `origin/main` em `68e6defb5270279acb680bc1e0a84f14ed4ddbcc`
+**Base verificada:** `origin/main` em `eebcf53`
 
 **Repositório:** `hilaliskandar/biblioteca`
 
@@ -63,9 +63,9 @@ como backlog pendente.
 | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|
 | Reconciliar documentação de planejamento | — | Backlog e roadmap distinguem concluído, parcial, próximo ciclo e médio prazo. |
-| Preparar release `0.3.0` | Reconciliação documental | Versão, changelog e documentação de release correspondem à `main`; CI verde. |
+| Preparar release `0.3.0` | Reconciliação documental | **Concluído:** versão, changelog e documentação de release correspondem à `main`; validação local verde. |
 | Decidir política de lint para scripts legados | — | A política para `ruff check .` é documentada e implementada em configuração ou correções, sem ambiguidade entre validação local e CI. |
-| Definir composição explícita de rodadas em `data/raw` | Algoritmo atual | `build-db` aceita `--run-id` repetido, registra manifesto de composição no DuckDB e preserva modo cumulativo legado. **Concluído nesta branch (#27).** |
+| Definir composição explícita de rodadas em `data/raw` | Algoritmo atual | `build-db` aceita `--run-id` repetido, registra manifesto de composição no DuckDB e preserva modo cumulativo legado. **Concluído na `main` (#27).** |
 
 Por padrão, `build-db` ainda incorpora todos os JSONL locais. Para controlar a
 composição, informe `--run-id` uma ou mais vezes; o pesquisador/equipe decide a
@@ -89,7 +89,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B02 | **Concluído e integrado na `main`:** calcular hash reproduzível do corpus | B01 | `hash_record_keys` e `CorpusSelection.corpus_hash` produzem SHA-256 canônico; ordem e duplicidades não alteram o resultado, e alteração de uma obra altera o hash. |
 | B03 | **Concluído e integrado na `main`:** normalizar autores e autoria | B01 | `authors` e `work_authors` preservam OpenAlex ID, ORCID, nome original, posição, ordem, autoria correspondente e relação obra-autor. |
 | B04 | **Concluído e integrado na `main`:** normalizar instituições e afiliações | B03 | `institutions` e `work_institutions` preservam OpenAlex ID, ROR, nome, país, tipo e vínculo autor-instituição quando recuperável. |
-| B05 | **Concluído nesta branch:** normalizar fontes | B01 | `sources` e `work_sources` preservam OpenAlex Source ID, ISSN-L, nome, tipo e relação obra-fonte. |
+| B05 | **Concluído e integrado na `main`:** normalizar fontes | B01 | `sources` e `work_sources` preservam OpenAlex Source ID, ISSN-L, nome, tipo e relação obra-fonte. |
 | B06 | Normalizar keywords | B01 | Preserva termo bruto, termo normalizado, origem e score quando disponível. |
 | B07 | Normalizar tópicos OpenAlex | B01 | Preserva tópico, subfield, field, domain e score. |
 | B08 | Materializar referências | B01 | Referências internas, externas e duplicadas são testadas; obras citadas fora do corpus são preservadas. |

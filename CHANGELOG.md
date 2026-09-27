@@ -6,7 +6,7 @@ Sem alterações ainda não lançadas. Consulte
 [`docs/integration-backlog.md`](docs/integration-backlog.md) para o histórico
 de integração e o backlog futuro.
 
-## 0.3.0 — 2026-09-25
+## 0.3.0 — 2026-09-27
 
 ### Added
 
@@ -25,6 +25,8 @@ de integração e o backlog futuro.
   etapa.
 - Resumo de decisões, conflitos e pendências de `titulo_resumo` no relatório e
   em `reports/screening_summary.csv`.
+- Normalização de fontes a partir de `primary_location.source`, `locations[].source`
+  e `host_venue`, com deduplicação por obra em `work_sources`.
 
 ### Changed
 
@@ -41,6 +43,8 @@ de integração e o backlog futuro.
   detalha fluxo, rastreabilidade, deduplicação, exportação e triagem.
 - A documentação do modelo de dados distingue o esquema implementado das
   estruturas planejadas.
+- A documentação bibliométrica e o modelo de dados registram fontes normalizadas
+  e sua relação com as obras.
 
 ## 0.2.0 — 2026-07-21
 

@@ -2,7 +2,7 @@
 
 > Para critérios de aceite, dependências imediatas e histórico de PRs
 > integrados, consulte [integration-backlog.md](integration-backlog.md). Este
-> documento apresenta a direção funcional após a `main` de 26 de setembro de
+> documento apresenta a direção funcional após a `main` de 27 de setembro de
 > 2026.
 
 ## Estado atual
