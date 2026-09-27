@@ -1,6 +1,6 @@
 import duckdb
 
-from openalex_review.report import generate_report
+from openalex_review.report import generate_report, validate_seeds
 
 
 def make_database(tmp_path):
@@ -46,3 +46,19 @@ def test_report_includes_screening_metrics_and_conflicts(tmp_path):
     assert "Pendentes de triagem: **0**" in text
     summary = (tmp_path / "reports" / "screening_summary.csv").read_text(encoding="utf-8-sig")
     assert "titulo_resumo" in summary
+
+
+def test_validate_seeds_accepts_custom_file(tmp_path):
+    make_database(tmp_path)
+    reference = tmp_path / "reference"
+    reference.mkdir()
+    seeds = reference / "custom_seeds.txt"
+    seeds.write_text("# benchmark\n10.1/a\n10.1/missing\n", encoding="utf-8")
+
+    found, missing = validate_seeds(
+        tmp_path,
+        seeds_file="reference/custom_seeds.txt",
+    )
+
+    assert found == ["10.1/a"]
+    assert missing == ["10.1/missing"]
