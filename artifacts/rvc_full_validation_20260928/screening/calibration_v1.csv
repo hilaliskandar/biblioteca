@@ -1,0 +1,85 @@
+query_id,openalex_id,screening_decision,query_relevance,reason,reviewer,stage
+rvc_l01_urban_vacancy_underuse,W1983182431,incluir,relevante,"Declinio urbano, vacancia e desenvolvimento desigual em area central.",chatgpt_calibration_v1,titulo_resumo
+rvc_l01_urban_vacancy_underuse,W148677675,incluir,relevante,"Encolhimento urbano, abandono, biodiversidade e servicos ecossistemicos.",chatgpt_calibration_v1,titulo_resumo
+rvc_l02_inner_city_reuse_regeneration,W2061314421,excluir,nao_relevante,Patologia construtiva em centros historicos sem foco em reuso ou politica de regeneracao.,chatgpt_calibration_v1,titulo_resumo
+rvc_l02_inner_city_reuse_regeneration,W2013028804,excluir,nao_relevante,Politicas de estacionamento sem conexao substantiva com reuso de areas centrais.,chatgpt_calibration_v1,titulo_resumo
+rvc_l03_brownfield_land_redevelopment,W4323844708,incluir,relevante,Viabilidade para redesenvolvimento de brownfields.,chatgpt_calibration_v1,titulo_resumo
+rvc_l03_brownfield_land_redevelopment,W2982031252,incluir,relevante,Uso temporario de brownfields e estrategias de regeneracao.,chatgpt_calibration_v1,titulo_resumo
+rvc_l04_densification_compact_city_outcomes,W2032268803,excluir,parcial,Tipologia ampla de cidades sustentaveis sem foco em densificacao.,chatgpt_calibration_v1,titulo_resumo
+rvc_l04_densification_compact_city_outcomes,W2087399017,excluir,nao_relevante,Drenagem urbana sustentavel fora dos mecanismos centrais da tese.,chatgpt_calibration_v1,titulo_resumo
+rvc_l05_sprawl_containment_infill,W2304842732,incluir,relevante,"Greyfields, GIS participativo e reducao de sprawl.",chatgpt_calibration_v1,titulo_resumo
+rvc_l05_sprawl_containment_infill,W2150427166,incluir,parcial,Mecanismos de sprawl por subsidios de transporte; contexto da expansao.,chatgpt_calibration_v1,titulo_resumo
+rvc_l06_land_activation_compulsory_development,W2068914920,duvida,parcial,Tributacao imobiliaria e land value taxation; pertinencia depende da leitura integral.,chatgpt_calibration_v1,titulo_resumo
+rvc_l06_land_activation_compulsory_development,W3036307967,incluir,nao_relevante,"Relevante para fit territorial e governanca, mas falso positivo desta consulta.",chatgpt_calibration_v1,titulo_resumo
+rvc_l07_peuc_funcao_social,W2804019621,incluir,relevante,"IPTU progressivo, vazios urbanos e funcao social.",chatgpt_calibration_v1,titulo_resumo
+rvc_l07_peuc_funcao_social,W3161325760,incluir,relevante,"SIG, PEUC, vazios urbanos e implementacao municipal.",chatgpt_calibration_v1,titulo_resumo
+rvc_l08_land_policy_implementation,W3000432338,excluir,nao_relevante,Governanca de conservacao da biodiversidade sem politica fundiaria urbana.,chatgpt_calibration_v1,titulo_resumo
+rvc_l08_land_policy_implementation,W2518766815,duvida,parcial,"Coordenacao, capacidades e implementacao em risco de inundacao; transferibilidade possivel.",chatgpt_calibration_v1,titulo_resumo
+rvc_l09_policy_state_institutional_capacity_local,W2796780570,excluir,nao_relevante,Direito eleitoral local sem capacidade institucional.,chatgpt_calibration_v1,titulo_resumo
+rvc_l09_policy_state_institutional_capacity_local,W1995980461,duvida,parcial,Descentralizacao e responsividade local; contribuicao indireta possivel.,chatgpt_calibration_v1,titulo_resumo
+rvc_l10_interorganizational_coordination_urban,W2782956089,excluir,nao_relevante,Governanca colaborativa em supply chain privada.,chatgpt_calibration_v1,titulo_resumo
+rvc_l10_interorganizational_coordination_urban,W4200520946,duvida,parcial,Coordenacao interorganizacional em governos urbanos aplicada a saude.,chatgpt_calibration_v1,titulo_resumo
+rvc_l11_institutional_fit_scale_authority,W3036307967,incluir,relevante,Mismatch entre territorios funcionais e limites municipais.,chatgpt_calibration_v1,titulo_resumo
+rvc_l11_institutional_fit_scale_authority,W2071484401,duvida,parcial,Areas funcionais versus limites jurisdicionais; potencial para fit.,chatgpt_calibration_v1,titulo_resumo
+rvc_l12_digital_planning_gis_automation,W3019534486,duvida,parcial,"Toolkits de valoracao; possivel apoio a decisao, sem automacao clara.",chatgpt_calibration_v1,titulo_resumo
+rvc_l12_digital_planning_gis_automation,W2137798415,excluir,nao_relevante,Planejamento costeiro sem foco em digitalizacao ou capacidade.,chatgpt_calibration_v1,titulo_resumo
+rvc_l13_administrative_burden_process_design,W4307846395,duvida,parcial,Framework de implementation research potencialmente transferivel.,chatgpt_calibration_v1,titulo_resumo
+rvc_l13_administrative_burden_process_design,W2123592202,excluir,nao_relevante,Administracao transnacional distante da cadeia municipal.,chatgpt_calibration_v1,titulo_resumo
+rvc_l14_value_capture_public_value_equity,W1480754421,incluir,parcial,Debate adversarial sobre gentrificacao e efeitos distributivos.,chatgpt_calibration_v1,titulo_resumo
+rvc_l14_value_capture_public_value_equity,W2921909800,incluir,relevante,Deslocamento e impactos distributivos de redevelopment.,chatgpt_calibration_v1,titulo_resumo
+rvc_l15_adaptive_reuse_local_government,W4210548194,incluir,relevante,"Adaptive reuse, regeneracao e governanca.",chatgpt_calibration_v1,titulo_resumo
+rvc_l15_adaptive_reuse_local_government,W4295693576,incluir,relevante,Retrofit e regeneracao do estoque habitacional.,chatgpt_calibration_v1,titulo_resumo
+rvc_l16_urban_regeneration_governance_capacity,W2296261386,incluir,relevante,Estrategias de revitalizacao urbana e acao governamental.,chatgpt_calibration_v1,titulo_resumo
+rvc_l16_urban_regeneration_governance_capacity,W2007604345,duvida,parcial,Regeneracao e estrategias digitais; falta resumo para confirmar capacidade.,chatgpt_calibration_v1,titulo_resumo
+rvc_s01_norm_to_implementation,W2364068883,incluir,relevante,Falhas de supervisao local e reciclagem fundiaria.,chatgpt_calibration_v1,titulo_resumo
+rvc_s01_norm_to_implementation,W3040908881,incluir,relevante,"Restricoes organizacionais, recursos, comunicacao e implementacao local.",chatgpt_calibration_v1,titulo_resumo
+rvc_s02_resources_to_recurring_action,W7014561207,incluir,relevante,Aprendizagem de politica e capacidade organizacional.,chatgpt_calibration_v1,titulo_resumo
+rvc_s02_resources_to_recurring_action,W7098867481,duvida,parcial,Capacidades e rotinas em firmas; contribuicao teorica possivel.,chatgpt_calibration_v1,titulo_resumo
+rvc_s03_interface_bottlenecks,W1603486497,incluir,relevante,Informacao e implementacao interorganizacional sem autoridade unificada.,chatgpt_calibration_v1,titulo_resumo
+rvc_s03_interface_bottlenecks,W636419939,incluir,relevante,Processos multi-organizacionais de implementacao.,chatgpt_calibration_v1,titulo_resumo
+rvc_s04_removable_burden_process_design,W6976986152,excluir,nao_relevante,Arquivo suplementar sem contribuicao bibliografica autonoma.,chatgpt_calibration_v1,titulo_resumo
+rvc_s04_removable_burden_process_design,W6903852188,excluir,nao_relevante,Redesenho de processo empresarial privado.,chatgpt_calibration_v1,titulo_resumo
+rvc_s05_external_capacity_absorption,W2784079534,incluir,parcial,Externalizacao em governos locais; dependencia e capacidade externa.,chatgpt_calibration_v1,titulo_resumo
+rvc_s05_external_capacity_absorption,W2304293660,duvida,nao_relevante,Desempenho local sem conexao demonstrada com absorcao de capacidade externa.,chatgpt_calibration_v1,titulo_resumo
+rvc_s06_underused_land_public_value,W7064992516,incluir,relevante,"Friches, densificacao, infraestrutura e obstaculos de regeneracao.",chatgpt_calibration_v1,titulo_resumo
+rvc_s06_underused_land_public_value,W6996328219,incluir,relevante,Reuso de vazios arquitetonicos e densificacao.,chatgpt_calibration_v1,titulo_resumo
+rvc_s07_coercion_vs_enablement,W6885191489,duvida,parcial,Uso do solo e direitos de propriedade; mecanismo requer leitura integral.,chatgpt_calibration_v1,titulo_resumo
+rvc_s07_coercion_vs_enablement,W2726074863,incluir,relevante,Land readjustment e influencia dos proprietarios.,chatgpt_calibration_v1,titulo_resumo
+rvc_s08_automation_human_judgment,W4401639931,excluir,parcial,DSS ambiental sem administracao urbana ou salvaguardas institucionais centrais.,chatgpt_calibration_v1,titulo_resumo
+rvc_s08_automation_human_judgment,W3083603180,duvida,parcial,Geosynthesis automatizada; governanca e julgamento humano nao demonstrados.,chatgpt_calibration_v1,titulo_resumo
+rvc_s09_vacancy_to_intervention_chain,W3184536614,incluir,relevante,Transformacao e reuso de vazios urbanos.,chatgpt_calibration_v1,titulo_resumo
+rvc_s09_vacancy_to_intervention_chain,W3109746763,incluir,relevante,Inventario e mapeamento de propriedades abandonadas.,chatgpt_calibration_v1,titulo_resumo
+rvc_s10_priority_vs_readiness,W1991302975,incluir,relevante,Usos temporarios e valores positivos de espacos abandonados.,chatgpt_calibration_v1,titulo_resumo
+rvc_s10_priority_vs_readiness,W2412194962,incluir,relevante,"Registro de vazios com propriedade, situacao legal e ambiente.",chatgpt_calibration_v1,titulo_resumo
+rvc_s11_spatial_institutional_fit,W4416608028,incluir,relevante,Mismatch entre responsabilidades e capacidades municipais.,chatgpt_calibration_v1,titulo_resumo
+rvc_s11_spatial_institutional_fit,W137939734,incluir,relevante,"Desajuste entre territorios institucional, funcional e relacional.",chatgpt_calibration_v1,titulo_resumo
+rvc_s12_capacity_performance_results,W7125917768,incluir,relevante,"Capacidade institucional, implementacao e especificidade territorial.",chatgpt_calibration_v1,titulo_resumo
+rvc_s12_capacity_performance_results,W7202076476,incluir,parcial,Capacidade institucional e gaps de implementacao fora do urbano.,chatgpt_calibration_v1,titulo_resumo
+rvc_s13_land_policy_capacity_bridge,W2982031252,incluir,relevante,"Uso temporario, brownfields, regeneracao e atores.",chatgpt_calibration_v1,titulo_resumo
+rvc_s13_land_policy_capacity_bridge,W7137679313,incluir,relevante,"Monitoramento, avaliacao e instrumentos de governos locais.",chatgpt_calibration_v1,titulo_resumo
+rvc_s14_regeneration_distributional_safeguards,W3129615184,incluir,relevante,"Densificacao, valor, planejamento e impactos distributivos.",chatgpt_calibration_v1,titulo_resumo
+rvc_s14_regeneration_distributional_safeguards,W6888552947,incluir,relevante,"Regeneracao, habitacao, inclusao e controle da gentrificacao.",chatgpt_calibration_v1,titulo_resumo
+rvc_s15_land_value_creation_capture_governance,W2740258464,duvida,parcial,Sem resumo suficiente para confirmar land value capture.,chatgpt_calibration_v1,titulo_resumo
+rvc_s15_land_value_creation_capture_governance,W4367400320,incluir,relevante,Captura e reparticao de valor fundiario por atores publicos.,chatgpt_calibration_v1,titulo_resumo
+rvc_s16_institutional_learning_continuity,W7172104513,excluir,parcial,Manuscrito de divulgacao sobre memoria empresarial.,chatgpt_calibration_v1,titulo_resumo
+rvc_s16_institutional_learning_continuity,W2497693808,incluir,relevante,"Regras, rotinas e aprendizagem organizacional.",chatgpt_calibration_v1,titulo_resumo
+rvc_a01_compact_city_negative_null,W7098530540,incluir,parcial,Custos sociais e ambientais da forma urbana; nao necessariamente contraevidencia.,chatgpt_calibration_v1,titulo_resumo
+rvc_a01_compact_city_negative_null,W2041145432,incluir,relevante,Revisao empirica critica dos efeitos ambientais da cidade compacta.,chatgpt_calibration_v1,titulo_resumo
+rvc_a02_vacant_land_positive_functions,W7029880149,incluir,relevante,"Vazios como lugares potenciais, sustentabilidade e usos temporarios.",chatgpt_calibration_v1,titulo_resumo
+rvc_a02_vacant_land_positive_functions,W3081681682,incluir,relevante,Vazios urbanos como recursos potenciais e reuso.,chatgpt_calibration_v1,titulo_resumo
+rvc_a03_capacity_without_outcomes,W336980922,duvida,nao_relevante,"Mismatch espacial pertinente, mas nao testa capacidade forte sem resultados.",chatgpt_calibration_v1,titulo_resumo
+rvc_a03_capacity_without_outcomes,W2029066427,incluir,nao_relevante,"Importante para capacidade administrativa, mas nao e contraevidencia procurada.",chatgpt_calibration_v1,titulo_resumo
+rvc_a04_fragmentation_can_help,W7210272761,incluir,nao_relevante,"Fragmentacao e falhas de brokerage; relevante ao tema, mas oposto ao mecanismo procurado.",chatgpt_calibration_v1,titulo_resumo
+rvc_a04_fragmentation_can_help,W6925139581,incluir,relevante,Governanca policentrica como contraevidencia a centralizacao.,chatgpt_calibration_v1,titulo_resumo
+rvc_a05_digitalization_new_burdens,W7213326325,incluir,relevante,Digitalizacao administrativa e desafios de legalidade.,chatgpt_calibration_v1,titulo_resumo
+rvc_a05_digitalization_new_burdens,W3186929141,incluir,relevante,"IA administrativa, transparencia algoritmica e auditoria.",chatgpt_calibration_v1,titulo_resumo
+rvc_a06_coercive_land_policy_unintended,W2767726282,duvida,parcial,Violacoes construtivas e fracasso de planos; mecanismo coercivo requer texto.,chatgpt_calibration_v1,titulo_resumo
+rvc_a06_coercive_land_policy_unintended,W3109746763,incluir,nao_relevante,"Relevante ao corpus, mas nao a efeitos indesejados de coercao.",chatgpt_calibration_v1,titulo_resumo
+rvc_a07_regeneration_displacement,W7049342006,duvida,parcial,Regeneracao urbana sem resumo para confirmar deslocamento.,chatgpt_calibration_v1,titulo_resumo
+rvc_a07_regeneration_displacement,W3197533055,duvida,parcial,Regeneracao habitacional sem resumo para avaliar efeitos distributivos.,chatgpt_calibration_v1,titulo_resumo
+rvc_a08_more_capacity_not_solution,W2052895949,incluir,parcial,Problemas de medicao publica associados a objetivos e stakeholders.,chatgpt_calibration_v1,titulo_resumo
+rvc_a08_more_capacity_not_solution,W2027131,incluir,relevante,Redesenho institucional em vez de simplesmente mais administracao.,chatgpt_calibration_v1,titulo_resumo
+rvc_a09_land_reuse_not_best_option,W3184536614,incluir,nao_relevante,"Reuso de vazios pertinente, mas nao demonstra opcao inferior.",chatgpt_calibration_v1,titulo_resumo
+rvc_a09_land_reuse_not_best_option,W1593828861,duvida,nao_relevante,Redevelopment privado sem comparacao com alternativas.,chatgpt_calibration_v1,titulo_resumo
+rvc_a10_value_capture_limits,W212505123,duvida,parcial,"Problemas de valoracao potencialmente relevantes, sem resumo suficiente.",chatgpt_calibration_v1,titulo_resumo
+rvc_a10_value_capture_limits,W4417467290,incluir,relevante,Limites e distribuicao de custos na captura de valor.,chatgpt_calibration_v1,titulo_resumo
