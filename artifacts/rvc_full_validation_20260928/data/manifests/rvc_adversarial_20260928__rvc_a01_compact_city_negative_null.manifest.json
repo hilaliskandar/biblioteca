@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_adversarial",
+  "run_id": "rvc_adversarial_20260928",
+  "query_id": "rvc_a01_compact_city_negative_null",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T02:01:55+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_a01_compact_city_negative_null",
+    "search": "Empirical evidence that compact urban development, infill or densification did not reduce infrastructure costs, travel, carbon emissions or environmental impacts as expected, or produced important trade-offs that challenge simple claims about urban compactness and sustainability.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T02:02:09+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_adversarial_20260928__rvc_a01_compact_city_negative_null.jsonl",
+  "sha256": "138ac80250c2d0b6715ecb184c096a998083b3937872c32e22ea1b1c35695b62"
+}

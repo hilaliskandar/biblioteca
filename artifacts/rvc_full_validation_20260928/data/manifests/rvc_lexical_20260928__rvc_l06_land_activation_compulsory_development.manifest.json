@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_lexical",
+  "run_id": "rvc_lexical_20260928",
+  "query_id": "rvc_l06_land_activation_compulsory_development",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:52:16+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_l06_land_activation_compulsory_development",
+    "search": "(\"vacant land tax\" OR \"vacancy tax\" OR \"compulsory development\" OR \"compulsory building\" OR \"land activation\" OR \"land value taxation\" OR \"idle land\") AND (urban OR municipal OR local government)",
+    "mode": "lexical",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 200,
+    "progress_every": 50,
+    "sort_by": "relevance_score",
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:52:37+00:00",
+  "records_written": 200,
+  "raw_file": "data\\raw\\rvc_lexical_20260928__rvc_l06_land_activation_compulsory_development.jsonl",
+  "sha256": "b080b1a7878f7004c6b027cf1227a93f4cb2cc39fd90565d7427c6be16baaea4"
+}

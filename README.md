@@ -2,7 +2,7 @@
 
 > Pipeline Python reprodutível para identificar, preservar, deduplicar, exportar e triar literatura recuperada da API OpenAlex.
 
-Este repositório atende pessoas e automações: estratégias são YAMLs versionados; JSONL, manifestos, DuckDB, exportações e relatórios são produtos locais, reproduzíveis e não versionados.
+Este repositório atende pessoas e automações: estratégias são YAMLs versionados; JSONL, manifestos, DuckDB, exportações e relatórios são normalmente produtos locais reproduzíveis. Snapshots experimentais explicitamente identificados, como `artifacts/rvc_full_validation_20260928/`, podem ser versionados para análise, auditoria e caching; arquivos grandes usam Git LFS.
 
 ## Objetivo e fluxo
 

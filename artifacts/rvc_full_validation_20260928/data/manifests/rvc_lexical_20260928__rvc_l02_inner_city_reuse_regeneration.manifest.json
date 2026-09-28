@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_lexical",
+  "run_id": "rvc_lexical_20260928",
+  "query_id": "rvc_l02_inner_city_reuse_regeneration",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:50:52+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_l02_inner_city_reuse_regeneration",
+    "search": "(\"inner city\" OR \"city centre\" OR \"city center\" OR downtown OR \"central urban area\") AND (\"adaptive reuse\" OR regeneration OR revitalization OR rehabilitation OR \"urban recycling\" OR reoccupation OR reuse)",
+    "mode": "lexical",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 200,
+    "progress_every": 50,
+    "sort_by": "relevance_score",
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:51:14+00:00",
+  "records_written": 200,
+  "raw_file": "data\\raw\\rvc_lexical_20260928__rvc_l02_inner_city_reuse_regeneration.jsonl",
+  "sha256": "927192e1f031b3a86d14313f03673c9cf0a4ebde74b180920b701f9cdd962b2c"
+}

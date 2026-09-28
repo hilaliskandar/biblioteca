@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_lexical",
+  "run_id": "rvc_lexical_20260928",
+  "query_id": "rvc_l04_densification_compact_city_outcomes",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:51:33+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_l04_densification_compact_city_outcomes",
+    "search": "(densification OR \"compact city\" OR infill OR \"urban intensification\") AND (sustainability OR emissions OR accessibility OR infrastructure OR equity OR displacement OR affordability)",
+    "mode": "lexical",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 200,
+    "progress_every": 50,
+    "sort_by": "relevance_score",
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:51:54+00:00",
+  "records_written": 200,
+  "raw_file": "data\\raw\\rvc_lexical_20260928__rvc_l04_densification_compact_city_outcomes.jsonl",
+  "sha256": "7d370d5af6dc1e1d1866bcad543fd46bca4231137a757ac226c13ffbe97bb5d9"
+}

@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_bridges",
+  "run_id": "rvc_semantic_20260928",
+  "query_id": "rvc_s05_external_capacity_absorption",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:58:25+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_s05_external_capacity_absorption",
+    "search": "How local governments use expertise, data, technology or staff controlled by universities, consultants, public companies, higher levels of government or other organizations, and under what conditions those external resources are accessed, translated, absorbed, institutionalized and sustained as usable public-sector capability.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:58:33+00:00",
+  "records_written": 49,
+  "raw_file": "data\\raw\\rvc_semantic_20260928__rvc_s05_external_capacity_absorption.jsonl",
+  "sha256": "87469b0d27a49985cac8f5603ec00d994738e372e84d4391322806b46f063a96"
+}

@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_bridges",
+  "run_id": "rvc_semantic_20260928",
+  "query_id": "rvc_s06_underused_land_public_value",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:58:33+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_s06_underused_land_public_value",
+    "search": "Reuse or reoccupation of vacant and underused urban land and buildings that seeks to improve access to existing infrastructure, services and opportunities without assuming that higher density, more construction or higher real-estate values necessarily constitute better urban outcomes.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:59:00+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_semantic_20260928__rvc_s06_underused_land_public_value.jsonl",
+  "sha256": "79830dce5e0fb000b36e36fc0d3c84c5d021a26d87dae1935a95c67bb169dd24"
+}

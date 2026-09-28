@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_adversarial",
+  "run_id": "rvc_adversarial_20260928",
+  "query_id": "rvc_a03_capacity_without_outcomes",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T02:02:12+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_a03_capacity_without_outcomes",
+    "search": "Cases where governments with strong administrative, institutional or policy capacity implemented programs competently but nevertheless obtained weak, unequal or unintended territorial outcomes because of markets, context, private actors or downstream constraints.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T02:02:18+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_adversarial_20260928__rvc_a03_capacity_without_outcomes.jsonl",
+  "sha256": "fed427b2d1b99994b2d6b4303696956d3b7fde1bd2ca981bc70e4e1c4cd42366"
+}

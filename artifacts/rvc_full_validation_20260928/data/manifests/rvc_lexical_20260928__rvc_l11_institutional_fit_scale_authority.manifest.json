@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_lexical",
+  "run_id": "rvc_lexical_20260928",
+  "query_id": "rvc_l11_institutional_fit_scale_authority",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:53:58+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_l11_institutional_fit_scale_authority",
+    "search": "(\"institutional fit\" OR \"scale mismatch\" OR \"spatial fit\" OR \"institutional mismatch\" OR jurisdiction OR \"authority mismatch\") AND (governance OR planning OR urban OR \"land use\")",
+    "mode": "lexical",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 200,
+    "progress_every": 50,
+    "sort_by": "relevance_score",
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:54:21+00:00",
+  "records_written": 200,
+  "raw_file": "data\\raw\\rvc_lexical_20260928__rvc_l11_institutional_fit_scale_authority.jsonl",
+  "sha256": "7b25ab6e71a686a0800e3033703e2d1a575644732da0657bee4aea70b4991669"
+}

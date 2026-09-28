@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_bridges",
+  "run_id": "rvc_semantic_20260928",
+  "query_id": "rvc_s04_removable_burden_process_design",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:58:22+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_s04_removable_burden_process_design",
+    "search": "Administrative processes where implementation difficulty results from redundant procedures, unclear responsibilities, incompatible information systems, weak identifiers, duplicated checks or poorly designed workflows rather than from an intrinsic lack of organizational capacity, including evidence on process redesign and burden reduction.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:58:25+00:00",
+  "records_written": 49,
+  "raw_file": "data\\raw\\rvc_semantic_20260928__rvc_s04_removable_burden_process_design.jsonl",
+  "sha256": "518ad5835e5df0c69ac935d783712b18e8fd32f44d0f106e866aa7ccfad25b22"
+}

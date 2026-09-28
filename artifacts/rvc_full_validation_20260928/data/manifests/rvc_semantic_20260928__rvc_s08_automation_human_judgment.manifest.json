@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_bridges",
+  "run_id": "rvc_semantic_20260928",
+  "query_id": "rvc_s08_automation_human_judgment",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:59:43+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_s08_automation_human_judgment",
+    "search": "Automation, geospatial analysis, integrated data or decision-support systems that reduce repetitive administrative work in urban planning and land management while preserving human judgment, accountability, explainability, data governance, error correction and rights of appeal.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T02:00:15+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_semantic_20260928__rvc_s08_automation_human_judgment.jsonl",
+  "sha256": "4ae4456d255e427018eb921f1f1fe3bfa1f6c3b94299becffd98b3f9b1283526"
+}

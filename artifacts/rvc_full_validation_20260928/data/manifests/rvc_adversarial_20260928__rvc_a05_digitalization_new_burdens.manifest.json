@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_adversarial",
+  "run_id": "rvc_adversarial_20260928",
+  "query_id": "rvc_a05_digitalization_new_burdens",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T02:02:20+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_a05_digitalization_new_burdens",
+    "search": "Cases where automation, GIS, integrated data systems or digital decision tools in government increased administrative workload, produced errors at scale, reduced transparency, introduced maintenance burdens, reinforced exclusion or created new coordination and accountability problems.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T02:02:40+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_adversarial_20260928__rvc_a05_digitalization_new_burdens.jsonl",
+  "sha256": "25343b37fee85f77ade38ffb5560d8d3f1d29707b00ba2c230bc4242d6429f41"
+}

@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_lexical",
+  "run_id": "rvc_lexical_20260928",
+  "query_id": "rvc_l16_urban_regeneration_governance_capacity",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:55:49+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_l16_urban_regeneration_governance_capacity",
+    "search": "(\"urban regeneration\" OR \"urban revitalization\" OR \"central city regeneration\") AND (governance OR \"institutional capacity\" OR \"administrative capacity\" OR coordination OR implementation)",
+    "mode": "lexical",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 200,
+    "progress_every": 50,
+    "sort_by": "relevance_score",
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:56:12+00:00",
+  "records_written": 200,
+  "raw_file": "data\\raw\\rvc_lexical_20260928__rvc_l16_urban_regeneration_governance_capacity.jsonl",
+  "sha256": "d0037fbdad812614d13aa343c842ccc1781a582b38eeeae8c76e35664193d588"
+}

@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_bridges",
+  "run_id": "rvc_semantic_20260928",
+  "query_id": "rvc_s02_resources_to_recurring_action",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T01:58:05+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_s02_resources_to_recurring_action",
+    "search": "Research explaining why public organizations may possess staff, budgets, cadastral data, technology, contracts, expertise, and legal powers but still be unable to perform a public policy function consistently and repeatedly over time, and how resources become durable organizational capabilities through routines, responsibilities, documentation and learning.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T01:58:08+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_semantic_20260928__rvc_s02_resources_to_recurring_action.jsonl",
+  "sha256": "41d48da8dcfb8060837af336ed8c4144919d8155712dd56af301df90a8fc6bab"
+}

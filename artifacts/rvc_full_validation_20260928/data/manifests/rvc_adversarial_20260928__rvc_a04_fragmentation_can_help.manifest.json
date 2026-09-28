@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_adversarial",
+  "run_id": "rvc_adversarial_20260928",
+  "query_id": "rvc_a04_fragmentation_can_help",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T02:02:18+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_a04_fragmentation_can_help",
+    "search": "Evidence that decentralized, fragmented, polycentric or multi-organizational governance arrangements improved policy implementation, adaptability or problem solving rather than impairing coordination, including mechanisms that compensated for formal fragmentation.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T02:02:20+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_adversarial_20260928__rvc_a04_fragmentation_can_help.jsonl",
+  "sha256": "f7ff506e3b5366d8d65289447e4564844351f638a247b487d5c34c8dcbd2dee6"
+}

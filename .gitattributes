@@ -1,3 +1,5 @@
 * text=auto eol=lf
 *.ps1 text eol=crlf
 *.csv text eol=lf
+artifacts/rvc_full_validation_20260928/**/*.jsonl filter=lfs diff=lfs merge=lfs -text
+artifacts/rvc_full_validation_20260928/**/*.duckdb filter=lfs diff=lfs merge=lfs -text

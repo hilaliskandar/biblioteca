@@ -1,0 +1,5 @@
+strategy,run_id,occurrences,unique_works,unique_dois,seed_hits,seed_total
+lexical,rvc_lexical_20260928,3200,3004,2783,12,31
+semantic,rvc_semantic_20260928,794,756,442,1,31
+adversarial,rvc_adversarial_20260928,498,489,311,1,31
+combined,rvc_lexical_20260928+rvc_semantic_20260928+rvc_adversarial_20260928,4492,4157,3475,12,31

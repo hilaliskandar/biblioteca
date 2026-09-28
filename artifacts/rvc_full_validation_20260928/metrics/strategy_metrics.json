@@ -1,0 +1,38 @@
+[
+  {
+    "strategy": "lexical",
+    "run_id": "rvc_lexical_20260928",
+    "occurrences": 3200,
+    "unique_works": 3004,
+    "unique_dois": 2783,
+    "seed_hits": 12,
+    "seed_total": 31
+  },
+  {
+    "strategy": "semantic",
+    "run_id": "rvc_semantic_20260928",
+    "occurrences": 794,
+    "unique_works": 756,
+    "unique_dois": 442,
+    "seed_hits": 1,
+    "seed_total": 31
+  },
+  {
+    "strategy": "adversarial",
+    "run_id": "rvc_adversarial_20260928",
+    "occurrences": 498,
+    "unique_works": 489,
+    "unique_dois": 311,
+    "seed_hits": 1,
+    "seed_total": 31
+  },
+  {
+    "strategy": "combined",
+    "run_id": "rvc_lexical_20260928+rvc_semantic_20260928+rvc_adversarial_20260928",
+    "occurrences": 4492,
+    "unique_works": 4157,
+    "unique_dois": 3475,
+    "seed_hits": 12,
+    "seed_total": 31
+  }
+]

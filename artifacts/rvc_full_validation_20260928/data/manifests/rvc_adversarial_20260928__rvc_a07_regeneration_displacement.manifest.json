@@ -1,0 +1,43 @@
+{
+  "project_name": "revolucao_verde_cinza_semantic_adversarial",
+  "run_id": "rvc_adversarial_20260928",
+  "query_id": "rvc_a07_regeneration_displacement",
+  "source": "OpenAlex API via PyAlex",
+  "started_at": "2026-09-28T02:02:45+00:00",
+  "status": "completed",
+  "query": {
+    "id": "rvc_a07_regeneration_displacement",
+    "search": "Urban regeneration, revitalization, adaptive reuse, redevelopment or densification projects that improved the physical environment while increasing displacement, rents, exclusion, unequal access or loss of community uses.",
+    "mode": "semantic",
+    "from_publication_date": null,
+    "to_publication_date": null,
+    "types": [
+      "article",
+      "review",
+      "book-chapter",
+      "preprint"
+    ],
+    "languages": [],
+    "open_access_only": false,
+    "published_only": false,
+    "journal_only": false,
+    "has_abstract_only": false,
+    "has_doi_only": false,
+    "exclude_retracted": true,
+    "max_records": 50,
+    "progress_every": 25,
+    "sort_by": null,
+    "sort_order": "desc",
+    "metadata": {}
+  },
+  "software": {
+    "python": "3.12.3",
+    "pyalex": "0.21",
+    "python-dotenv": "1.1.1",
+    "PyYAML": "6.0.2"
+  },
+  "completed_at": "2026-09-28T02:03:15+00:00",
+  "records_written": 50,
+  "raw_file": "data\\raw\\rvc_adversarial_20260928__rvc_a07_regeneration_displacement.jsonl",
+  "sha256": "1533074af20d491ab7e999fa373e8d0ca78f8ddad1f5d57e2f5cb4de0d9d1968"
+}

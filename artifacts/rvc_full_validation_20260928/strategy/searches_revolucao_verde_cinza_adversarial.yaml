@@ -1,0 +1,96 @@
+project_name: revolucao_verde_cinza_semantic_adversarial
+
+# Buscas adversariais: destinam-se a localizar evidencias que tensionem,
+# qualifiquem ou contradigam as proposicoes do manuscrito.
+defaults:
+  from_publication_date: null
+  to_publication_date: null
+  types:
+    - article
+    - review
+    - book-chapter
+    - preprint
+  languages: []
+  open_access_only: false
+  max_records: 50
+
+queries:
+  - id: rvc_a01_compact_city_negative_null
+    mode: semantic
+    search: >-
+      Empirical evidence that compact urban development, infill or densification
+      did not reduce infrastructure costs, travel, carbon emissions or
+      environmental impacts as expected, or produced important trade-offs that
+      challenge simple claims about urban compactness and sustainability.
+
+  - id: rvc_a02_vacant_land_positive_functions
+    mode: semantic
+    search: >-
+      Evidence that vacant, informal, residual or underused urban land provides
+      ecological, social, recreational, cultural or community functions that
+      would be diminished or lost through conventional redevelopment or
+      intensification.
+
+  - id: rvc_a03_capacity_without_outcomes
+    mode: semantic
+    search: >-
+      Cases where governments with strong administrative, institutional or policy
+      capacity implemented programs competently but nevertheless obtained weak,
+      unequal or unintended territorial outcomes because of markets, context,
+      private actors or downstream constraints.
+
+  - id: rvc_a04_fragmentation_can_help
+    mode: semantic
+    search: >-
+      Evidence that decentralized, fragmented, polycentric or multi-organizational
+      governance arrangements improved policy implementation, adaptability or
+      problem solving rather than impairing coordination, including mechanisms
+      that compensated for formal fragmentation.
+
+  - id: rvc_a05_digitalization_new_burdens
+    mode: semantic
+    search: >-
+      Cases where automation, GIS, integrated data systems or digital decision
+      tools in government increased administrative workload, produced errors at
+      scale, reduced transparency, introduced maintenance burdens, reinforced
+      exclusion or created new coordination and accountability problems.
+
+  - id: rvc_a06_coercive_land_policy_unintended
+    mode: semantic
+    search: >-
+      Evidence that taxes, compulsory development obligations, vacancy penalties,
+      land-use enforcement or other coercive instruments aimed at activating
+      vacant or underused urban property produced avoidance, litigation,
+      speculation, displacement, premature development or other unintended effects.
+
+  - id: rvc_a07_regeneration_displacement
+    mode: semantic
+    search: >-
+      Urban regeneration, revitalization, adaptive reuse, redevelopment or
+      densification projects that improved the physical environment while
+      increasing displacement, rents, exclusion, unequal access or loss of
+      community uses.
+
+  - id: rvc_a08_more_capacity_not_solution
+    mode: semantic
+    search: >-
+      Public-sector implementation problems in which adding staff, money,
+      technology or expertise did not resolve the problem because the main cause
+      was institutional design, incentives, authority, conflicting goals,
+      political vetoes, process architecture or lack of demand.
+
+  - id: rvc_a09_land_reuse_not_best_option
+    mode: semantic
+    search: >-
+      Cases where redevelopment or intensification of vacant or underused urban
+      sites was rejected or performed worse than alternatives such as temporary
+      use, open space, ecological restoration, community use, preservation or
+      leaving land undeveloped.
+
+  - id: rvc_a10_value_capture_limits
+    mode: semantic
+    search: >-
+      Evidence on limitations, failures or distributional problems of land value
+      capture, negotiated development obligations or upzoning-based public
+      benefits, including uncertainty in valuation, bargaining asymmetry,
+      implementation capacity and unrealized projected land values.
