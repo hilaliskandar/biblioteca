@@ -1,0 +1,40 @@
+openalex_id,label,stage,exclusion_reason,notes
+W4224660086,incluir,titulo_resumo,,targeted_v2; query=rvc_l02_inner_city_reuse_regeneration; query_relevance=relevante; Conservacao e adaptive reuse de centro historico.
+W420509186,incluir,titulo_resumo,,targeted_v2; query=rvc_l02_inner_city_reuse_regeneration; query_relevance=relevante; Capacidade institucional aplicada a regeneracao de centro urbano.
+W2065090331,incluir,titulo_resumo,,"targeted_v2; query=rvc_l02_inner_city_reuse_regeneration; query_relevance=relevante; Revitalizacao de inner-city, gentrificacao e deslocamento."
+W2088848761,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_l04_densification_compact_city_outcomes; query_relevance=nao_relevante; Vulnerabilidade estrutural de edificios; falso positivo lexical.
+W2902282079,incluir,titulo_resumo,,"targeted_v2; query=rvc_l04_densification_compact_city_outcomes; query_relevance=relevante; Cidade compacta, densificacao e equilibrio entre metas sociais, ambientais e economicas."
+W2097205878,incluir,titulo_resumo,,targeted_v2; query=rvc_l04_densification_compact_city_outcomes; query_relevance=parcial; Impactos ambientais de mudanca de uso/cobertura urbana; conexao indireta com forma urbana.
+W2133575279,excluir,titulo_resumo,fora_escopo,"targeted_v2; query=rvc_l08_land_policy_implementation; query_relevance=nao_relevante; Agricultura climate-smart, fora da politica fundiaria urbana."
+W2137798415,excluir,titulo_resumo,fora_escopo,"targeted_v2; query=rvc_l08_land_policy_implementation; query_relevance=parcial; Planos locais costeiros e wetlands; tema territorial, mas fora do mecanismo central."
+W3022976335,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_l08_land_policy_implementation; query_relevance=nao_relevante; Implementation gap em agricultura sustentavel.
+W420509186,incluir,titulo_resumo,,targeted_v2; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=relevante; Capacidade institucional para regeneracao de centro urbano.
+W3133690142,incluir,titulo_resumo,,targeted_v2; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=relevante; Governos urbanos em governanca multinivel de sustentabilidade.
+W3210742149,incluir,titulo_resumo,,targeted_v2; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=relevante; Policy capacity de cidades europeias e governanca multinivel.
+W1515984629,incluir,titulo_resumo,,targeted_v2; query=rvc_l10_interorganizational_coordination_urban; query_relevance=relevante; Brokers entre escalas e governanca em rede de servicos ecossistemicos urbanos.
+W1973807100,incluir,titulo_resumo,,targeted_v2; query=rvc_l10_interorganizational_coordination_urban; query_relevance=parcial; Regras institucionais e desempenho de arranjos colaborativos locais.
+W1515219588,incluir,titulo_resumo,,"targeted_v2; query=rvc_l12_digital_planning_gis_automation; query_relevance=relevante; Planejamento online, e-participacao e GIS em governos locais."
+W2164998768,incluir,titulo_resumo,,targeted_v2; query=rvc_l12_digital_planning_gis_automation; query_relevance=relevante; GIS e analise multicriterio para decisao em gestao da terra.
+W2767234824,incluir,titulo_resumo,,targeted_v2; query=rvc_l12_digital_planning_gis_automation; query_relevance=relevante; Ferramenta GIS de apoio a decisao e planejamento urbano.
+W2167596287,incluir,titulo_resumo,,targeted_v2; query=rvc_l13_administrative_burden_process_design; query_relevance=parcial; Colaboracao na gestao de contratos publicos; relevante a arranjos e monitoramento.
+W1977329497,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_l13_administrative_burden_process_design; query_relevance=nao_relevante; Cinismo cidadao sem relacao com onus administrativo ou desenho de processos.
+W968399513,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_s04_removable_burden_process_design; query_relevance=nao_relevante; Business process redesign privado e sistemas empresariais.
+W6968023238,incluir,titulo_resumo,,targeted_v2; query=rvc_s04_removable_burden_process_design; query_relevance=relevante; Otimizacao de carga administrativa em orgao publico; procedimentos e simplificacao.
+W7073596674,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_s04_removable_burden_process_design; query_relevance=nao_relevante; Heuristicas de business process redesign sem setor publico.
+W1790211156,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_s08_automation_human_judgment; query_relevance=nao_relevante; Material promocional/tecnico sobre integracao Autodesk e GIS.
+W2587982871,excluir,titulo_resumo,fora_escopo,"targeted_v2; query=rvc_s08_automation_human_judgment; query_relevance=parcial; Automacao de correcao de dados espaciais sem julgamento, governanca ou administracao publica."
+W2220814662,incluir,titulo_resumo,,targeted_v2; query=rvc_a03_capacity_without_outcomes; query_relevance=parcial; Aprendizagem em contracting out local e efeitos positivos/negativos sobre metas.
+W7207198379,incluir,titulo_resumo,,targeted_v2; query=rvc_a03_capacity_without_outcomes; query_relevance=relevante; Falhas e efeitos inesperados em politica de restituicao de terras.
+W2172450905,incluir,titulo_resumo,,targeted_v2; query=rvc_a03_capacity_without_outcomes; query_relevance=relevante; Politica municipal tecnicamente apoiada com resultados exiguos e descontinuidade.
+W7123732289,incluir,titulo_resumo,,"targeted_v2; query=rvc_a04_fragmentation_can_help; query_relevance=relevante; Descentralizacao gera custos de coordenacao, mas tambem legitimidade e conexoes politicas."
+W2359374159,incluir,titulo_resumo,,targeted_v2; query=rvc_a04_fragmentation_can_help; query_relevance=relevante; Mecanismo policentrico de producao de politica e suas vantagens/deficiencias.
+W6885191489,incluir,titulo_resumo,,targeted_v2; query=rvc_a06_coercive_land_policy_unintended; query_relevance=parcial; Planos de uso do solo sob perspectiva de direitos de propriedade; possiveis efeitos sobre desenvolvimento.
+W4312506842,incluir,titulo_resumo,,targeted_v2; query=rvc_a06_coercive_land_policy_unintended; query_relevance=parcial; Nao aplicacao do PEUC e entraves municipais; relevante embora nao trate apenas efeitos indesejados da coercao.
+W7029995069,incluir,titulo_resumo,,"targeted_v2; query=rvc_a07_regeneration_displacement; query_relevance=relevante; Regeneracao, desapropriacao e deslocamento de migrantes."
+W3141563335,incluir,titulo_resumo,,"targeted_v2; query=rvc_a07_regeneration_displacement; query_relevance=relevante; Redensificacao, conflitos e procedimentos de intervencao urbana."
+W4232935426,incluir,titulo_resumo,,targeted_v2; query=rvc_a09_land_reuse_not_best_option; query_relevance=relevante; Redevelopment de downtown e resistencia comunitaria.
+W2142581535,incluir,titulo_resumo,,targeted_v2; query=rvc_a09_land_reuse_not_best_option; query_relevance=relevante; Uso temporario de terrenos vagos e legado de longo prazo.
+W2036979848,incluir,titulo_resumo,,targeted_v2; query=rvc_a09_land_reuse_not_best_option; query_relevance=relevante; Ferramenta comunitaria para avaliar adequacao de reuso temporario de terrenos vagos.
+W3045818249,incluir,titulo_resumo,,targeted_v2; query=rvc_a10_value_capture_limits; query_relevance=relevante; Dificuldades praticas e teoricas da captura de valorizacao fundiaria.
+W4387635024,incluir,titulo_resumo,,targeted_v2; query=rvc_a10_value_capture_limits; query_relevance=relevante; Captura de valor na Colombia limitada por resistencia e capacidade administrativa local.
+W4387635040,incluir,titulo_resumo,,"targeted_v2; query=rvc_a10_value_capture_limits; query_relevance=relevante; Instrumentos de captura no Peru e obstaculos cadastrais, tecnicos, politicos e orcamentarios."
