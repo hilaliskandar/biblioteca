@@ -1,0 +1,85 @@
+openalex_id,decision,exclusion_reason,notes
+W3125603239,incluir,,Calibracao RVC 01 B001: Contraevidência diretamente pertinente sobre compacidade e emissões.
+W2616908496,incluir,,"Calibracao RVC 01 B002: Compara cidade compacta, qualidade de vida e sustentabilidade."
+W7037364064,incluir,,Calibracao RVC 01 B003: Vazios urbanos com funções ecológicas e sociais; relevante para evitar equivaler vazio a desperdício.
+W3081681682,incluir,,Calibracao RVC 01 B004: Vazios urbanos tratados como recurso e objeto de reutilização.
+W7099214224,,,"Calibracao RVC 01 B005: Governança em domínios congestionados é conceitualmente pertinente, mas o resumo é insuficiente para aferir contribuição à cadeia estudada."
+W2172450905,,,"Calibracao RVC 01 B006: Caso municipal de implementação com barreiras políticas; potencialmente transferível, mas setor substantivo distante."
+W1600218603,incluir,,Calibracao RVC 01 B007: Coordenação multiescalar e governança policêntrica úteis ao problema de fit e interfaces.
+W4236039149,,,Calibracao RVC 01 B008: Referência conceitual de policentrismo; utilidade depende da leitura integral.
+W3171015974,incluir,,"Calibracao RVC 01 B009: Automação administrativa, explicabilidade, recurso e accountability são centrais ao quadro normativo da tese."
+W4408970457,incluir,,Calibracao RVC 01 B010: Mostra cadeias decisórias distribuídas e novos ônus administrativos em governo digital.
+W3121736425,incluir,,Calibracao RVC 01 B011: Testa efeitos não intencionais de desenvolvimento compulsório em lotes vagos.
+W2800503993,incluir,,"Calibracao RVC 01 B012: Instrumentos urbanísticos, distribuição de cargas/benefícios e transferência de potencial construtivo."
+W4237630372,incluir,,Calibracao RVC 01 B013: Regeneração urbana e necessidade de intervenção pública em áreas degradadas.
+W3141563335,incluir,,"Calibracao RVC 01 B014: Redensificação, conflitos e procedimento urbanístico diretamente relacionados ao objeto."
+W2380493633,incluir,,Calibracao RVC 01 B015: Capacidade administrativa e execução em órgãos locais são pertinentes ao núcleo institucional.
+W1834757036,incluir,,Calibracao RVC 01 B016: Implementação de inovação municipal e diferença entre solução formal e implementação efetiva.
+W7059904043,incluir,,"Calibracao RVC 01 B017: Reuso, conservação de solo, contenção do sprawl e urban redevelopment."
+W2807215459,incluir,,"Calibracao RVC 01 B018: Funções ecológicas, estéticas e sociais de terrenos vagos; forte contraevidência a intervenções automáticas."
+W3199288865,incluir,,Calibracao RVC 01 B019: Barreiras e potencial de captura pública de valorização vinculada ao planejamento.
+W4387635025,incluir,,"Calibracao RVC 01 B020: Capacidade administrativa, coordenação e resistência de proprietários limitando captura de valor."
+W2025051877,excluir,fora_escopo,Calibracao RVC 01 B021: Agricultura urbana e segurança alimentar; relação apenas indireta com o problema central.
+W2895334654,incluir,,"Calibracao RVC 01 B022: Compacidade, áreas verdes e bem-estar; útil para qualificar resultados de sustentabilidade."
+W2043531356,incluir,,"Calibracao RVC 01 B023: Governança, regeneração urbana e exclusão social em área central."
+W2322296010,excluir,fora_escopo,Calibracao RVC 01 B024: Química orgânica; falso positivo lexical.
+W1968381721,incluir,,Calibracao RVC 01 B025: Brownfields como categoria territorial diretamente pertinente.
+W2907777557,,,"Calibracao RVC 01 B026: Governança colaborativa de soluções baseadas na natureza é transferível, mas não trata diretamente subutilização/reocupação."
+W2075941419,incluir,,"Calibracao RVC 01 B027: Evidência sobre cidade compacta, proximidade e deslocamentos."
+W2895334654,incluir,,"Calibracao RVC 01 B028: Compacidade, áreas verdes e bem-estar; duplicata amostral do mesmo registro, com decisão consistente."
+W1605089624,incluir,,"Calibracao RVC 01 B029: Expansão urbana, perda de solo periurbano, infraestrutura e gestão."
+W2949168113,,,"Calibracao RVC 01 B030: Sprawl e sistemas alimentares; pertinente ao custo territorial da expansão, mas distante da cadeia de instrumentos."
+W2799692394,excluir,fora_escopo,Calibracao RVC 01 B031: Tributação local geral sem relação suficiente com propriedade urbana ou ativação fundiária.
+W3089467419,incluir,,Calibracao RVC 01 B032: Efeitos distributivos negativos de estratégias urbanas de desenvolvimento.
+W2588010313,incluir,,Calibracao RVC 01 B033: Função social da propriedade urbana e instrumentos de planejamento municipal.
+W2972366131,incluir,,"Calibracao RVC 01 B034: Expansão urbana, plano diretor e distância entre norma e implementação."
+W2103289420,excluir,fora_escopo,Calibracao RVC 01 B035: Geotermia; falso positivo.
+W2612293227,incluir,,Calibracao RVC 01 B036: Governança urbana e capacidade de transformação espacial em governo metropolitano.
+W1894275483,incluir,,Calibracao RVC 01 B037: Capacidade administrativa municipal e desempenho de pequenas localidades.
+W2796131283,,,"Calibracao RVC 01 B038: Capacidade estatal e coerção local são conceitualmente pertinentes, mas o mecanismo substantivo é distante."
+W1937792862,incluir,,Calibracao RVC 01 B039: Rede interorganizacional e coordenação; útil ao diagnóstico de interfaces.
+W2980963836,incluir,,"Calibracao RVC 01 B040: Integra planejamento, implementação e interfaces profissionais em infraestrutura urbana."
+W2139608255,incluir,,Calibracao RVC 01 B041: Jurisdição e escala fornecem base teórica ao fit de autoridade e territorial.
+W4240225561,incluir,,"Calibracao RVC 01 B042: Instituições, propriedade, infraestrutura e governança na transformação urbana."
+W1578122567,incluir,,Calibracao RVC 01 B043: Tecnologia em governo local com efeitos de carga de trabalho e integração de sistemas.
+W3005359275,,,"Calibracao RVC 01 B044: Gestão de dados geoespaciais é relevante como infraestrutura técnica, mas não demonstra integração organizacional pública."
+W2052644524,excluir,fora_escopo,Calibracao RVC 01 B045: Organização de protestos em redes; fora do escopo administrativo e urbano da tese.
+W3036271890,,,"Calibracao RVC 01 B046: Arquitetura intergovernamental e implementação são transferíveis, mas o caso é resposta fiscal à COVID-19."
+W2518216031,incluir,,Calibracao RVC 01 B047: Redevelopment/place-making com questão explícita de equidade.
+W3040314202,incluir,,"Calibracao RVC 01 B048: Reurbanização, desapropriação, participação, compensação e efeitos distributivos."
+W2793913024,excluir,fora_escopo,Calibracao RVC 01 B049: Retrofit energético e modelos de negócio; não aborda reutilização urbana/institucional no sentido da tese.
+W3122783266,excluir,fora_escopo,Calibracao RVC 01 B050: Retrofit estritamente energético/tecnológico.
+W2097129640,incluir,,Calibracao RVC 01 B051: Governança em rede aplicada diretamente à regeneração urbana.
+W2621532839,incluir,,Calibracao RVC 01 B052: Implementação de regeneração e preservação patrimonial em área central.
+W2378020872,incluir,,Calibracao RVC 01 B053: Barreiras de implementação em governo local.
+W3040908881,incluir,,Calibracao RVC 01 B054: Restrições organizacionais e implementação municipal de políticas de sustentabilidade.
+W6992775742,incluir,,Calibracao RVC 01 B055: Microfundamentos de rotinas e capacidades; base conceitual para conversão de recursos em prática recorrente.
+W6925111679,incluir,,"Calibracao RVC 01 B056: Arquitetura organizacional e efeitos de fronteiras, expertise e desenho formal no setor público."
+W2273128667,incluir,,"Calibracao RVC 01 B057: Implementação de política metropolitana, interdependências e instrumentos."
+W2912887838,incluir,,Calibracao RVC 01 B058: Coordenação de redes complexas na implementação pública.
+W2550514443,excluir,fora_escopo,Calibracao RVC 01 B059: Redesenho de processos em manufatura privada; distância excessiva do objeto público.
+W2889978109,excluir,fora_escopo,"Calibracao RVC 01 B060: Reestruturação empresarial genérica, sem vínculo demonstrado com administração pública."
+W89143870,incluir,,"Calibracao RVC 01 B061: Competências, recursos, TIC e formas de gestão em governos locais."
+W2784079534,incluir,,Calibracao RVC 01 B062: Externalização e flexibilidade de gestão em governos locais; útil à capacidade externa/dependência.
+W7024044040,incluir,,"Calibracao RVC 01 B063: Reutilização de áreas industriais e infraestruturais desativadas, densificação e espaço público."
+W2735019093,,,"Calibracao RVC 01 B064: Defende reuso do construído e liderança pública, mas o caso específico é uma estação de esqui."
+W3121736425,incluir,,Calibracao RVC 01 B065: Mesmo registro de B011; coerção versus viabilização diretamente pertinente.
+W3122655688,incluir,,"Calibracao RVC 01 B066: Anticommons, montagem fundiária, vacância e ação municipal; muito aderente à hipótese de obstáculos distintos."
+W2010011,incluir,,"Calibracao RVC 01 B067: Sistema de apoio à decisão com GIS em licenciamento ambiental; pertinente a automação, triagem e julgamento."
+W3028764531,excluir,fora_escopo,Calibracao RVC 01 B068: Geoportal para turismo; tecnologia sem relação suficiente com planejamento administrativo estudado.
+W2110206345,incluir,,Calibracao RVC 01 B069: Uso temporário de imóveis/terrenos vagos e incorporação à política de desenvolvimento urbano.
+W3003437902,incluir,,Calibracao RVC 01 B070: Mede duração da vacância para priorização de regeneração; forte aderência metodológica.
+W2412194962,incluir,,Calibracao RVC 01 B071: Registro e qualificação de áreas subutilizadas para transformação urbana.
+W4285377168,incluir,,"Calibracao RVC 01 B072: Agenda conceitual sobre ruínas, vacância e uso como recurso/comum."
+W7048425878,incluir,,Calibracao RVC 01 B073: Descompasso entre escalas territoriais e cooperação institucional metropolitana.
+W2905093732,incluir,,Calibracao RVC 01 B074: Cooperação intermunicipal e governança em escala intermediária.
+W2483146507,incluir,,"Calibracao RVC 01 B075: Capacidade estatal, durabilidade institucional e conexão entre gestão interna e ambiente externo."
+W4388471386,incluir,,Calibracao RVC 01 B076: Capacidades dinâmicas como mediação entre reforma e desempenho no setor público.
+W7026738261,incluir,,"Calibracao RVC 01 B077: Regeneração de periferias, parcerias e capacity building em política urbana."
+W2777533711,incluir,,"Calibracao RVC 01 B078: Brownfields convertidos em ativos públicos; instrumentos, políticas e regulação comparada."
+W4237630372,incluir,,Calibracao RVC 01 B079: Mesmo registro de B013; regeneração urbana diretamente pertinente.
+W7056081474,incluir,,"Calibracao RVC 01 B080: Densificação, renovação urbana, equilíbrio entre interesses privados e objetivos públicos."
+W2801669545,incluir,,Calibracao RVC 01 B081: Relação entre valor imobiliário e valor público/local authority funding.
+W4387635026,incluir,,"Calibracao RVC 01 B082: Instrumentos de captura de valor e obstáculos políticos, jurídicos e institucionais."
+W2483911611,incluir,,Calibracao RVC 01 B083: Rotinas estruturadas como proteção da aprendizagem organizacional diante de turnover.
+W635739483,incluir,,Calibracao RVC 01 B084: Memória e aprendizagem organizacional; mecanismo conceitualmente central à institucionalização.
