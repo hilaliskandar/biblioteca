@@ -15,7 +15,6 @@ W3161325760,incluir,titulo_resumo,,"calibration_v1; query=rvc_l07_peuc_funcao_so
 W3000432338,excluir,titulo_resumo,fora_escopo,calibration_v1; query=rvc_l08_land_policy_implementation; query_relevance=nao_relevante; Governanca de conservacao da biodiversidade sem politica fundiaria urbana.
 W2796780570,excluir,titulo_resumo,fora_escopo,calibration_v1; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=nao_relevante; Direito eleitoral local sem capacidade institucional.
 W2782956089,excluir,titulo_resumo,fora_escopo,calibration_v1; query=rvc_l10_interorganizational_coordination_urban; query_relevance=nao_relevante; Governanca colaborativa em supply chain privada.
-W3036307967,incluir,titulo_resumo,,calibration_v1; query=rvc_l11_institutional_fit_scale_authority; query_relevance=relevante; Mismatch entre territorios funcionais e limites municipais.
 W2137798415,excluir,titulo_resumo,fora_escopo,calibration_v1; query=rvc_l12_digital_planning_gis_automation; query_relevance=nao_relevante; Planejamento costeiro sem foco em digitalizacao ou capacidade.
 W2123592202,excluir,titulo_resumo,fora_escopo,calibration_v1; query=rvc_l13_administrative_burden_process_design; query_relevance=nao_relevante; Administracao transnacional distante da cadeia municipal.
 W1480754421,incluir,titulo_resumo,,calibration_v1; query=rvc_l14_value_capture_public_value_equity; query_relevance=parcial; Debate adversarial sobre gentrificacao e efeitos distributivos.
@@ -43,7 +42,6 @@ W4416608028,incluir,titulo_resumo,,calibration_v1; query=rvc_s11_spatial_institu
 W137939734,incluir,titulo_resumo,,"calibration_v1; query=rvc_s11_spatial_institutional_fit; query_relevance=relevante; Desajuste entre territorios institucional, funcional e relacional."
 W7125917768,incluir,titulo_resumo,,"calibration_v1; query=rvc_s12_capacity_performance_results; query_relevance=relevante; Capacidade institucional, implementacao e especificidade territorial."
 W7202076476,incluir,titulo_resumo,,calibration_v1; query=rvc_s12_capacity_performance_results; query_relevance=parcial; Capacidade institucional e gaps de implementacao fora do urbano.
-W2982031252,incluir,titulo_resumo,,"calibration_v1; query=rvc_s13_land_policy_capacity_bridge; query_relevance=relevante; Uso temporario, brownfields, regeneracao e atores."
 W7137679313,incluir,titulo_resumo,,"calibration_v1; query=rvc_s13_land_policy_capacity_bridge; query_relevance=relevante; Monitoramento, avaliacao e instrumentos de governos locais."
 W3129615184,incluir,titulo_resumo,,"calibration_v1; query=rvc_s14_regeneration_distributional_safeguards; query_relevance=relevante; Densificacao, valor, planejamento e impactos distributivos."
 W6888552947,incluir,titulo_resumo,,"calibration_v1; query=rvc_s14_regeneration_distributional_safeguards; query_relevance=relevante; Regeneracao, habitacao, inclusao e controle da gentrificacao."
@@ -59,8 +57,6 @@ W7210272761,incluir,titulo_resumo,,"calibration_v1; query=rvc_a04_fragmentation_
 W6925139581,incluir,titulo_resumo,,calibration_v1; query=rvc_a04_fragmentation_can_help; query_relevance=relevante; Governanca policentrica como contraevidencia a centralizacao.
 W7213326325,incluir,titulo_resumo,,calibration_v1; query=rvc_a05_digitalization_new_burdens; query_relevance=relevante; Digitalizacao administrativa e desafios de legalidade.
 W3186929141,incluir,titulo_resumo,,"calibration_v1; query=rvc_a05_digitalization_new_burdens; query_relevance=relevante; IA administrativa, transparencia algoritmica e auditoria."
-W3109746763,incluir,titulo_resumo,,"calibration_v1; query=rvc_a06_coercive_land_policy_unintended; query_relevance=nao_relevante; Relevante ao corpus, mas nao a efeitos indesejados de coercao."
 W2052895949,incluir,titulo_resumo,,calibration_v1; query=rvc_a08_more_capacity_not_solution; query_relevance=parcial; Problemas de medicao publica associados a objetivos e stakeholders.
 W2027131,incluir,titulo_resumo,,calibration_v1; query=rvc_a08_more_capacity_not_solution; query_relevance=relevante; Redesenho institucional em vez de simplesmente mais administracao.
-W3184536614,incluir,titulo_resumo,,"calibration_v1; query=rvc_a09_land_reuse_not_best_option; query_relevance=nao_relevante; Reuso de vazios pertinente, mas nao demonstra opcao inferior."
 W4417467290,incluir,titulo_resumo,,calibration_v1; query=rvc_a10_value_capture_limits; query_relevance=relevante; Limites e distribuicao de custos na captura de valor.
