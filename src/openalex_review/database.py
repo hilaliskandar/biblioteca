@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 import json
+import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -25,6 +27,7 @@ def _require_duckdb():
 
 
 CONTROL_TABLES = ("screening_decisions", "screening_resolutions", "reading_status", "evidence_notes")
+WORK_INSERT_BATCH_SIZE = 1000
 
 
 def _existing_control_rows(db_path: Path, duckdb) -> dict[str, list[tuple]]:
@@ -147,8 +150,35 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         )
         """
     )
-    insert_sql = "INSERT INTO works_stage VALUES (" + ",".join(["?"] * 32) + ")"
     columns = [row[1] for row in con.execute("PRAGMA table_info('works_stage')").fetchall()]
+
+    def copy_rows(table_name: str, rows) -> None:
+        rows = list(rows)
+        if not rows:
+            return
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", newline="", suffix=".csv", delete=False
+        ) as batch_file:
+            writer = csv.writer(batch_file)
+            for row in rows:
+                writer.writerow(["\\N" if value is None else value for value in row])
+            batch_path = Path(batch_file.name)
+        escaped_path = str(batch_path).replace("'", "''")
+        try:
+            con.execute(
+                f"COPY {table_name} FROM '{escaped_path}' "
+                "(FORMAT CSV, HEADER FALSE, NULL '\\N')"
+            )
+        finally:
+            batch_path.unlink(missing_ok=True)
+
+    work_rows: list[list] = []
+
+    def flush_work_rows() -> None:
+        if work_rows:
+            copy_rows("works_stage", work_rows)
+            work_rows.clear()
+
     for path in raw_files:
         run_id, query_id = parse_raw_filename(path)
         with path.open("r", encoding="utf-8") as stream:
@@ -158,7 +188,9 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                 try:
                     record = json.loads(line)
                     normalized = normalize_work(record, run_id=run_id, query_id=query_id, rank=rank)
-                    con.execute(insert_sql, [normalized[column] for column in columns])
+                    work_rows.append([normalized[column] for column in columns])
+                    if len(work_rows) >= WORK_INSERT_BATCH_SIZE:
+                        flush_work_rows()
                     authorship_rows.extend(
                         (
                             normalized["record_key"],
@@ -236,6 +268,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                             ensure_ascii=False,
                         )
                     )
+    flush_work_rows()
     con.execute(
         """
         CREATE TABLE works AS
@@ -275,9 +308,9 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         elif relationship[4] and not previous[4]:
             relationship_rows[relationship_key] = (*previous[:4], True)
     if author_rows:
-        con.executemany("INSERT INTO authors VALUES (?, ?, ?, ?, ?)", author_rows.values())
+        copy_rows("authors", author_rows.values())
     if relationship_rows:
-        con.executemany("INSERT INTO work_authors VALUES (?, ?, ?, ?, ?)", relationship_rows.values())
+        copy_rows("work_authors", relationship_rows.values())
     con.execute(
         """
         CREATE TABLE institutions (
@@ -301,13 +334,9 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         relationship_key = (record_key, institution_id, author_id)
         institution_relationships.setdefault(relationship_key, relationship_key)
     if institution_rows:
-        con.executemany(
-            "INSERT INTO institutions VALUES (?, ?, ?, ?, ?, ?, ?)", institution_rows.values()
-        )
+        copy_rows("institutions", institution_rows.values())
     if institution_relationships:
-        con.executemany(
-            "INSERT INTO work_institutions VALUES (?, ?, ?)", institution_relationships.values()
-        )
+        copy_rows("work_institutions", institution_relationships.values())
     con.execute(
         """
         CREATE TABLE sources (
@@ -329,13 +358,9 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         source_entities.setdefault(source_id, (source_id, *source_values))
         source_relationships.setdefault((record_key, source_id), (record_key, source_id))
     if source_entities:
-        con.executemany(
-            "INSERT INTO sources VALUES (?, ?, ?, ?, ?, ?)", source_entities.values()
-        )
+        copy_rows("sources", source_entities.values())
     if source_relationships:
-        con.executemany(
-            "INSERT INTO work_sources VALUES (?, ?)", source_relationships.values()
-        )
+        copy_rows("work_sources", source_relationships.values())
     con.execute(
         """
         CREATE TABLE keywords (
@@ -361,11 +386,9 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         ):
             keyword_relationships[relationship_key] = relationship_key + (score,)
     if keyword_entities:
-        con.executemany("INSERT INTO keywords VALUES (?, ?, ?)", keyword_entities.values())
+        copy_rows("keywords", keyword_entities.values())
     if keyword_relationships:
-        con.executemany(
-            "INSERT INTO work_keywords VALUES (?, ?, ?, ?)", keyword_relationships.values()
-        )
+        copy_rows("work_keywords", keyword_relationships.values())
     con.execute(
         """
         CREATE TABLE topics (
@@ -400,13 +423,9 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         ):
             topic_relationships[relationship_key] = relationship_key + (score,)
     if topic_entities:
-        con.executemany(
-            "INSERT INTO topics VALUES (?, ?, ?, ?, ?, ?)", topic_entities.values()
-        )
+        copy_rows("topics", topic_entities.values())
     if topic_relationships:
-        con.executemany(
-            "INSERT INTO work_topics VALUES (?, ?, ?)", topic_relationships.values()
-        )
+        copy_rows("work_topics", topic_relationships.values())
     con.execute(
         """
         CREATE TABLE work_queries AS
@@ -451,15 +470,16 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     )
     for table, rows in control_rows.items():
         if rows:
-            placeholders = ",".join(["?"] * len(rows[0]))
-            con.executemany(f"INSERT INTO {table} VALUES ({placeholders})", rows)
+            copy_rows(table, rows)
     con.execute("CREATE TABLE database_build_manifest (built_at VARCHAR, selected_run_ids JSON, inputs JSON)")
-    con.execute(
-        "INSERT INTO database_build_manifest VALUES (?, ?, ?)",
+    copy_rows(
+        "database_build_manifest",
         [
-            utc_now_iso(),
-            json.dumps(sorted({entry["run_id"] for entry in build_manifest})),
-            json.dumps(build_manifest),
+            (
+                utc_now_iso(),
+                json.dumps(sorted({entry["run_id"] for entry in build_manifest})),
+                json.dumps(build_manifest),
+            )
         ],
     )
     con.execute("CHECKPOINT")

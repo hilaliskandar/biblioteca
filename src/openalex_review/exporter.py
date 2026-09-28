@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 from typing import Any
@@ -18,10 +19,32 @@ ALLOWED_FILTERS = {
 def _require_dependencies():
     try:
         import duckdb
-        import pandas as pd
     except ImportError as exc:
         raise RuntimeError("Dependencias de exportacao nao instaladas.") from exc
-    return duckdb, pd
+    return duckdb
+
+
+def _records_from_result(result) -> list[dict[str, Any]]:
+    columns = [item[0] for item in result.description]
+    return [dict(zip(columns, row, strict=True)) for row in result.fetchall()]
+
+
+def _write_csv(records: list[dict[str, Any]], path: Path, columns: list[str]) -> None:
+    with path.open("w", encoding="utf-8-sig", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=columns, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(
+            {column: "" if record.get(column) is None else record.get(column) for column in columns}
+            for record in records
+        )
+
+
+def _iter_records(frame):
+    if hasattr(frame, "iterrows"):
+        for _, row in frame.iterrows():
+            yield row
+    else:
+        yield from frame
 
 
 def _replace_missing_values(frame, pd):
@@ -42,7 +65,7 @@ def _ris_type(work_type: Any) -> str:
 
 def write_ris(frame, path: Path) -> None:
     lines: list[str] = []
-    for _, row in frame.iterrows():
+    for row in _iter_records(frame):
         lines.append(f"TY  - {_ris_type(row.get('type'))}")
         if row.get("title"):
             lines.append(f"TI  - {row['title']}")
@@ -70,7 +93,7 @@ def write_ris(frame, path: Path) -> None:
 
 def write_csl(frame, path: Path) -> None:
     items: list[dict[str, Any]] = []
-    for _, row in frame.iterrows():
+    for row in _iter_records(frame):
         authors = [
             {"literal": name}
             for name in str(row.get("authors") or "").split("; ")
@@ -101,40 +124,51 @@ def export_records(filter_name: str = "all", root: Path | None = None) -> int:
     db_path = base / "data" / "db" / "openalex.duckdb"
     if not db_path.exists():
         raise FileNotFoundError("Banco DuckDB nao encontrado.")
-    duckdb, pd = _require_dependencies()
+    duckdb = _require_dependencies()
     con = duckdb.connect(str(db_path), read_only=True)
-    frame = con.execute(
+    result = con.execute(
         f"SELECT * FROM works_with_queries WHERE {ALLOWED_FILTERS[filter_name]} ORDER BY publication_year, title"
-    ).df()
+    )
+    records = _records_from_result(result)
     con.close()
-    if frame.empty:
+    if not records:
         raise RuntimeError("A selecao nao retornou registros.")
-    frame = _replace_missing_values(frame, pd)
     zotero = base / "exports" / "zotero"
     asreview = base / "exports" / "asreview"
     bibliometrix = base / "exports" / "bibliometrix"
     for path in (zotero, asreview, bibliometrix, base / "data" / "processed"):
         path.mkdir(parents=True, exist_ok=True)
-    write_ris(frame, zotero / "openalex_deduplicated.ris")
-    write_csl(frame, zotero / "openalex_deduplicated.csl.json")
-    pd.DataFrame(
-        {
-            "title": frame["title"], "abstract": frame["abstract"], "authors": frame["authors"],
-            "keywords": frame["keywords"], "doi": frame["doi"], "url": frame["landing_page_url"],
-            "openalex_id": frame["openalex_id"], "source_queries": frame["query_ids"],
-            "publication_year": frame["publication_year"], "source": frame["source_name"],
-        }
-    ).to_csv(asreview / "openalex_asreview.csv", index=False, encoding="utf-8-sig")
-    write_ris(frame, asreview / "openalex_asreview.ris")
-    pd.DataFrame(
-        {
-            "AU": frame["authors"], "AF": frame["authors"], "TI": frame["title"],
-            "SO": frame["source_name"], "DT": frame["type"], "DE": frame["keywords"],
-            "ID": frame["topics"], "AB": frame["abstract"], "C1": frame["institutions"],
-            "TC": frame["cited_by_count"], "PY": frame["publication_year"], "DI": frame["doi"],
-            "URL": frame["landing_page_url"], "UT": frame["openalex_id"], "LA": frame["language"],
-            "DB": "OPENALEX_LOCAL", "QID": frame["query_ids"],
-        }
-    ).to_csv(bibliometrix / "openalex_bibliometrix.csv", index=False, encoding="utf-8-sig")
-    frame.to_csv(base / "data" / "processed" / "works_deduplicated.csv", index=False, encoding="utf-8-sig")
-    return len(frame)
+    write_ris(records, zotero / "openalex_deduplicated.ris")
+    write_csl(records, zotero / "openalex_deduplicated.csl.json")
+    _write_csv(
+        [
+            {
+                "title": row.get("title"), "abstract": row.get("abstract"),
+                "authors": row.get("authors"), "keywords": row.get("keywords"),
+                "doi": row.get("doi"), "url": row.get("landing_page_url"),
+                "openalex_id": row.get("openalex_id"), "source_queries": row.get("query_ids"),
+                "publication_year": row.get("publication_year"), "source": row.get("source_name"),
+            }
+            for row in records
+        ],
+        asreview / "openalex_asreview.csv",
+        ["title", "abstract", "authors", "keywords", "doi", "url", "openalex_id", "source_queries", "publication_year", "source"],
+    )
+    write_ris(records, asreview / "openalex_asreview.ris")
+    _write_csv(
+        [
+            {
+                "AU": row.get("authors"), "AF": row.get("authors"), "TI": row.get("title"),
+                "SO": row.get("source_name"), "DT": row.get("type"), "DE": row.get("keywords"),
+                "ID": row.get("topics"), "AB": row.get("abstract"), "C1": row.get("institutions"),
+                "TC": row.get("cited_by_count"), "PY": row.get("publication_year"), "DI": row.get("doi"),
+                "URL": row.get("landing_page_url"), "UT": row.get("openalex_id"), "LA": row.get("language"),
+                "DB": "OPENALEX_LOCAL", "QID": row.get("query_ids"),
+            }
+            for row in records
+        ],
+        bibliometrix / "openalex_bibliometrix.csv",
+        ["AU", "AF", "TI", "SO", "DT", "DE", "ID", "AB", "C1", "TC", "PY", "DI", "URL", "UT", "LA", "DB", "QID"],
+    )
+    _write_csv(records, base / "data" / "processed" / "works_deduplicated.csv", list(records[0]))
+    return len(records)

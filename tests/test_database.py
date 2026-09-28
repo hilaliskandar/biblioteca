@@ -61,6 +61,37 @@ def test_build_database_defaults_to_combining_runs_and_preserves_provenance(tmp_
     con.close()
 
 
+def test_build_database_inserts_large_stage_in_batches(tmp_path):
+    raw_dir = tmp_path / "data" / "raw"
+    manifest_dir = tmp_path / "data" / "manifests"
+    raw_dir.mkdir(parents=True)
+    manifest_dir.mkdir(parents=True)
+    raw_path = raw_dir / "run1__q1.jsonl"
+    with raw_path.open("w", encoding="utf-8") as stream:
+        for index in range(1205):
+            work = _raw_work()
+            work["id"] = f"https://openalex.org/W{index}"
+            stream.write(json.dumps(work) + "\n")
+    manifest_path = manifest_dir / "run1__q1.manifest.json"
+    manifest_path.write_text(
+        json.dumps({
+            "run_id": "run1",
+            "query_id": "q1",
+            "status": "completed",
+            "sha256": hashlib.sha256(raw_path.read_bytes()).hexdigest(),
+        }),
+        encoding="utf-8",
+    )
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute("SELECT COUNT(*) FROM works_stage").fetchone() == (1205,)
+    assert con.execute("SELECT COUNT(*) FROM works").fetchone() == (1205,)
+    assert con.execute("SELECT COUNT(*) FROM work_queries").fetchone() == (1205,)
+    con.close()
+
+
 def test_build_database_materializes_authors_and_work_authors(tmp_path):
     work = _raw_work()
     work["authorships"] = [

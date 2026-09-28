@@ -1,9 +1,36 @@
 from __future__ import annotations
 
+import csv
 from pathlib import Path
+from typing import Any
 
 from .common import project_root, utc_now_iso
 from .reviewer_agreement import agreement_markdown, write_reviewer_agreement
+
+
+def _records_from_result(result) -> list[dict[str, Any]]:
+    columns = [item[0] for item in result.description]
+    return [dict(zip(columns, row, strict=True)) for row in result.fetchall()]
+
+
+def _write_csv(records: list[dict[str, Any]], path: Path) -> None:
+    columns = list(records[0]) if records else []
+    with path.open("w", encoding="utf-8-sig", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(records)
+
+
+def _markdown_table(records: list[dict[str, Any]]) -> str:
+    if not records:
+        return ""
+    columns = list(records[0])
+    lines = ["| " + " | ".join(columns) + " |", "| " + " | ".join("---" for _ in columns) + " |"]
+    lines.extend(
+        "| " + " | ".join("" if row.get(column) is None else str(row.get(column)) for column in columns) + " |"
+        for row in records
+    )
+    return "\n".join(lines)
 
 
 def _screening_summary(con):
@@ -27,7 +54,7 @@ def _screening_summary(con):
         if has_resolutions
         else "           0 AS conflitos_nao_resolvidos,\n           0 AS conflitos_resolvidos,\n           0 AS decisoes_finais,\n"
     )
-    return con.execute(
+    return _records_from_result(con.execute(
         f"""
         WITH decisions AS (
           SELECT
@@ -67,7 +94,7 @@ def _screening_summary(con):
         GROUP BY stage
         ORDER BY stage
         """
-    ).df()
+    ))
 
 
 def generate_report(root: Path | None = None) -> Path:
@@ -91,35 +118,35 @@ def generate_report(root: Path | None = None) -> Path:
           (SELECT COUNT(*) FROM works WHERE is_oa) open_access
         """
     ).fetchone()
-    by_query = con.execute(
+    by_query = _records_from_result(con.execute(
         """SELECT query_id, COUNT(*) occurrences, COUNT(DISTINCT record_key) unique_records
            FROM works_stage GROUP BY query_id ORDER BY query_id"""
-    ).df()
-    overlap = con.execute(
+    ))
+    overlap = _records_from_result(con.execute(
         """SELECT number_of_queries, COUNT(*) records FROM (
              SELECT record_key, COUNT(DISTINCT query_id) number_of_queries
              FROM work_queries GROUP BY record_key
            ) GROUP BY number_of_queries ORDER BY number_of_queries"""
-    ).df()
+    ))
     screening = _screening_summary(con)
     agreement_path = base / "reports" / "reviewer_agreement.csv"
     agreement_summaries, agreement_details = write_reviewer_agreement(con, agreement_path)
     con.close()
     reports = base / "reports"
     reports.mkdir(parents=True, exist_ok=True)
-    by_query.to_csv(reports / "prisma_by_query.csv", index=False, encoding="utf-8-sig")
-    overlap.to_csv(reports / "query_overlap.csv", index=False, encoding="utf-8-sig")
-    screening.to_csv(reports / "screening_summary.csv", index=False, encoding="utf-8-sig")
+    _write_csv(by_query, reports / "prisma_by_query.csv")
+    _write_csv(overlap, reports / "query_overlap.csv")
+    _write_csv(screening, reports / "screening_summary.csv")
     screening_markdown = (
-        screening.to_markdown(index=False)
-        if not screening.empty
+        _markdown_table(screening)
+        if screening
         else "Nenhuma decisao de triagem foi importada."
     )
-    title_abstract = screening.loc[screening["etapa"] == "titulo_resumo"]
-    if title_abstract.empty:
+    title_abstract = [row for row in screening if row.get("etapa") == "titulo_resumo"]
+    if not title_abstract:
         title_abstract_markdown = "Nenhuma decisao registrada para a etapa titulo_resumo."
     else:
-        values = title_abstract.iloc[0].to_dict()
+        values = title_abstract[0]
         pending = int(summary[1]) - int(values["registros_com_decisao"])
         title_abstract_markdown = f"""- Registros com decisao: **{int(values['registros_com_decisao'])}**
 - Incluidos para a proxima etapa: **{int(values['incluidos'])}**
@@ -145,11 +172,11 @@ Gerado em: {utc_now_iso()}
 
 ## Por consulta
 
-{by_query.to_markdown(index=False)}
+{_markdown_table(by_query)}
 
 ## Sobreposicao
 
-{overlap.to_markdown(index=False)}
+{_markdown_table(overlap)}
 
 ## Triagem de titulo e resumo
 
