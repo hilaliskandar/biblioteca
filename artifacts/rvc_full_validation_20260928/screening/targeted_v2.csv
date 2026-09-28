@@ -1,0 +1,46 @@
+query_id,openalex_id,screening_decision,query_relevance,reason,reviewer,stage
+rvc_l02_inner_city_reuse_regeneration,W4224660086,incluir,relevante,Conservacao e adaptive reuse de centro historico.,chatgpt_targeted_v2,titulo_resumo
+rvc_l02_inner_city_reuse_regeneration,W420509186,incluir,relevante,Capacidade institucional aplicada a regeneracao de centro urbano.,chatgpt_targeted_v2,titulo_resumo
+rvc_l02_inner_city_reuse_regeneration,W2065090331,incluir,relevante,"Revitalizacao de inner-city, gentrificacao e deslocamento.",chatgpt_targeted_v2,titulo_resumo
+rvc_l04_densification_compact_city_outcomes,W2088848761,excluir,nao_relevante,Vulnerabilidade estrutural de edificios; falso positivo lexical.,chatgpt_targeted_v2,titulo_resumo
+rvc_l04_densification_compact_city_outcomes,W2902282079,incluir,relevante,"Cidade compacta, densificacao e equilibrio entre metas sociais, ambientais e economicas.",chatgpt_targeted_v2,titulo_resumo
+rvc_l04_densification_compact_city_outcomes,W2097205878,incluir,parcial,Impactos ambientais de mudanca de uso/cobertura urbana; conexao indireta com forma urbana.,chatgpt_targeted_v2,titulo_resumo
+rvc_l08_land_policy_implementation,W2133575279,excluir,nao_relevante,"Agricultura climate-smart, fora da politica fundiaria urbana.",chatgpt_targeted_v2,titulo_resumo
+rvc_l08_land_policy_implementation,W2137798415,excluir,parcial,"Planos locais costeiros e wetlands; tema territorial, mas fora do mecanismo central.",chatgpt_targeted_v2,titulo_resumo
+rvc_l08_land_policy_implementation,W3022976335,excluir,nao_relevante,Implementation gap em agricultura sustentavel.,chatgpt_targeted_v2,titulo_resumo
+rvc_l09_policy_state_institutional_capacity_local,W420509186,incluir,relevante,Capacidade institucional para regeneracao de centro urbano.,chatgpt_targeted_v2,titulo_resumo
+rvc_l09_policy_state_institutional_capacity_local,W3133690142,incluir,relevante,Governos urbanos em governanca multinivel de sustentabilidade.,chatgpt_targeted_v2,titulo_resumo
+rvc_l09_policy_state_institutional_capacity_local,W3210742149,incluir,relevante,Policy capacity de cidades europeias e governanca multinivel.,chatgpt_targeted_v2,titulo_resumo
+rvc_l10_interorganizational_coordination_urban,W1515984629,incluir,relevante,Brokers entre escalas e governanca em rede de servicos ecossistemicos urbanos.,chatgpt_targeted_v2,titulo_resumo
+rvc_l10_interorganizational_coordination_urban,W2991244904,duvida,parcial,"Governanca colaborativa em turismo; mecanismos transferiveis, mas fora do urbano-fundiario.",chatgpt_targeted_v2,titulo_resumo
+rvc_l10_interorganizational_coordination_urban,W1973807100,incluir,parcial,Regras institucionais e desempenho de arranjos colaborativos locais.,chatgpt_targeted_v2,titulo_resumo
+rvc_l12_digital_planning_gis_automation,W1515219588,incluir,relevante,"Planejamento online, e-participacao e GIS em governos locais.",chatgpt_targeted_v2,titulo_resumo
+rvc_l12_digital_planning_gis_automation,W2164998768,incluir,relevante,GIS e analise multicriterio para decisao em gestao da terra.,chatgpt_targeted_v2,titulo_resumo
+rvc_l12_digital_planning_gis_automation,W2767234824,incluir,relevante,Ferramenta GIS de apoio a decisao e planejamento urbano.,chatgpt_targeted_v2,titulo_resumo
+rvc_l13_administrative_burden_process_design,W2167596287,incluir,parcial,Colaboracao na gestao de contratos publicos; relevante a arranjos e monitoramento.,chatgpt_targeted_v2,titulo_resumo
+rvc_l13_administrative_burden_process_design,W4414756778,duvida,parcial,IA reduzindo carga administrativa em saude; mecanismo transferivel a automacao publica.,chatgpt_targeted_v2,titulo_resumo
+rvc_l13_administrative_burden_process_design,W1977329497,excluir,nao_relevante,Cinismo cidadao sem relacao com onus administrativo ou desenho de processos.,chatgpt_targeted_v2,titulo_resumo
+rvc_s04_removable_burden_process_design,W968399513,excluir,nao_relevante,Business process redesign privado e sistemas empresariais.,chatgpt_targeted_v2,titulo_resumo
+rvc_s04_removable_burden_process_design,W6968023238,incluir,relevante,Otimizacao de carga administrativa em orgao publico; procedimentos e simplificacao.,chatgpt_targeted_v2,titulo_resumo
+rvc_s04_removable_burden_process_design,W7073596674,excluir,nao_relevante,Heuristicas de business process redesign sem setor publico.,chatgpt_targeted_v2,titulo_resumo
+rvc_s08_automation_human_judgment,W1790211156,excluir,nao_relevante,Material promocional/tecnico sobre integracao Autodesk e GIS.,chatgpt_targeted_v2,titulo_resumo
+rvc_s08_automation_human_judgment,W2587982871,excluir,parcial,"Automacao de correcao de dados espaciais sem julgamento, governanca ou administracao publica.",chatgpt_targeted_v2,titulo_resumo
+rvc_s08_automation_human_judgment,W2233872608,duvida,parcial,Analise automatizada de grades espaciais; falta contexto para relevancia institucional.,chatgpt_targeted_v2,titulo_resumo
+rvc_a03_capacity_without_outcomes,W2220814662,incluir,parcial,Aprendizagem em contracting out local e efeitos positivos/negativos sobre metas.,chatgpt_targeted_v2,titulo_resumo
+rvc_a03_capacity_without_outcomes,W7207198379,incluir,relevante,Falhas e efeitos inesperados em politica de restituicao de terras.,chatgpt_targeted_v2,titulo_resumo
+rvc_a03_capacity_without_outcomes,W2172450905,incluir,relevante,Politica municipal tecnicamente apoiada com resultados exiguos e descontinuidade.,chatgpt_targeted_v2,titulo_resumo
+rvc_a04_fragmentation_can_help,W7123732289,incluir,relevante,"Descentralizacao gera custos de coordenacao, mas tambem legitimidade e conexoes politicas.",chatgpt_targeted_v2,titulo_resumo
+rvc_a04_fragmentation_can_help,W2359374159,incluir,relevante,Mecanismo policentrico de producao de politica e suas vantagens/deficiencias.,chatgpt_targeted_v2,titulo_resumo
+rvc_a04_fragmentation_can_help,W2408948461,duvida,parcial,Reformas descentralizadas potencialmente pertinentes; ausencia de resumo exige leitura.,chatgpt_targeted_v2,titulo_resumo
+rvc_a06_coercive_land_policy_unintended,W6885191489,incluir,parcial,Planos de uso do solo sob perspectiva de direitos de propriedade; possiveis efeitos sobre desenvolvimento.,chatgpt_targeted_v2,titulo_resumo
+rvc_a06_coercive_land_policy_unintended,W2798238890,duvida,parcial,"Tributo como obstaculo ao desenvolvimento de terras ociosas, mas contexto florestal e historico.",chatgpt_targeted_v2,titulo_resumo
+rvc_a06_coercive_land_policy_unintended,W4312506842,incluir,parcial,Nao aplicacao do PEUC e entraves municipais; relevante embora nao trate apenas efeitos indesejados da coercao.,chatgpt_targeted_v2,titulo_resumo
+rvc_a07_regeneration_displacement,W7029995069,incluir,relevante,"Regeneracao, desapropriacao e deslocamento de migrantes.",chatgpt_targeted_v2,titulo_resumo
+rvc_a07_regeneration_displacement,W2606326710,duvida,parcial,Regeneracao via esporte; sem resumo para avaliar deslocamento ou desigualdade.,chatgpt_targeted_v2,titulo_resumo
+rvc_a07_regeneration_displacement,W3141563335,incluir,relevante,"Redensificacao, conflitos e procedimentos de intervencao urbana.",chatgpt_targeted_v2,titulo_resumo
+rvc_a09_land_reuse_not_best_option,W4232935426,incluir,relevante,Redevelopment de downtown e resistencia comunitaria.,chatgpt_targeted_v2,titulo_resumo
+rvc_a09_land_reuse_not_best_option,W2142581535,incluir,relevante,Uso temporario de terrenos vagos e legado de longo prazo.,chatgpt_targeted_v2,titulo_resumo
+rvc_a09_land_reuse_not_best_option,W2036979848,incluir,relevante,Ferramenta comunitaria para avaliar adequacao de reuso temporario de terrenos vagos.,chatgpt_targeted_v2,titulo_resumo
+rvc_a10_value_capture_limits,W3045818249,incluir,relevante,Dificuldades praticas e teoricas da captura de valorizacao fundiaria.,chatgpt_targeted_v2,titulo_resumo
+rvc_a10_value_capture_limits,W4387635024,incluir,relevante,Captura de valor na Colombia limitada por resistencia e capacidade administrativa local.,chatgpt_targeted_v2,titulo_resumo
+rvc_a10_value_capture_limits,W4387635040,incluir,relevante,"Instrumentos de captura no Peru e obstaculos cadastrais, tecnicos, politicos e orcamentarios.",chatgpt_targeted_v2,titulo_resumo
