@@ -8,7 +8,6 @@ W2097205878,incluir,titulo_resumo,,targeted_v2; query=rvc_l04_densification_comp
 W2133575279,excluir,titulo_resumo,fora_escopo,"targeted_v2; query=rvc_l08_land_policy_implementation; query_relevance=nao_relevante; Agricultura climate-smart, fora da politica fundiaria urbana."
 W2137798415,excluir,titulo_resumo,fora_escopo,"targeted_v2; query=rvc_l08_land_policy_implementation; query_relevance=parcial; Planos locais costeiros e wetlands; tema territorial, mas fora do mecanismo central."
 W3022976335,excluir,titulo_resumo,fora_escopo,targeted_v2; query=rvc_l08_land_policy_implementation; query_relevance=nao_relevante; Implementation gap em agricultura sustentavel.
-W420509186,incluir,titulo_resumo,,targeted_v2; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=relevante; Capacidade institucional para regeneracao de centro urbano.
 W3133690142,incluir,titulo_resumo,,targeted_v2; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=relevante; Governos urbanos em governanca multinivel de sustentabilidade.
 W3210742149,incluir,titulo_resumo,,targeted_v2; query=rvc_l09_policy_state_institutional_capacity_local; query_relevance=relevante; Policy capacity de cidades europeias e governanca multinivel.
 W1515984629,incluir,titulo_resumo,,targeted_v2; query=rvc_l10_interorganizational_coordination_urban; query_relevance=relevante; Brokers entre escalas e governanca em rede de servicos ecossistemicos urbanos.
