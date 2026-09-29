@@ -185,6 +185,190 @@ HELP: Mapping[str, HelpEntry] = {
         why_it_matters="Evita escrita parcial e mistura de vocabularios.",
         docs_anchor="screening",
     ),
+    "bibliometrics.corpus": HelpEntry(
+        short="Corpus fixado que alimenta a analise; a contagem e o hash identificam exatamente o conjunto usado.",
+        detail=(
+            "Toda analise bibliometrica deve partir de um corpus explicitamente selecionado. "
+            "O corpus_hash identifica o conjunto de obras, independentemente da ordem, e permite comparar "
+            "execucoes sem confundir mudanca de parametros com mudanca de corpus."
+        ),
+        why_it_matters="Sem corpus e hash explicitos, resultados de rodadas diferentes nao sao comparaveis nem plenamente reproduziveis.",
+        avoid="Nao interpretar dois resultados como comparaveis sem confirmar que usam o mesmo corpus_hash.",
+        docs_anchor="selecao-de-corpus",
+    ),
+    "bibliometrics.top_n": HelpEntry(
+        short="Controla quantas linhas aparecem nos rankings; nao altera o corpus nem a analise de base.",
+        detail=(
+            "Top N e um limite de exibicao. Rankings resumem uma distribuicao e devem ser acompanhados do "
+            "universo, da metrica e da possibilidade de consultar a tabela completa."
+        ),
+        why_it_matters="Cortes visuais podem exagerar diferencas pequenas e ocultar a cauda da distribuicao.",
+        avoid="Nao tratar posicao em Top N como medida geral de qualidade, influencia ou relevancia.",
+        docs_anchor="performance-analysis",
+    ),
+    "bibliometrics.citations": HelpEntry(
+        short="Soma das citacoes registradas para as obras do corpus na fonte e data de coleta disponiveis.",
+        detail=(
+            "Citacoes acumulam com o tempo e variam entre fontes, areas e tipos documentais. "
+            "O total descreve impacto de citacao observado, nao qualidade intrinseca nem relevancia para a pergunta."
+        ),
+        why_it_matters="Comparacoes sem controlar idade, cobertura e fonte podem favorecer obras ou temas mais antigos.",
+        avoid="Nao usar citacoes brutas como sinonimo de qualidade cientifica.",
+        docs_anchor="performance-analysis",
+    ),
+    "bibliometrics.publications_over_time": HelpEntry(
+        short="Mostra a distribuicao anual das obras do corpus.",
+        detail=(
+            "A serie ajuda a identificar crescimento, estabilidade ou mudanca de volume. O ultimo ano pode estar "
+            "incompleto e crescimento absoluto pode refletir expansao geral da producao cientifica."
+        ),
+        why_it_matters="Tendencia temporal precisa ser interpretada em relacao ao periodo coberto e a completude dos anos.",
+        avoid="Nao chamar aumento de publicacoes de emergencia tematica sem analise adicional.",
+        docs_anchor="temporalidade",
+    ),
+    "bibliometrics.coauthorship": HelpEntry(
+        short="Liga autores que aparecem conjuntamente em uma ou mais obras do corpus.",
+        detail=(
+            "A rede descreve colaboracao bibliografica. O peso da aresta representa colaboracoes compartilhadas "
+            "segundo a regra de contagem registrada; centralidade descreve posicao na rede, nao qualidade do autor."
+        ),
+        why_it_matters="Permite estudar estrutura social, grupos de colaboracao e atores que conectam comunidades.",
+        avoid="Nao chamar automaticamente o no mais central de autor mais importante.",
+        docs_anchor="coautoria",
+    ),
+    "bibliometrics.cooccurrence": HelpEntry(
+        short="Liga termos ou topicos que aparecem conjuntamente nas mesmas obras.",
+        detail=(
+            "A rede aproxima a estrutura conceitual do corpus. Keywords e topics nao sao equivalentes: keywords "
+            "refletem vocabulario atribuido; topics podem resultar de classificacao externa. A origem deve permanecer explicita."
+        ),
+        why_it_matters="A escolha da unidade pode mudar clusters, frequencias e a narrativa conceitual resultante.",
+        avoid="Nao fundir termos apenas por semelhanca lexical sem regra ou thesaurus documentado.",
+        docs_anchor="coocorrencia",
+    ),
+    "bibliometrics.min_edge_weight": HelpEntry(
+        short="Exclui da analise relacoes com peso inferior ao limiar escolhido.",
+        detail=(
+            "O threshold reduz ruido e tamanho da rede, mas tambem pode remover pontes fracas e comunidades perifericas. "
+            "O valor usado na geracao deve ser persistido como parametro metodologico."
+        ),
+        why_it_matters="Mudancas de threshold podem alterar conectividade, clusters e metricas de centralidade.",
+        avoid="Nao escolher o limiar apenas para produzir um grafo visualmente mais bonito.",
+        docs_anchor="threshold-e-filtros",
+    ),
+    "bibliometrics.display_edge_weight": HelpEntry(
+        short="Filtro apenas de exibicao; nao deve alterar a rede persistida nem o analysis_id.",
+        detail=(
+            "Use para explorar uma rede ja calculada. A interface deve sempre informar quantos nos e arestas "
+            "existem na rede original e quantos permanecem visiveis apos o filtro."
+        ),
+        why_it_matters="Distingue decisao analitica de decisao visual e evita que uma visualizacao filtrada seja confundida com a fonte.",
+        docs_anchor="threshold-e-filtros",
+    ),
+    "bibliometrics.display_degree": HelpEntry(
+        short="Mostra apenas nos com pelo menos este numero de conexoes na rede filtrada.",
+        detail=(
+            "Grau e numero de vizinhos diretos. Filtrar por grau destaca o nucleo conectado, mas pode apagar "
+            "nos perifericos substantivamente relevantes."
+        ),
+        why_it_matters="A periferia pode conter temas emergentes, tradicoes minoritarias ou documentos-ponte.",
+        avoid="Nao interpretar ausencia visual apos o filtro como ausencia no corpus.",
+        docs_anchor="threshold-e-filtros",
+    ),
+    "bibliometrics.display_max_nodes": HelpEntry(
+        short="Limita quantos nos sao desenhados para manter a visualizacao legivel.",
+        detail=(
+            "E um limite de renderizacao. A rede completa deve permanecer persistida e exportavel, e a tela deve "
+            "informar a reducao aplicada."
+        ),
+        why_it_matters="Grandes redes exigem reducao visual sem perda da fonte analitica.",
+        docs_anchor="threshold-e-filtros",
+    ),
+    "bibliometrics.degree": HelpEntry(
+        short="Numero de nos diretamente conectados ao no selecionado.",
+        detail="Degree mede conectividade local. Um valor alto indica muitas conexoes diretas dentro desta rede e deste corpus.",
+        why_it_matters="E uma medida estrutural local, dependente do corpus e dos filtros.",
+        avoid="Nao comparar degree entre redes construidas com regras diferentes sem normalizacao adequada.",
+        docs_anchor="metricas-de-rede",
+    ),
+    "bibliometrics.weighted_degree": HelpEntry(
+        short="Soma dos pesos das relacoes diretamente ligadas ao no.",
+        detail="Combina quantidade e intensidade das conexoes diretas segundo o peso definido para a rede.",
+        why_it_matters="Distingue muitos vinculos fracos de um conjunto menor de relacoes repetidas ou intensas.",
+        docs_anchor="metricas-de-rede",
+    ),
+    "bibliometrics.betweenness": HelpEntry(
+        short="Indica quanto um no participa dos caminhos mais curtos entre outros nos.",
+        detail=(
+            "Betweenness pode sinalizar pontes entre partes da rede. O significado depende da definicao de distancia "
+            "a partir dos pesos e nao prova que o ator, termo ou documento exerceu causalmente uma funcao de mediacao."
+        ),
+        why_it_matters="Ajuda a localizar conectores estruturais e candidatos a leitura de ponte.",
+        avoid="Nao converter centralidade de intermediacao diretamente em influencia substantiva.",
+        docs_anchor="metricas-de-rede",
+    ),
+    "bibliometrics.closeness": HelpEntry(
+        short="Resume a proximidade de um no aos demais nos alcancaveis na rede.",
+        detail="Closeness depende da conectividade e da definicao de distancia; componentes desconectados exigem interpretacao cuidadosa.",
+        why_it_matters="Pode indicar posicoes estruturalmente proximas do restante de uma comunidade.",
+        docs_anchor="metricas-de-rede",
+    ),
+    "bibliometrics.eigenvector": HelpEntry(
+        short="Valoriza nos conectados a outros nos que tambem ocupam posicoes estruturalmente fortes.",
+        detail="Eigenvector mede prestigio estrutural recursivo na rede calculada; nao e medida de qualidade ou relevancia substantiva.",
+        why_it_matters="Complementa degree ao considerar tambem a posicao dos vizinhos.",
+        avoid="Nao chamar eigenvector de impacto cientifico sem qualificacao.",
+        docs_anchor="metricas-de-rede",
+    ),
+    "bibliometrics.cluster": HelpEntry(
+        short="Grupo produzido pelo algoritmo de clustering; o identificador nao e uma interpretacao tematica.",
+        detail=(
+            "Clusters sao particoes ou componentes derivados da estrutura da rede. Rotulos substantivos devem ser "
+            "produzidos separadamente, retornando aos documentos, termos e evidencias representativas."
+        ),
+        why_it_matters="Separa resultado algoritmico de interpretacao humana e torna a rotulagem auditavel.",
+        avoid="Nao nomear um cluster apenas pelo termo de maior frequencia.",
+        docs_anchor="clustering",
+    ),
+    "bibliometrics.layout": HelpEntry(
+        short="Posicao visual dos nos; proximidade no desenho nao e, por si so, uma nova medida analitica.",
+        detail=(
+            "O layout organiza a representacao grafica. Algoritmo, parametros e seed devem ser registrados quando "
+            "aplicavel, mas coordenadas nao substituem pesos, arestas, clusters ou metricas."
+        ),
+        why_it_matters="Evita interpretar distancia visual como evidencia nao definida pelo metodo.",
+        docs_anchor="clustering",
+    ),
+    "bibliometrics.cocitation": HelpEntry(
+        short="Aproxima referencias que sao citadas conjuntamente pelas obras do corpus.",
+        detail=(
+            "Cocitacao e especialmente util para reconstruir bases intelectuais e tradicoes consolidadas. "
+            "A relacao expressa uso conjunto como referencia, nao concordancia entre os trabalhos citados."
+        ),
+        why_it_matters="Ajuda a identificar a estrutura intelectual sobre a qual o corpus se apoia.",
+        avoid="Nao interpretar cocitacao como concordancia teorica.",
+        docs_anchor="cocitacao",
+    ),
+    "bibliometrics.coupling": HelpEntry(
+        short="Aproxima obras do corpus que compartilham referencias bibliograficas.",
+        detail=(
+            "Acoplamento bibliografico tende a ser util para frentes contemporaneas porque pode relacionar obras "
+            "recentes antes que elas acumulem citacoes suficientes para analises de cocitacao."
+        ),
+        why_it_matters="Revela proximidade bibliografica entre documentos e possiveis frentes de pesquisa.",
+        docs_anchor="acoplamento-bibliografico",
+    ),
+    "bibliometrics.thematic_evolution": HelpEntry(
+        short="Compara temas entre janelas temporais para observar continuidade, transformacao, fusao ou fragmentacao.",
+        detail=(
+            "A analise exige periodizacao justificavel, unidade conceitual consistente e regra explicita para ligar "
+            "temas entre periodos. Mudancas podem resultar dos parametros, nao apenas da literatura."
+        ),
+        why_it_matters="Permite estudar transformacao da estrutura conceitual em vez de apenas crescimento de frequencia.",
+        avoid="Nao inferir nascimento ou desaparecimento de tema sem verificar cobertura e sensibilidade dos parametros.",
+        docs_anchor="temporalidade",
+    ),
+
 }
 
 
