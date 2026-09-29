@@ -52,9 +52,9 @@ como backlog pendente.
 | Texto integral | Tabela `reading_status` e modelo CSV são criados e preservados. | Importação/validação, ativos de texto, disponibilidade, hash, aquisição, leitura e elegibilidade. |
 | Evidências | Tabela `evidence_notes` e modelo CSV são criados e preservados. | Importação, validação referencial, fichamento estruturado e relatórios de rastreabilidade. |
 | PRISMA | Identificação, deduplicação, sobreposição e título/resumo são reportados. | Texto integral, exclusões por motivo e corpus final. |
-| Interface | Painel Streamlit local para estratégia, execução, produtos e importação. | Aba bibliométrica, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
+| Interface | Shell local com navegação, visão geral, seleção explícita de corpus, primeira página bibliométrica de KPIs/tabelas, estratégia, execução, produtos e importação. | Redes, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
 | Fontes e deduplicação | Coleta e normalização OpenAlex; deduplicação por `record_key` e proveniência por consulta. | Importação multibase e reconciliação avançada de identificadores/versões. |
-| Bibliometria | Ainda não há modelo de corpus, execuções ou redes persistentes. | Fundação B01–B11 e cálculos B12–B19. |
+| Bibliometria | Modelo de seleção de corpus e hash determinístico já existe; ainda não há execuções ou redes persistentes. | Fundação B02–B11 e cálculos B12–B19. |
 | Visualização | Streamlit local sem rede bibliométrica interativa. | UI-B01–B11; Cytoscape.js é a opção produtiva planejada. |
 
 ## Próximo ciclo de desenvolvimento
@@ -103,13 +103,14 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
 | B12 | Indicadores de desempenho | B10 | Gera CSV/Markdown de publicações, autores, fontes, instituições, países e citações; fonte/data da citação são registradas. |
-| B13 | Rede de coautoria | B03, B04 | Suporta autor, instituição e país com contagem integral e fracionada. |
-| B14 | Rede de coocorrência | B06, B07 | Suporta frequência mínima, normalização, unidade e thesaurus registrados. |
+| B13 | Rede de coautoria | B03, B04 | **Parcial:** rede de autores baseada em `works.authors`, com contagem integral, pesos, `analysis_id` e persistência em `network_nodes`/`network_edges`; instituições, países, contagem fracionada e entidades normalizadas dependem de B03/B04. |
+| B14 | Rede de coocorrência | B06, B07 | **Parcial:** keywords/topics agregados de `works`, normalização, frequência mínima, unidade, `analysis_id` e persistência em `network_nodes`/`network_edges`; thesaurus e entidades normalizadas ainda pendentes. |
 | B15 | Acoplamento bibliográfico | B08, B11 | Calcula referências compartilhadas com fórmula, normalização e parâmetros persistidos. |
 | B16 | Cocitação | B08, B11 | Calcula inicialmente documentos citados conjuntamente e preserva relações externas. |
-| B17 | Métricas de rede | B11 | Calcula somente métricas aplicáveis e registra degree, weighted degree e demais métricas utilizadas. |
-| B18 | Clustering reproduzível | B11 | Registra algoritmo, parâmetros e seed; execução repetida produz resultado determinístico quando suportado. |
-| B19 | Layouts reproduzíveis | B11, B18 | Persiste algoritmo, seed e coordenadas sem tornar layout parte da identidade da rede. |
+| B17 | Métricas de rede | B11 | **Parcial:** calcula e persiste `degree`, `weighted_degree`, `betweenness`, `closeness` e `eigenvector` ponderados nos nós de coautoria/coocorrência; demais métricas continuam pendentes. |
+| B18 | Clustering reproduzível | B11 | **Parcial:** atribui `cluster_id` por componentes conexos com algoritmo `connected_components_v1`, parâmetros e seed determinísticos; métodos comunitários continuam pendentes. |
+| B19 | Layouts reproduzíveis | B11, B18 | **Parcial:** persiste coordenadas `x`/`y` com algoritmo `clustered_circular_v1` e seed determinísticos, sem tornar o layout parte da identidade da rede; layouts avançados continuam pendentes. |
+| B19.1 | Visualização interativa básica de redes | B17–B19 | **Concluído nesta branch:** Streamlit/Vega-Lite renderiza nós e arestas filtrados usando `node_id`, coordenadas, cluster, peso e métricas persistidas; oferece seleção explícita de nó, destaque dos vizinhos e das arestas incidentes; a preparação do payload é testada e não altera os dados persistidos. Seleção por clique no canvas continua pendente. |
 
 ### P1.7 — interoperabilidade
 
@@ -141,11 +142,11 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
-| UI-B01 | Aba Bibliometria | B10 | Permite selecionar corpus, consultar execuções e exibir KPIs/tabelas. |
+| UI-B01 | Aba Bibliometria | B10 | Permite selecionar corpus, persistir execuções de desempenho/coautoria/coocorrência e exibir KPIs/tabelas com `analysis_id`. **Parcial:** visualização interativa e filtros avançados ainda pendentes. |
 | UI-B02 | Gráficos de desempenho | B12 | Exibe publicações, citações, autores, fontes e instituições. |
 | UI-B03 | Spike comparativo de redes | B11 | Compara PyVis, Cytoscape.js e Sigma.js offline em redes pequenas/médias. |
-| UI-B04 | Componente Cytoscape.js | UI-B03 | Recebe nodes/edges/configuração, suporta zoom, seleção, tooltip e reset via componente local. |
-| UI-B05 | Comunicação grafo → Python | UI-B04 | Clique retorna `node_id` e abre painel com metadados, triagem e leitura. |
+| UI-B04 | Componente Cytoscape.js | UI-B03 | **Concluído nesta branch:** componente local recebe nodes/edges/configuração, usa layout `preset` com coordenadas persistidas, suporta zoom, pan, seleção por clique, tooltip visual, destaque de vizinhos e reset. |
+| UI-B05 | Comunicação grafo → Python | UI-B04 | **Integrado nesta branch:** clique e limpeza retornam eventos com `node_id` ao Streamlit; a seleção é persistida por corpus/rede e abre painel contextual com métricas, coordenadas, cluster, vizinhos, arestas incidentes, obras associadas e estado de triagem/leitura/evidências quando disponível. |
 | UI-B06 | Filtros interativos | UI-B05 | Filtra threshold, cluster, período, corpus, tipo e peso sem alterar a fonte persistida. |
 | UI-B07 | Modos de rede | UI-B06 | Alterna coautoria, coocorrência, cocitação e acoplamento. |
 | UI-B08 | Overlay temporal | UI-B06 | Exibe ano médio, emergência e crescimento com parâmetros registrados. |

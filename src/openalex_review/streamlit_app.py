@@ -6,6 +6,14 @@ from pathlib import Path
 import streamlit as st
 from dotenv import load_dotenv
 
+from openalex_review.bibliometrics import (
+    execute_coauthorship_analysis,
+    execute_cooccurrence_analysis,
+    execute_performance_analysis,
+    filter_network,
+    list_bibliometric_runs,
+    network_visualization_data,
+)
 from openalex_review.common import ensure_directories, env_api_key, project_root, run_id_now
 from openalex_review.control import import_screening_decisions
 from openalex_review.interface import (
@@ -17,8 +25,10 @@ from openalex_review.interface import (
     save_guided_config,
     split_terms,
 )
+from openalex_review.review_context import selected_node_review_context
 from openalex_review.screening_vocabulary import STAGE_CODES
 from openalex_review.ui_help import render_help_popover, short_help
+from openalex_review.workspace import CORPUS_SCOPES, select_workspace_corpus, summarize_workspace
 
 
 def _root() -> Path:
@@ -28,6 +38,242 @@ def _root() -> Path:
 def _prepare_root(root: Path) -> None:
     load_dotenv(root / ".env")
     ensure_directories(root)
+
+
+def _focus_record_in_screening(record_key: str) -> None:
+    st.session_state["pending_navigation"] = "Triagem ASReview"
+    st.session_state["pending_record_key"] = record_key
+    st.rerun()
+
+
+def _render_selected_node_review_context(root: Path, node: dict, *, action_key: str) -> None:
+    """Render read-only review links and state for the selected node's works."""
+    review_context = selected_node_review_context(root, node)
+    record_keys = review_context["record_keys"]
+    if not record_keys:
+        st.info("Este nó não possui obras associadas para triagem, leitura ou FAFAT+.")
+        return
+
+    st.write("Obras associadas para revisão")
+    works = list(review_context["works"])
+    if not works:
+        st.warning("As chaves do nó não foram encontradas em `works`.")
+    else:
+        st.dataframe(
+            [
+                {
+                    "record_key": work.get("record_key"),
+                    "título": work.get("title"),
+                    "OpenAlex": work.get("openalex_id"),
+                    "DOI": work.get("doi"),
+                    "ano": work.get("publication_year"),
+                }
+                for work in works
+            ],
+            width="stretch",
+            hide_index=True,
+        )
+        for index, work in enumerate(works):
+            record_key = work.get("record_key")
+            if record_key and st.button(
+                f"Abrir {record_key} na triagem",
+                key=f"{action_key}_screening_{index}",
+                help="Abre a tela de triagem sem alterar decisões.",
+            ):
+                _focus_record_in_screening(str(record_key))
+            links = []
+            if work.get("landing_page_url"):
+                links.append(("Abrir obra", work["landing_page_url"]))
+            if work.get("pdf_url"):
+                links.append(("Abrir PDF", work["pdf_url"]))
+            if links:
+                columns = st.columns(len(links))
+                for column, (label, url) in zip(columns, links, strict=True):
+                    column.link_button(label, url, key=f"selected_work_link_{index}_{label}")
+
+    decisions = review_context["screening_decisions"]
+    resolutions = review_context["screening_resolutions"]
+    reading = review_context["reading_status"]
+    evidence = review_context["evidence_notes"]
+    with st.expander(f"Triagem ({len(decisions)} decisões, {len(resolutions)} resoluções)"):
+        if decisions:
+            st.dataframe(decisions, width="stretch", hide_index=True)
+        else:
+            st.info("Nenhuma decisão de triagem associada.")
+        if resolutions:
+            st.dataframe(resolutions, width="stretch", hide_index=True)
+    with st.expander(f"Leitura ({len(reading)} registros)"):
+        if reading:
+            st.dataframe(reading, width="stretch", hide_index=True)
+            note_paths = sorted({row.get("note_path") for row in reading if row.get("note_path")})
+            if note_paths:
+                st.caption("Fichamentos locais registrados: " + ", ".join(str(path) for path in note_paths))
+        else:
+            st.info("Nenhum estado de leitura associado.")
+    with st.expander(f"Evidências / FAFAT+ ({len(evidence)} registros)"):
+        if evidence:
+            st.dataframe(evidence, width="stretch", hide_index=True)
+        else:
+            st.info("Nenhuma evidência ou ficha FAFAT+ associada. A estrutura ainda é opcional.")
+
+
+def _render_network_chart(
+    network, title: str, *, key: str, selection_scope: str, root: Path | None = None
+) -> None:
+    chart_data = network_visualization_data(network)
+    if not chart_data["nodes"]:
+        return
+    st.write(title)
+    selection_key = f"network_selected_node_{selection_scope}_{key}"
+    selected = st.session_state.get(selection_key)
+    node_ids = {node["node_id"] for node in chart_data["nodes"]}
+    if selected not in node_ids:
+        selected = None
+    try:
+        from openalex_review.network_component import (
+            render_cytoscape_network,
+            selected_node_context,
+            selected_node_id,
+            selection_was_cleared,
+        )
+
+        event = render_cytoscape_network(
+            nodes=list(chart_data["nodes"]),
+            edges=list(chart_data["edges"]),
+            key=f"{key}_cytoscape",
+            selected_node_id=selected,
+        )
+        if selection_was_cleared(event):
+            selected = None
+        elif selected_node_id(event) is not None:
+            selected = selected_node_id(event)
+        st.session_state[selection_key] = selected
+        if selected:
+            selected_label = next(
+                (node["label"] for node in chart_data["nodes"] if node["node_id"] == selected),
+                selected,
+            )
+            st.caption(f"Nó selecionado: `{selected_label}` (`{selected}`)")
+            context = selected_node_context(chart_data["nodes"], chart_data["edges"], selected)
+            if context is not None:
+                node = context["node"]
+                st.write("Contexto do nó selecionado")
+                st.dataframe(
+                    [{
+                        "label": node["label"],
+                        "node_id": node["node_id"],
+                        "cluster": node["cluster"],
+                        "x": node["x"],
+                        "y": node["y"],
+                        "weight": node["weight"],
+                        "degree": node["degree"],
+                        "weighted_degree": node["weighted_degree"],
+                        "betweenness": node["betweenness"],
+                        "closeness": node["closeness"],
+                        "eigenvector": node["eigenvector"],
+                    }],
+                    width="stretch",
+                    hide_index=True,
+                )
+                st.caption(
+                    f"Vizinhos diretos: {len(context['neighbor_ids'])} · "
+                    f"arestas incidentes: {len(context['incident_edges'])}"
+                )
+                _render_selected_node_review_context(
+                    root or _root(), node, action_key=f"{key}_cytoscape"
+                )
+        return
+    except (ImportError, ModuleNotFoundError, RuntimeError, OSError) as exc:
+        st.caption(f"Cytoscape indisponível; usando visualização de fallback. Motivo: `{exc}`")
+
+    node_options = [node["node_id"] for node in network.nodes]
+    labels = {node["node_id"]: node.get("label", node["node_id"]) for node in network.nodes}
+    selected_node_id = st.selectbox(
+        "Nó em foco (opcional)",
+        options=[None, *node_options],
+        format_func=lambda value: "Nenhum" if value is None else f"{labels[value]} ({value})",
+        key=f"{key}_selected_node",
+    )
+    st.session_state[selection_key] = selected_node_id
+    chart_data = network_visualization_data(network, selected_node_id=selected_node_id)
+    st.vega_lite_chart(
+        {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "width": "container",
+            "height": 500,
+            "datasets": {
+                "edges": list(chart_data["edges"]),
+                "nodes": list(chart_data["nodes"]),
+            },
+            "layer": [
+                {
+                    "data": {"name": "edges"},
+                    "mark": {"type": "rule", "color": "#9aa0a6", "opacity": 0.45},
+                    "encoding": {
+                        "x": {"field": "x", "type": "quantitative", "axis": {"title": "x"}},
+                        "y": {"field": "y", "type": "quantitative", "axis": {"title": "y"}},
+                        "x2": {"field": "x2"},
+                        "y2": {"field": "y2"},
+                        "size": {"field": "weight", "type": "quantitative", "legend": None},
+                        "opacity": {
+                            "condition": {"test": "datum.visual_state === 'incident'", "value": 0.9},
+                            "value": 0.15,
+                        },
+                        "tooltip": [
+                            {"field": "source_node_id", "title": "Origem"},
+                            {"field": "target_node_id", "title": "Destino"},
+                            {"field": "weight", "title": "Peso"},
+                        ],
+                    },
+                },
+                {
+                    "data": {"name": "nodes"},
+                    "mark": {"type": "circle", "filled": True, "opacity": 0.9},
+                    "encoding": {
+                        "x": {"field": "x", "type": "quantitative"},
+                        "y": {"field": "y", "type": "quantitative"},
+                        "size": {"field": "weight", "type": "quantitative", "legend": {"title": "Peso"}},
+                        "color": {"field": "cluster", "type": "nominal", "legend": {"title": "Cluster"}},
+                        "opacity": {
+                            "condition": [
+                                {"test": "datum.visual_state === 'selected'", "value": 1.0},
+                                {"test": "datum.visual_state === 'neighbor'", "value": 0.9},
+                            ],
+                            "value": 0.25,
+                        },
+                        "stroke": {
+                            "condition": {"test": "datum.visual_state === 'selected'", "value": "#111827"},
+                            "value": "transparent",
+                        },
+                        "strokeWidth": {
+                            "condition": {"test": "datum.visual_state === 'selected'", "value": 3},
+                            "value": 0,
+                        },
+                        "tooltip": [
+                            {"field": "label", "title": "Nó"},
+                            {"field": "cluster", "title": "Cluster"},
+                            {"field": "weight", "title": "Peso"},
+                            {"field": "degree", "title": "Degree"},
+                            {"field": "weighted_degree", "title": "Weighted degree"},
+                            {"field": "betweenness", "title": "Betweenness"},
+                            {"field": "closeness", "title": "Closeness"},
+                            {"field": "eigenvector", "title": "Eigenvector"},
+                        ],
+                    },
+                },
+            ],
+        },
+        width="stretch",
+    )
+    if selected_node_id is not None:
+        selected_context = next(
+            (node for node in chart_data["nodes"] if node["node_id"] == selected_node_id),
+            None,
+        )
+        if selected_context is not None:
+            _render_selected_node_review_context(
+                root or _root(), selected_context, action_key=f"{key}_vega"
+            )
 
 
 def _download_mime(path: Path) -> str:
@@ -293,6 +539,11 @@ def _render_screening(root: Path) -> None:
         "A triagem registra julgamento humano. Decisões individuais, consensos e adjudicações devem permanecer "
         "separados e rastreáveis."
     )
+    focused_record = st.session_state.pop("pending_record_key", None)
+    if focused_record:
+        st.success(f"Registro em foco: `{focused_record}`. Nenhuma decisão foi alterada automaticamente.")
+        if st.button("Limpar registro em foco", key="clear_focused_record"):
+            st.rerun()
     reviewer = st.text_input(
         "Revisor ou rodada",
         value="revisor_01",
@@ -336,6 +587,256 @@ def _render_screening(root: Path) -> None:
             st.error(str(exc))
 
 
+def _render_overview(root: Path) -> None:
+    st.header("Visão geral")
+    st.caption("Contexto persistente do projeto, corpus e estado operacional local.")
+    summary = summarize_workspace(root)
+    if not summary.works:
+        st.info("Ainda não há um banco local com obras deduplicadas. Execute uma estratégia primeiro.")
+        return
+
+    metrics = st.columns(4)
+    metrics[0].metric("Obras no corpus-base", f"{summary.works:,}")
+    metrics[1].metric("Decisões de triagem", f"{summary.screening_decisions:,}")
+    metrics[2].metric("Itens de leitura", f"{summary.reading_items:,}")
+    metrics[3].metric("Notas de evidência", f"{summary.evidence_notes:,}")
+    if summary.manifest_available:
+        st.success("Composição do banco registrada em database_build_manifest.")
+    else:
+        st.warning("Este banco local não possui database_build_manifest; rodadas são inferidas de data/raw.")
+    if summary.runs:
+        st.write("Rodadas disponíveis:", ", ".join(summary.runs))
+
+
+def _render_corpus(root: Path) -> None:
+    st.header("Corpus e contexto")
+    st.caption("Toda análise futura deve declarar explicitamente este conjunto de obras.")
+    labels = {
+        "identified": "Identificado — todas as obras deduplicadas",
+        "screened": "Triado — obras com decisão ou estado de leitura",
+        "included": "Incluído — resolução final ou inclusão sem conflito",
+        "custom": "Personalizado — record_key informado manualmente",
+    }
+    current = st.session_state.get("corpus_scope", "identified")
+    scope = st.radio(
+        "Escopo do corpus",
+        options=CORPUS_SCOPES,
+        index=CORPUS_SCOPES.index(current),
+        format_func=lambda value: labels[value],
+        horizontal=True,
+    )
+    custom_text = ""
+    if scope == "custom":
+        custom_text = st.text_area(
+            "record_key (um por linha ou separados por vírgula)",
+            value=st.session_state.get("corpus_custom_text", ""),
+            help="Exemplo: openalex:W123456789.",
+        )
+        st.session_state["corpus_custom_text"] = custom_text
+    if st.button("Resolver e fixar corpus", type="primary", width="stretch"):
+        try:
+            selection = select_workspace_corpus(scope, root=root, custom_text=custom_text)
+        except (FileNotFoundError, KeyError, ValueError, RuntimeError) as exc:
+            st.error(str(exc))
+        else:
+            st.session_state["corpus_scope"] = scope
+            st.session_state["corpus_selection"] = selection
+            st.success(f"Corpus fixado: {selection.record_count:,} obras.")
+    selection = st.session_state.get("corpus_selection")
+    if selection is not None:
+        st.divider()
+        left, right = st.columns(2)
+        left.metric("Obras selecionadas", f"{selection.record_count:,}")
+        right.code(selection.corpus_hash, language=None)
+        st.caption(selection.definition)
+        with st.expander("Ver primeiras chaves do corpus"):
+            st.dataframe(
+                {"record_key": list(selection.record_keys[:100])},
+                width="stretch",
+                hide_index=True,
+            )
+
+
+def _render_bibliometrics(root: Path) -> None:
+    st.header("Bibliometria")
+    selection = st.session_state.get("corpus_selection")
+    if selection is None:
+        st.info("Fixe um corpus na página Corpus antes de abrir uma análise.")
+        return
+    st.caption(f"Corpus: {selection.scope} · {selection.record_count:,} obras · hash {selection.corpus_hash}")
+    cached = st.session_state.get("bibliometric_result")
+    cached_matches = cached is not None and cached[0].corpus_hash == selection.corpus_hash
+    if st.button("Calcular indicadores", type="primary", width="stretch") or cached_matches:
+        try:
+            top_n = st.slider("Quantidade nas tabelas de ranking", min_value=5, max_value=50, value=10)
+            if st.button("Atualizar análise", width="stretch"):
+                st.session_state["bibliometric_result"] = execute_performance_analysis(root, selection, top_n=top_n)
+            result = st.session_state.get("bibliometric_result")
+            if result is None or result[0].corpus_hash != selection.corpus_hash:
+                result = execute_performance_analysis(root, selection, top_n=top_n)
+                st.session_state["bibliometric_result"] = result
+            run, overview = result
+        except (FileNotFoundError, ValueError, RuntimeError) as exc:
+            st.error(str(exc))
+            return
+        st.caption(f"Análise: `{run.analysis_id}` · status: `{run.status}` · tipo: `{run.analysis_type}`")
+        metrics = st.columns(5)
+        metrics[0].metric("Obras", f"{overview.record_count:,}")
+        metrics[1].metric("Citações", f"{overview.total_citations:,}")
+        metrics[2].metric("Obras citadas", f"{overview.cited_records:,}")
+        metrics[3].metric("Acesso aberto", f"{overview.open_access_records:,}")
+        metrics[4].metric("Com resumo", f"{overview.abstracts:,}")
+        st.subheader("Publicações por ano")
+        if overview.years:
+            st.line_chart(overview.years, x="year", y="records")
+            st.dataframe(overview.years, width="stretch", hide_index=True)
+        else:
+            st.info("O corpus não possui anos de publicação preenchidos.")
+        left, right = st.columns(2)
+        with left:
+            st.subheader("Tipos de publicação")
+            st.dataframe(overview.types, width="stretch", hide_index=True)
+        with right:
+            st.subheader("Principais fontes")
+            st.dataframe(overview.sources, width="stretch", hide_index=True)
+        st.subheader("Obras mais citadas")
+        st.dataframe(overview.top_cited, width="stretch", hide_index=True)
+        st.caption("Indicadores são descritivos e não substituem critérios de inclusão metodológica.")
+        st.subheader("Rede de coautoria")
+        st.caption("Nesta etapa, a rede usa nomes agregados em `works.authors`; identidades normalizadas serão usadas quando B03 estiver materializado.")
+        min_edge_weight = st.number_input("Peso mínimo da coautoria", min_value=1, max_value=20, value=1, step=1)
+        if st.button("Gerar rede de coautoria", width="stretch"):
+            try:
+                st.session_state["coauthorship_result"] = execute_coauthorship_analysis(
+                    root, selection, min_edge_weight=int(min_edge_weight)
+                )
+            except (FileNotFoundError, ValueError, RuntimeError) as exc:
+                st.error(str(exc))
+        network_result = st.session_state.get("coauthorship_result")
+        if network_result is not None and network_result[0].corpus_hash == selection.corpus_hash:
+            network_run, network = network_result
+            display_edge_weight = st.number_input("Peso mínimo exibido na coautoria", min_value=0.0, value=0.0, step=1.0, key="coauthorship_display_edge_weight")
+            display_degree = st.number_input("Grau mínimo exibido na coautoria", min_value=0, value=0, step=1, key="coauthorship_display_degree")
+            display_max_nodes = st.number_input("Máximo de nós exibidos na coautoria", min_value=1, max_value=5000, value=100, step=10, key="coauthorship_display_max_nodes")
+            displayed_network = filter_network(
+                network,
+                min_edge_weight=float(display_edge_weight),
+                min_degree=int(display_degree),
+                max_nodes=int(display_max_nodes),
+            )
+            st.caption(f"Análise: `{network_run.analysis_id}` · exibindo {displayed_network.node_count} de {network.node_count} nós · {displayed_network.edge_count} de {network.edge_count} arestas")
+            if displayed_network.nodes:
+                _render_network_chart(
+                    displayed_network,
+                    "Visualização da rede de coautoria",
+                    key="coauthorship",
+                    selection_scope=selection.corpus_hash,
+                    root=root,
+                )
+                st.write("Nós mais frequentes")
+                st.dataframe(
+                    [
+                        {
+                            "label": node["label"],
+                            "cluster": node.get("cluster_id"),
+                            "x": node.get("x"),
+                            "y": node.get("y"),
+                            "weight": node["weight"],
+                            "degree": node.get("centrality_degree", 0),
+                            "weighted_degree": node.get("weighted_degree", 0),
+                            "betweenness": node.get("centrality_betweenness", 0),
+                            "closeness": node.get("centrality_closeness", 0),
+                            "eigenvector": node.get("centrality_eigenvector", 0),
+                        }
+                        for node in displayed_network.nodes[:20]
+                    ],
+                    width="stretch",
+                    hide_index=True,
+                )
+            if displayed_network.edges:
+                st.write("Arestas mais fortes")
+                st.dataframe(displayed_network.edges[:20], width="stretch", hide_index=True)
+            if not displayed_network.nodes:
+                st.info("Nenhuma autoria disponível no corpus selecionado.")
+        st.subheader("Rede de coocorrência")
+        st.caption("Keywords e tópicos são lidos dos campos agregados de `works`; entidades normalizadas e thesaurus ainda não estão ativos.")
+        term_field = st.selectbox("Unidade temática", ("keywords", "topics"), format_func=lambda value: "Keywords" if value == "keywords" else "Topics")
+        min_term_edge_weight = st.number_input("Peso mínimo da coocorrência", min_value=1, max_value=20, value=1, step=1)
+        if st.button("Gerar rede de coocorrência", width="stretch"):
+            try:
+                st.session_state["cooccurrence_result"] = execute_cooccurrence_analysis(
+                    root,
+                    selection,
+                    field=term_field,
+                    min_edge_weight=int(min_term_edge_weight),
+                )
+            except (FileNotFoundError, ValueError, RuntimeError) as exc:
+                st.error(str(exc))
+        cooccurrence_result = st.session_state.get("cooccurrence_result")
+        if cooccurrence_result is not None and cooccurrence_result[0].corpus_hash == selection.corpus_hash:
+            cooccurrence_run, cooccurrence = cooccurrence_result
+            display_term_edge_weight = st.number_input("Peso mínimo exibido na coocorrência", min_value=0.0, value=0.0, step=1.0, key="cooccurrence_display_edge_weight")
+            display_term_degree = st.number_input("Grau mínimo exibido na coocorrência", min_value=0, value=0, step=1, key="cooccurrence_display_degree")
+            display_term_max_nodes = st.number_input("Máximo de nós exibidos na coocorrência", min_value=1, max_value=5000, value=100, step=10, key="cooccurrence_display_max_nodes")
+            displayed_cooccurrence = filter_network(
+                cooccurrence,
+                min_edge_weight=float(display_term_edge_weight),
+                min_degree=int(display_term_degree),
+                max_nodes=int(display_term_max_nodes),
+            )
+            st.caption(f"Análise: `{cooccurrence_run.analysis_id}` · exibindo {displayed_cooccurrence.node_count} de {cooccurrence.node_count} nós · {displayed_cooccurrence.edge_count} de {cooccurrence.edge_count} arestas")
+            if displayed_cooccurrence.nodes:
+                _render_network_chart(
+                    displayed_cooccurrence,
+                    "Visualização da rede de coocorrência",
+                    key="cooccurrence",
+                    selection_scope=selection.corpus_hash,
+                    root=root,
+                )
+                st.write("Termos mais frequentes")
+                st.dataframe(
+                    [
+                        {
+                            "label": node["label"],
+                            "cluster": node.get("cluster_id"),
+                            "x": node.get("x"),
+                            "y": node.get("y"),
+                            "weight": node["weight"],
+                            "degree": node.get("centrality_degree", 0),
+                            "weighted_degree": node.get("weighted_degree", 0),
+                            "betweenness": node.get("centrality_betweenness", 0),
+                            "closeness": node.get("centrality_closeness", 0),
+                            "eigenvector": node.get("centrality_eigenvector", 0),
+                        }
+                        for node in displayed_cooccurrence.nodes[:20]
+                    ],
+                    width="stretch",
+                    hide_index=True,
+                )
+            if displayed_cooccurrence.edges:
+                st.write("Coocorrências mais fortes")
+                st.dataframe(displayed_cooccurrence.edges[:20], width="stretch", hide_index=True)
+            if not displayed_cooccurrence.nodes:
+                st.info("Nenhum keyword ou tópico disponível no corpus selecionado.")
+        history = list_bibliometric_runs(root, corpus_hash=selection.corpus_hash)
+        if history:
+            st.subheader("Histórico de análises deste corpus")
+            st.dataframe(
+                [
+                    {
+                        "analysis_id": item.analysis_id,
+                        "created_at": item.created_at,
+                        "type": item.analysis_type,
+                        "status": item.status,
+                        "parameters": item.parameters_json,
+                    }
+                    for item in history
+                ],
+                width="stretch",
+                hide_index=True,
+            )
+
+
 def main() -> None:
     st.set_page_config(page_title="OpenAlex Review", page_icon="📚", layout="wide")
     root = _root()
@@ -346,14 +847,38 @@ def main() -> None:
         "A interface não publica dados nem substitui o protocolo de revisão. JSONL, DuckDB e exportáveis "
         "permanecem locais. As orientações contextuais explicam escolhas, mas não tomam decisões pelo pesquisador."
     )
-    tabs = st.tabs(("Nova estratégia", "Contar e executar", "Produtos", "Triagem ASReview"))
-    with tabs[0]:
-        _render_search(root)
-    with tabs[1]:
-        _render_execution(root)
-    with tabs[2]:
+    pending_navigation = st.session_state.pop("pending_navigation", None)
+    if pending_navigation:
+        st.session_state["navigation_page"] = pending_navigation
+    with st.sidebar:
+        st.header("Navegação")
+        page = st.radio(
+            "Fluxo",
+            ("Visão geral", "Corpus", "Bibliometria", "Busca e coleta", "Produtos", "Triagem ASReview"),
+            key="navigation_page",
+            label_visibility="collapsed",
+        )
+        selected = st.session_state.get("corpus_selection")
+        if selected is not None:
+            st.divider()
+            st.caption("Corpus fixado")
+            st.write(f"{selected.scope}: {selected.record_count:,} obras")
+            st.code(selected.corpus_hash[:16] + "…", language=None)
+    if page == "Visão geral":
+        _render_overview(root)
+    elif page == "Corpus":
+        _render_corpus(root)
+    elif page == "Bibliometria":
+        _render_bibliometrics(root)
+    elif page == "Busca e coleta":
+        tabs = st.tabs(("Nova estratégia", "Contar e executar"))
+        with tabs[0]:
+            _render_search(root)
+        with tabs[1]:
+            _render_execution(root)
+    elif page == "Produtos":
         _render_products(root)
-    with tabs[3]:
+    else:
         _render_screening(root)
 
 

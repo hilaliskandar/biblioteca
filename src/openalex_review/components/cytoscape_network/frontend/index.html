@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; font-family: sans-serif; background: transparent; }
+      #toolbar { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; }
+      #selection { font-size: 0.9rem; opacity: 0.8; }
+      button { border: 1px solid #9aa0a6; border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+      #cy { width: 100%; min-height: 480px; border: 1px solid #d1d5db; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <button id="clear" type="button">Limpar seleção</button>
+      <span id="selection">Nenhum nó selecionado</span>
+    </div>
+    <div id="cy" aria-label="Rede bibliométrica"></div>
+    <script>
+      const STREAMLIT = window.parent.Streamlit;
+      const state = { selected: null };
+
+      function send(type, nodeId) {
+        STREAMLIT.setComponentValue(nodeId ? { type, node_id: nodeId } : { type });
+      }
+
+      function configureFrame(height) {
+        STREAMLIT.setFrameHeight(height || 560);
+      }
+
+      function visualState(nodeId, selected, neighborIds) {
+        if (!selected) return 'other';
+        if (nodeId === selected) return 'selected';
+        return neighborIds.has(nodeId) ? 'neighbor' : 'other';
+      }
+
+      function render(args) {
+        const rawNodes = Array.isArray(args.nodes) ? args.nodes : [];
+        const rawEdges = Array.isArray(args.edges) ? args.edges : [];
+        configureFrame(args.height);
+        const nodeIds = new Set(rawNodes.map(node => String(node.node_id)));
+        state.selected = args.selected_node_id && nodeIds.has(String(args.selected_node_id))
+          ? String(args.selected_node_id) : null;
+        const nodes = rawNodes.map(node => ({
+          data: { ...node, id: String(node.node_id) },
+          position: { x: Number(node.x) || 0, y: Number(node.y) || 0 }
+        }));
+        const edges = rawEdges
+          .filter(edge => nodeIds.has(String(edge.source_node_id)) && nodeIds.has(String(edge.target_node_id)))
+          .map((edge, index) => ({
+            data: {
+              ...edge,
+              id: `edge-${index}-${edge.source_node_id}-${edge.target_node_id}`,
+              source: String(edge.source_node_id),
+              target: String(edge.target_node_id)
+            }
+          }));
+        const cy = cytoscape({
+          container: document.getElementById('cy'),
+          elements: [...nodes, ...edges],
+          layout: { name: 'preset', fit: true, padding: 30 },
+          minZoom: 0.1,
+          maxZoom: 5,
+          style: [
+            { selector: 'node', style: {
+              'background-color': '#4f86c6', 'label': 'data.label', 'color': '#111827',
+              'font-size': '10px', 'text-valign': 'center', 'text-halign': 'center',
+              'width': 'mapData(weight, 0, 10, 12, 42)', 'height': 'mapData(weight, 0, 10, 12, 42)',
+              'border-width': 0, 'opacity': 1
+            }},
+            { selector: 'edge', style: {
+              'line-color': '#9aa0a6', 'width': 'mapData(weight, 0, 10, 1, 5)',
+              'opacity': 0.5, 'curve-style': 'straight'
+            }},
+            { selector: '.selected', style: { 'background-color': '#ef4444', 'border-width': 4, 'border-color': '#111827', 'opacity': 1 }},
+            { selector: '.neighbor', style: { 'background-color': '#10b981', 'opacity': 1 }},
+            { selector: '.dimmed', style: { 'opacity': 0.18 }},
+            { selector: '.incident', style: { 'line-color': '#ef4444', 'width': 4, 'opacity': 0.9 }}
+          ]
+        });
+
+        function applySelection(selected) {
+          cy.elements().removeClass('selected neighbor dimmed incident');
+          const selectionLabel = document.getElementById('selection');
+          if (!selected) {
+            selectionLabel.textContent = 'Nenhum nó selecionado';
+            return;
+          }
+          const selectedNode = cy.getElementById(selected);
+          if (!selectedNode || selectedNode.length === 0) return;
+          const neighbors = selectedNode.neighborhood('node');
+          selectedNode.addClass('selected');
+          neighbors.addClass('neighbor');
+          cy.nodes().not(selectedNode).not(neighbors).addClass('dimmed');
+          selectedNode.connectedEdges().addClass('incident');
+          selectionLabel.textContent = `Selecionado: ${selectedNode.data('label') || selected}`;
+        }
+
+        cy.on('tap', 'node', event => {
+          state.selected = event.target.id();
+          applySelection(state.selected);
+          send('node_selected', state.selected);
+        });
+        cy.on('tap', event => {
+          if (event.target === cy) {
+            state.selected = null;
+            applySelection(null);
+            send('selection_cleared', null);
+          }
+        });
+        document.getElementById('clear').onclick = () => {
+          state.selected = null;
+          applySelection(null);
+          send('selection_cleared', null);
+        };
+        applySelection(state.selected);
+        window.__openalexCytoscape = cy;
+      }
+
+      STREAMLIT.events.addEventListener('streamlit:componentReady', event => {
+        STREAMLIT.setComponentReady();
+        configureFrame(560);
+      });
+      STREAMLIT.events.addEventListener('streamlit:render', event => render(event.detail.args || {}));
+      STREAMLIT.setComponentReady();
+    </script>
+  </body>
+</html>

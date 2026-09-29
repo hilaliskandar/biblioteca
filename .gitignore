@@ -4,6 +4,8 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+build/
+dist/
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -29,6 +31,12 @@ Thumbs.db
 /exports/asreview/*
 /exports/bibliometrix/*
 /reports/*
+
+# Logs e artefatos locais da interface/testes
+.streamlit-local.log
+.streamlit-local.err.log
+*.zip
+/artifacts/requirements-dev-resolved.txt
 
 # Mantém a estrutura vazia
 !/config/custom/.gitkeep
