@@ -52,10 +52,10 @@ como backlog pendente.
 | Texto integral | Tabela `reading_status` e modelo CSV são criados e preservados. | Importação/validação, ativos de texto, disponibilidade, hash, aquisição, leitura e elegibilidade. |
 | Evidências | Tabela `evidence_notes` e modelo CSV são criados e preservados. | Importação, validação referencial, fichamento estruturado e relatórios de rastreabilidade. |
 | PRISMA | Identificação, deduplicação, sobreposição e título/resumo são reportados. | Texto integral, exclusões por motivo e corpus final. |
-| Interface | Shell local com navegação, visão geral, seleção explícita de corpus, primeira página bibliométrica de KPIs/tabelas, estratégia, execução, produtos e importação. | Redes, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
+| Interface | Shell local com navegação, visão geral, seleção explícita de corpus, bibliometria, redes interativas, estratégia, execução, produtos e importação. | Filtros/exportações avançadas, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
 | Fontes e deduplicação | Coleta e normalização OpenAlex; deduplicação por `record_key` e proveniência por consulta. | Importação multibase e reconciliação avançada de identificadores/versões. |
-| Bibliometria | Modelo de seleção de corpus e hash determinístico já existe; ainda não há execuções ou redes persistentes. | Fundação B02–B11 e cálculos B12–B19. |
-| Visualização | Streamlit local sem rede bibliométrica interativa. | UI-B01–B11; Cytoscape.js é a opção produtiva planejada. |
+| Bibliometria | Seleção/hash de corpus, execuções persistidas, indicadores, redes de coautoria/coocorrência, métricas, clustering inicial e layouts reproduzíveis. | Referências, identificadores multibase, cocitação, acoplamento, métricas/clustering/layouts avançados e interoperabilidade. |
+| Visualização | Streamlit local com fallback Vega-Lite e componente Cytoscape.js para redes persistidas, seleção de nós e contexto de revisão. | Filtros avançados, exportação de redes, overlay temporal, densidade e benchmark de Sigma.js. |
 
 ## Próximo ciclo de desenvolvimento
 
@@ -92,7 +92,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B04 | **Concluído e integrado na `main`:** normalizar instituições e afiliações | B03 | `institutions` e `work_institutions` preservam OpenAlex ID, ROR, nome, país, tipo e vínculo autor-instituição quando recuperável. |
 | B05 | **Concluído e integrado na `main`:** normalizar fontes | B01 | `sources` e `work_sources` preservam OpenAlex Source ID, ISSN-L, nome, tipo e relação obra-fonte. |
 | B06 | **Concluído e integrado na `main`:** normalizar keywords | B01 | Preserva termo bruto, termo normalizado, origem e score quando disponível. |
-| B07 | **Concluído nesta branch:** normalizar tópicos OpenAlex | B01 | Preserva tópico, subfield, field, domain e score. |
+| B07 | **Concluído e integrado na `main`:** normalizar tópicos OpenAlex | B01 | Preserva tópico, subfield, field, domain e score. |
 | B08 | Materializar referências | B01 | Referências internas, externas e duplicadas são testadas; obras citadas fora do corpus são preservadas. |
 | B09 | Criar identificadores multibase | B01 | OpenAlex, DOI e futuros identificadores têm normalização, origem, verificação e regras de unicidade. |
 | B10 | Registrar `bibliometric_runs` | B01–B09 | Cada análise registra corpus, hash, parâmetros, software, versão, status e saída. |
@@ -110,7 +110,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B17 | Métricas de rede | B11 | **Parcial:** calcula e persiste `degree`, `weighted_degree`, `betweenness`, `closeness` e `eigenvector` ponderados nos nós de coautoria/coocorrência; demais métricas continuam pendentes. |
 | B18 | Clustering reproduzível | B11 | **Parcial:** atribui `cluster_id` por componentes conexos com algoritmo `connected_components_v1`, parâmetros e seed determinísticos; métodos comunitários continuam pendentes. |
 | B19 | Layouts reproduzíveis | B11, B18 | **Parcial:** persiste coordenadas `x`/`y` com algoritmo `clustered_circular_v1` e seed determinísticos, sem tornar o layout parte da identidade da rede; layouts avançados continuam pendentes. |
-| B19.1 | Visualização interativa básica de redes | B17–B19 | **Concluído nesta branch:** Streamlit/Vega-Lite renderiza nós e arestas filtrados usando `node_id`, coordenadas, cluster, peso e métricas persistidas; oferece seleção explícita de nó, destaque dos vizinhos e das arestas incidentes; a preparação do payload é testada e não altera os dados persistidos. Seleção por clique no canvas continua pendente. |
+| B19.1 | Visualização interativa básica de redes | B17–B19 | **Concluído e integrado na `main`:** Streamlit renderiza redes com fallback Vega-Lite e componente Cytoscape.js, usando `node_id`, coordenadas, cluster, peso e métricas persistidas; oferece seleção por clique, destaque de vizinhos/arestas incidentes e contexto de revisão. Filtros e exportações avançadas continuam pendentes. |
 
 ### P1.7 — interoperabilidade
 
@@ -142,11 +142,11 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
-| UI-B01 | Aba Bibliometria | B10 | Permite selecionar corpus, persistir execuções de desempenho/coautoria/coocorrência e exibir KPIs/tabelas com `analysis_id`. **Parcial:** visualização interativa e filtros avançados ainda pendentes. |
+| UI-B01 | Aba Bibliometria | B10 | **Concluído e integrado na `main`:** permite selecionar corpus, persistir execuções de desempenho/coautoria/coocorrência e exibir KPIs/tabelas e redes com `analysis_id`; filtros avançados e exportações ainda pendentes. |
 | UI-B02 | Gráficos de desempenho | B12 | Exibe publicações, citações, autores, fontes e instituições. |
 | UI-B03 | Spike comparativo de redes | B11 | Compara PyVis, Cytoscape.js e Sigma.js offline em redes pequenas/médias. |
-| UI-B04 | Componente Cytoscape.js | UI-B03 | **Concluído nesta branch:** componente local recebe nodes/edges/configuração, usa layout `preset` com coordenadas persistidas, suporta zoom, pan, seleção por clique, tooltip visual, destaque de vizinhos e reset. |
-| UI-B05 | Comunicação grafo → Python | UI-B04 | **Integrado nesta branch:** clique e limpeza retornam eventos com `node_id` ao Streamlit; a seleção é persistida por corpus/rede e abre painel contextual com métricas, coordenadas, cluster, vizinhos, arestas incidentes, obras associadas e estado de triagem/leitura/evidências quando disponível. |
+| UI-B04 | Componente Cytoscape.js | UI-B03 | **Concluído e integrado na `main`:** componente local recebe nodes/edges/configuração, usa layout `preset` com coordenadas persistidas, suporta zoom, pan, seleção por clique, tooltip visual, destaque de vizinhos e reset. |
+| UI-B05 | Comunicação grafo → Python | UI-B04 | **Concluído e integrado na `main`:** clique e limpeza retornam eventos com `node_id` ao Streamlit; a seleção é persistida por corpus/rede e abre painel contextual com métricas, coordenadas, cluster, vizinhos, arestas incidentes, obras associadas e estado de triagem/leitura/evidências quando disponível. |
 | UI-B06 | Filtros interativos | UI-B05 | Filtra threshold, cluster, período, corpus, tipo e peso sem alterar a fonte persistida. |
 | UI-B07 | Modos de rede | UI-B06 | Alterna coautoria, coocorrência, cocitação e acoplamento. |
 | UI-B08 | Overlay temporal | UI-B06 | Exibe ano médio, emergência e crescimento com parâmetros registrados. |
@@ -158,8 +158,8 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
-| UX-M01 | Catálogo central de ajuda metodológica | Interface existente | **Concluído nesta branch:** `ui_help.py` fornece ajuda curta, explicação, consequência, antipadrão e âncora documental. |
-| UX-M02 | Integrar ajuda aos campos atuais | UX-M01 | **Concluído nesta branch:** busca, execução, produtos e screening exibem orientação progressiva sem substituir julgamento humano. |
+| UX-M01 | Catálogo central de ajuda metodológica | Interface existente | **Concluído e integrado na `main`:** `ui_help.py` fornece ajuda curta, explicação, consequência, antipadrão e âncora documental. |
+| UX-M02 | Integrar ajuda aos campos atuais | UX-M01 | **Concluído e integrado na `main`:** busca, execução, produtos e screening exibem orientação progressiva sem substituir julgamento humano. |
 | UX-M03 | Cobertura automatizada da ajuda | UX-M01 | Testes verificam chaves críticas, conteúdo mínimo e anchors documentais. |
 | UX-M04 | Bibliometria guiada | B10-B19, UI-B01-B10 | Todo parâmetro e resultado bibliométrico relevante usa o mesmo catálogo e distingue significado, limite e consequência metodológica. |
 | UX-M05 | Proveniência clicável | B10-B19, UI-B05 | Resultado permite navegar para `analysis_id`, `corpus_hash`, parâmetros, dados subjacentes e documentos. |
