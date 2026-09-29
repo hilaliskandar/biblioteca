@@ -14,9 +14,8 @@ revisão de título/resumo. A interface Streamlit local permite criar estratégi
 guiadas, contar, executar o pipeline, consultar produtos, importar triagem e,
 desde a primeira entrega UX/B01, navegar por contexto e fixar explicitamente um
 corpus identificado, triado, incluído ou personalizado com hash determinístico.
-Também existe uma primeira página bibliométrica somente leitura com KPIs,
-publicações por ano, tipos, fontes e obras mais citadas, sempre limitada ao
-corpus fixado.
+Também existe uma página bibliométrica limitada ao corpus fixado, com KPIs,
+publicações por ano, tipos, fontes, obras mais citadas e execuções persistidas.
 As execuções de desempenho também são persistidas em `bibliometric_runs`, com
 `analysis_id`, hash do corpus, parâmetros, versão do software e status. A primeira
 rede tabular de coautoria também persiste nós e arestas vinculados ao `analysis_id`,
@@ -30,9 +29,10 @@ registram algoritmo e seed; clustering comunitário e layouts avançados
 continuam planejados.
 
 Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
-bloqueiam filtros incompatíveis de data e DOI. A bibliometria reproduzível, as
-redes, o PRISMA completo, a gestão de texto integral, a matriz de evidências
-operacional e a deduplicação multibase ainda não existem como fluxos completos.
+bloqueiam filtros incompatíveis de data e DOI. A bibliometria reproduzível e a
+primeira visualização de redes estão operacionais; permanecem incompletos o
+PRISMA integral, a gestão de texto integral, a matriz de evidências operacional
+e a deduplicação multibase.
 
 ## P0 — consolidação e release
 
@@ -58,15 +58,11 @@ próximas capacidades são:
 
 ## P1.5 — fundação bibliométrica e interoperabilidade
 
-Este é o próximo ciclo principal após a consolidação da triagem. A sequência
-detalhada está em [`docs/integration-backlog.md`](integration-backlog.md):
-
-1. formalizar escopos de corpus e hash reproduzível;
-2. normalizar autores, instituições, fontes, keywords, tópicos, referências e
-   identificadores multibase;
-3. registrar `bibliometric_runs` e o contrato genérico de nós/arestas;
-4. implementar indicadores de desempenho e redes bibliométricas;
-5. exportar resultados para Bibliometrix e VOSviewer sem perder os dados internos.
+A fundação bibliométrica e a primeira integração de redes foram incorporadas à
+`main` pelo PR #44. Permanecem no backlog a materialização de referências,
+identificadores multibase, cocitação, acoplamento bibliográfico, exportações
+Bibliometrix/VOSviewer e o registro de resultados externos. A sequência detalhada
+está em [`docs/integration-backlog.md`](integration-backlog.md).
 
 Bibliometria deve orientar prioridade de leitura, nunca substituir critérios de
 inclusão ou julgamento metodológico.
@@ -105,8 +101,9 @@ entre bases com regras auditáveis e revisão humana quando necessária.
 
 ## P6 — interface bibliométrica
 
-Entrega atual: os contratos de análise e a primeira integração Streamlit já
-estão operacionais. Permanecem como evolução:
+Entrega atual: os contratos de análise, a seleção de corpus, os KPIs, as redes
+persistidas e a integração Streamlit/Cytoscape.js já estão operacionais.
+Permanecem como evolução:
 
 - **Concluído:** aba Bibliometria e seleção explícita de corpus;
 - **Concluído:** KPIs e tabelas de desempenho;
