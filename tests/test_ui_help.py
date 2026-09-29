@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 import unicodedata
+from pathlib import Path
 
 from openalex_review.ui_help import HELP, get_help, short_help
-
 
 CRITICAL_KEYS = {
     "search.mode",
