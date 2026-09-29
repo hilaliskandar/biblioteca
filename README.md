@@ -487,6 +487,15 @@ estratégia é persistida como YAML. A busca lexical combina sinônimos de um
 mesmo bloco com `OR` e blocos distintos com `AND`. Buscas semânticas continuam
 suplementares e o teto é limitado a 50 registros por consulta.
 
+A interface adota **orientação metodológica contextual**: campos relevantes
+possuem ajuda curta no próprio controle, decisões complexas têm explicação
+adicional em `?`/popover e resultados agregados recebem notas de interpretação.
+A fonte canônica desse conteúdo é `src/openalex_review/ui_help.py`, ligada à
+documentação aprofundada em
+[`docs/contextual-methodology-guidance.md`](docs/contextual-methodology-guidance.md).
+A ajuda explica consequências e limites, mas não toma decisões metodológicas
+pelo pesquisador.
+
 O OpenAlex não aceita filtros de data nem `has_doi` em buscas semânticas. Para
 restringir por data ou exigir DOI, use o modo `lexical`.
 
