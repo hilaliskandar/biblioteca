@@ -198,6 +198,19 @@ Filtros por abstract e DOI aumentam facilidade de screening e reconciliação,
 mas podem enviesar o corpus contra literatura antiga, regional ou não
 padronizada.
 
+### Identificadores
+
+OpenAlex ID, DOI, ORCID, ROR e futuros identificadores multibase servem à
+reconciliação e à auditoria. A ausência de um identificador não deve ser
+confundida com irrelevância; quando houver enriquecimento, preserve valor de
+origem, valor enriquecido, fonte e regra de resolução.
+
+### Versionamento
+
+Configurações, rodadas e análises devem ser imutáveis sempre que possível.
+Mudança substantiva de consulta, filtro, corpus ou parâmetro deve produzir nova
+versão ou nova execução. Sobrescrita é exceção documentada, não fluxo normal.
+
 ### Teto de coleta
 
 `max_records` é limite operacional. Deve ser usado em piloto, calibração e
