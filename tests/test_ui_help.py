@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
-import unicodedata
 from pathlib import Path
+import unicodedata
 
 from openalex_review.ui_help import HELP, get_help, short_help
 
@@ -38,7 +38,7 @@ def _slug(value: str) -> str:
 
 
 def test_contextual_help_has_complete_entries():
-    assert CRITICAL_KEYS <= set(HELP)
+    assert set(HELP) >= CRITICAL_KEYS
     for key, entry in HELP.items():
         assert key.strip()
         assert entry.short.strip()
