@@ -2,9 +2,22 @@
 
 ## Unreleased
 
-Sem alterações ainda não lançadas. Consulte
-[`docs/integration-backlog.md`](docs/integration-backlog.md) para o histórico
-de integração e o backlog futuro.
+### Added
+
+- Camada de orientação metodológica contextual na interface Streamlit, com ajuda
+  curta nos campos, explicações sob demanda em `?`/popover e notas de
+  interpretação junto a resultados.
+- Catálogo canônico em `src/openalex_review/ui_help.py`, documentação
+  aprofundada em `docs/contextual-methodology-guidance.md` e testes de
+  cobertura para campos metodologicamente críticos.
+
+### Changed
+
+- README, metodologia e backlog passam a tratar documentação contextual como
+  parte da própria interface e como requisito de conclusão de novos componentes.
+
+Consulte [`docs/integration-backlog.md`](docs/integration-backlog.md) para o
+histórico de integração e o backlog futuro.
 
 ## 0.3.0 — 2026-09-27
 

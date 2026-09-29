@@ -64,3 +64,21 @@ Uma rodada somente deve ser considerada encerrada quando houver:
 - estudos-semente verificados;
 - matriz de evidências conferida;
 - referência bibliográfica validada.
+
+
+## 9. Orientação metodológica contextual
+
+As regras deste procedimento devem aparecer também no ponto de uso da
+plataforma. A interface adota divulgação progressiva:
+
+1. instrução curta junto ao campo ou resultado;
+2. ajuda curta no componente;
+3. explicação sob demanda em `?` ou popover;
+4. documentação aprofundada.
+
+O conteúdo canônico de interface fica em `src/openalex_review/ui_help.py`; o
+padrão de UX, interpretação de resultados e expansão bibliométrica estão em
+[`contextual-methodology-guidance.md`](contextual-methodology-guidance.md).
+
+Nenhuma camada de ajuda substitui protocolo, decisão humana ou justificativa
+metodológica. Informação essencial também não pode depender apenas de hover.
