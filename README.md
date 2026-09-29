@@ -469,18 +469,25 @@ Use `--decision-column minha_coluna` para cabeçalho não reconhecido e `--repla
 
 ## Interface visual local
 
-O comando `openalex-review-ui` inicia um painel Streamlit local em quatro
-etapas:
+O comando `openalex-review-ui` inicia um painel Streamlit local com navegação
+por corpus, bibliometria e revisão:
 
-1. **Nova estratégia:** recebe palavras-chave por blocos de sinônimos ou uma
+1. **Visão geral e Corpus:** resume o banco local e fixa explicitamente o
+   conjunto de `record_key` usado nas análises;
+2. **Bibliometria:** executa desempenho, coautoria e coocorrência, exibe KPIs,
+   tabelas e redes persistidas;
+3. **Nova estratégia:** recebe palavras-chave por blocos de sinônimos ou uma
    expressão booleana avançada, aplica filtros e valida o YAML antes da coleta;
-2. **Contar e executar:** consulta a contagem na OpenAlex e, mediante ação
+4. **Contar e executar:** consulta a contagem na OpenAlex e, mediante ação
    explícita, executa coleta, banco, exportações, relatório e modelos de
    controle usando as mesmas funções da CLI;
-3. **Produtos:** lista somente arquivos locais existentes em `data/processed`,
+5. **Produtos:** lista somente arquivos locais existentes em `data/processed`,
    `exports/`, `reports/`, manifestos e controles, com prévia e download;
-4. **Triagem ASReview:** recebe CSV rotulado, revisor, etapa e opção explícita
-   de substituição, delegando a validação ao importador já existente.
+6. **Triagem ASReview:** recebe CSV rotulado, revisor, etapa e opção explícita
+   de substituição, delegando a validação ao importador já existente. A seleção
+   de um nó bibliométrico abre suas obras associadas por `metadata_json`, com
+   estados de triagem, leitura, evidências/FAFAT+ e atalho somente de navegação
+   para o registro em foco.
 
 O formulário não envia uma busca descartável: antes de contar ou coletar, a
 estratégia é persistida como YAML. A busca lexical combina sinônimos de um

@@ -10,9 +10,24 @@
 O pipeline já coleta OpenAlex, preserva JSONL e manifestos, normaliza e
 deduplica no DuckDB, exporta para Zotero/ASReview/Bibliometrix, importa decisões
 ASReview, registra resoluções de triagem e gera identificação, deduplicação,
-concordância e resumo de triagem de título/resumo. A interface Streamlit local já
-permite criar estratégias guiadas, contar, executar o pipeline, consultar
-produtos e importar triagem.
+revisão de título/resumo. A interface Streamlit local permite criar estratégias
+guiadas, contar, executar o pipeline, consultar produtos, importar triagem e,
+desde a primeira entrega UX/B01, navegar por contexto e fixar explicitamente um
+corpus identificado, triado, incluído ou personalizado com hash determinístico.
+Também existe uma primeira página bibliométrica somente leitura com KPIs,
+publicações por ano, tipos, fontes e obras mais citadas, sempre limitada ao
+corpus fixado.
+As execuções de desempenho também são persistidas em `bibliometric_runs`, com
+`analysis_id`, hash do corpus, parâmetros, versão do software e status. A primeira
+rede tabular de coautoria também persiste nós e arestas vinculados ao `analysis_id`,
+usando `works.authors` quando as entidades normalizadas ainda não estão disponíveis.
+Keywords e tópicos agregados também podem gerar uma rede tabular de coocorrência,
+com unidade, normalização e limiar registrados na execução.
+As redes persistidas já calculam `degree`, `weighted_degree`, `betweenness`,
+`closeness` e `eigenvector` ponderados por nó. O clustering inicial por
+componentes conexos e o layout circular agrupado são determinísticos e
+registram algoritmo e seed; clustering comunitário e layouts avançados
+continuam planejados.
 
 Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
 bloqueiam filtros incompatíveis de data e DOI. A bibliometria reproduzível, as
@@ -50,7 +65,7 @@ detalhada está em [`docs/integration-backlog.md`](integration-backlog.md):
 2. normalizar autores, instituições, fontes, keywords, tópicos, referências e
    identificadores multibase;
 3. registrar `bibliometric_runs` e o contrato genérico de nós/arestas;
-4. só então implementar indicadores de desempenho e redes bibliométricas;
+4. implementar indicadores de desempenho e redes bibliométricas;
 5. exportar resultados para Bibliometrix e VOSviewer sem perder os dados internos.
 
 Bibliometria deve orientar prioridade de leitura, nunca substituir critérios de
@@ -90,16 +105,24 @@ entre bases com regras auditáveis e revisão humana quando necessária.
 
 ## P6 — interface bibliométrica
 
-Depois que os contratos de análise estiverem estáveis, adicionar ao Streamlit:
+Entrega atual: os contratos de análise e a primeira integração Streamlit já
+estão operacionais. Permanecem como evolução:
 
-- aba Bibliometria e seleção explícita de corpus;
-- KPIs e gráficos de desempenho;
-- filtros e exportação de redes;
-- componente principal Cytoscape.js via Streamlit Components v2;
-- PyVis apenas como protótipo/fallback;
+- **Concluído:** aba Bibliometria e seleção explícita de corpus;
+- **Concluído:** KPIs e tabelas de desempenho;
+- filtros avançados e exportação de redes permanecem como evolução;
+- **Concluído:** visualização interativa básica de nós e arestas com coordenadas, clusters,
+  pesos e tooltips de métricas, preservando os resultados persistidos;
+- **Concluído:** componente principal Cytoscape.js via Streamlit Components, com layout `preset`,
+  zoom, pan, seleção por clique, persistência da seleção, destaque de vizinhos e
+  painel contextual de métricas e contexto de revisão;
+- fallback Vega-Lite substitui o protótipo PyVis atual;
 - Sigma.js somente se benchmarks demonstrarem vantagem material em redes grandes.
 
 O estado visual nunca será a fonte de verdade e o layout não definirá clusters.
+Quando um nó é selecionado, o painel também usa as chaves de obras persistidas
+em `metadata_json` para exibir links e estados de triagem, leitura e evidências,
+sem inferir associações pelo rótulo visual do nó.
 
 ## P7 — texto integral, FAFAT+ e síntese
 

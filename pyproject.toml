@@ -22,12 +22,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "build>=1.2,<2",
   "pytest>=8,<10",
   "pytest-cov>=5,<7",
   "ruff>=0.9,<1",
 ]
 ui = [
   "streamlit>=1.39,<2",
+  "anyio>=4,<5",
 ]
 
 [project.scripts]
@@ -36,6 +38,9 @@ openalex-review-ui = "openalex_review.ui:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+openalex_review = ["components/**/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
