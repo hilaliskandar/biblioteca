@@ -153,6 +153,20 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | UI-B10 | Exportar rede filtrada | UI-B06 | Exporta CSV, JSON e parâmetros da visualização. |
 | UI-B11 | Avaliar Sigma.js | UI-B03 | Só adota backend opcional se benchmark em 1k–25k nós demonstrar ganho material. |
 
+### Orientação metodológica contextual na interface
+
+| ID | Entrega planejada | Dependência | Critério de aceite |
+|---|---|---|---|
+| UX-M01 | Catálogo central de ajuda metodológica | Interface existente | **Concluído nesta branch:** `ui_help.py` fornece ajuda curta, explicação, consequência, antipadrão e âncora documental. |
+| UX-M02 | Integrar ajuda aos campos atuais | UX-M01 | **Concluído nesta branch:** busca, execução, produtos e screening exibem orientação progressiva sem substituir julgamento humano. |
+| UX-M03 | Cobertura automatizada da ajuda | UX-M01 | Testes verificam chaves críticas, conteúdo mínimo e anchors documentais. |
+| UX-M04 | Bibliometria guiada | B10-B19, UI-B01-B10 | Todo parâmetro e resultado bibliométrico relevante usa o mesmo catálogo e distingue significado, limite e consequência metodológica. |
+| UX-M05 | Proveniência clicável | B10-B19, UI-B05 | Resultado permite navegar para `analysis_id`, `corpus_hash`, parâmetros, dados subjacentes e documentos. |
+| UX-M06 | Atualização documental obrigatória | UX-M01 | Novo parâmetro metodológico exige no mesmo PR código, ajuda contextual, documentação e teste. |
+
+A especificação completa está em
+[`docs/contextual-methodology-guidance.md`](contextual-methodology-guidance.md).
+
 ### Bibliometria orientando leitura
 
 | ID | Entrega planejada | Dependência | Critério de aceite |
