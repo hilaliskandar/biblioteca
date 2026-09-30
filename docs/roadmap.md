@@ -107,7 +107,8 @@ Permanecem como evolução:
 
 - **Concluído:** aba Bibliometria e seleção explícita de corpus;
 - **Concluído:** KPIs e tabelas de desempenho;
-- filtros avançados e exportação de redes permanecem como evolução;
+- filtros por peso, grau, cluster e limite de nós, além de exportação CSV/JSON com parâmetros, estão concluídos;
+- modos de rede adicionais, overlay temporal e densidade permanecem como evolução;
 - **Concluído:** visualização interativa básica de nós e arestas com coordenadas, clusters,
   pesos e tooltips de métricas, preservando os resultados persistidos;
 - **Concluído:** componente principal Cytoscape.js via Streamlit Components, com layout `preset`,

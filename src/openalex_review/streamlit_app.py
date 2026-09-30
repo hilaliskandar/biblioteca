@@ -10,8 +10,11 @@ from openalex_review.bibliometrics import (
     execute_coauthorship_analysis,
     execute_cooccurrence_analysis,
     execute_performance_analysis,
+    export_network_csv,
+    export_network_json,
     filter_network,
     list_bibliometric_runs,
+    network_filter_parameters,
     network_visualization_data,
 )
 from openalex_review.common import ensure_directories, env_api_key, project_root, run_id_now
@@ -274,6 +277,50 @@ def _render_network_chart(
             _render_selected_node_review_context(
                 root or _root(), selected_context, action_key=f"{key}_vega"
             )
+
+
+def _render_network_exports(
+    network,
+    *,
+    analysis_id: str,
+    corpus_hash: str,
+    network_type: str,
+    filter_parameters,
+    key: str,
+) -> None:
+    """Expose reproducible downloads for the presentation-only network view."""
+    json_data = export_network_json(
+        network,
+        analysis_id=analysis_id,
+        corpus_hash=corpus_hash,
+        network_type=network_type,
+        filter_parameters=filter_parameters,
+    )
+    nodes_csv = export_network_csv(network, record_type="nodes")
+    edges_csv = export_network_csv(network, record_type="edges")
+    st.caption("As exportações representam apenas a rede filtrada; os dados persistidos não são alterados.")
+    left, middle, right = st.columns(3)
+    left.download_button(
+        "Baixar JSON + parâmetros",
+        data=json_data,
+        file_name=f"{network_type}-{analysis_id}-filtered.json",
+        mime="application/json",
+        key=f"{key}_json_export",
+    )
+    middle.download_button(
+        "Baixar nós CSV",
+        data=nodes_csv,
+        file_name=f"{network_type}-{analysis_id}-nodes.csv",
+        mime="text/csv",
+        key=f"{key}_nodes_export",
+    )
+    right.download_button(
+        "Baixar arestas CSV",
+        data=edges_csv,
+        file_name=f"{network_type}-{analysis_id}-edges.csv",
+        mime="text/csv",
+        key=f"{key}_edges_export",
+    )
 
 
 def _download_mime(path: Path) -> str:
@@ -718,11 +765,28 @@ def _render_bibliometrics(root: Path) -> None:
             display_edge_weight = st.number_input("Peso mínimo exibido na coautoria", min_value=0.0, value=0.0, step=1.0, key="coauthorship_display_edge_weight")
             display_degree = st.number_input("Grau mínimo exibido na coautoria", min_value=0, value=0, step=1, key="coauthorship_display_degree")
             display_max_nodes = st.number_input("Máximo de nós exibidos na coautoria", min_value=1, max_value=5000, value=100, step=10, key="coauthorship_display_max_nodes")
+            coauthorship_clusters = sorted(
+                {
+                    str(node.get("cluster_id") or "cluster_000") for node in network.nodes
+                }
+            )
+            display_clusters = st.multiselect(
+                "Clusters exibidos na coautoria (vazio = todos)",
+                options=coauthorship_clusters,
+                key="coauthorship_display_clusters",
+            )
             displayed_network = filter_network(
                 network,
                 min_edge_weight=float(display_edge_weight),
                 min_degree=int(display_degree),
                 max_nodes=int(display_max_nodes),
+                cluster_ids=tuple(display_clusters),
+            )
+            coauthorship_filters = network_filter_parameters(
+                min_edge_weight=float(display_edge_weight),
+                min_degree=int(display_degree),
+                max_nodes=int(display_max_nodes),
+                cluster_ids=tuple(display_clusters),
             )
             st.caption(f"Análise: `{network_run.analysis_id}` · exibindo {displayed_network.node_count} de {network.node_count} nós · {displayed_network.edge_count} de {network.edge_count} arestas")
             if displayed_network.nodes:
@@ -756,6 +820,14 @@ def _render_bibliometrics(root: Path) -> None:
             if displayed_network.edges:
                 st.write("Arestas mais fortes")
                 st.dataframe(displayed_network.edges[:20], width="stretch", hide_index=True)
+            _render_network_exports(
+                displayed_network,
+                analysis_id=network_run.analysis_id,
+                corpus_hash=selection.corpus_hash,
+                network_type="coauthorship",
+                filter_parameters=coauthorship_filters,
+                key="coauthorship",
+            )
             if not displayed_network.nodes:
                 st.info("Nenhuma autoria disponível no corpus selecionado.")
         st.subheader("Rede de coocorrência")
@@ -778,11 +850,28 @@ def _render_bibliometrics(root: Path) -> None:
             display_term_edge_weight = st.number_input("Peso mínimo exibido na coocorrência", min_value=0.0, value=0.0, step=1.0, key="cooccurrence_display_edge_weight")
             display_term_degree = st.number_input("Grau mínimo exibido na coocorrência", min_value=0, value=0, step=1, key="cooccurrence_display_degree")
             display_term_max_nodes = st.number_input("Máximo de nós exibidos na coocorrência", min_value=1, max_value=5000, value=100, step=10, key="cooccurrence_display_max_nodes")
+            cooccurrence_clusters = sorted(
+                {
+                    str(node.get("cluster_id") or "cluster_000") for node in cooccurrence.nodes
+                }
+            )
+            display_term_clusters = st.multiselect(
+                "Clusters exibidos na coocorrência (vazio = todos)",
+                options=cooccurrence_clusters,
+                key="cooccurrence_display_clusters",
+            )
             displayed_cooccurrence = filter_network(
                 cooccurrence,
                 min_edge_weight=float(display_term_edge_weight),
                 min_degree=int(display_term_degree),
                 max_nodes=int(display_term_max_nodes),
+                cluster_ids=tuple(display_term_clusters),
+            )
+            cooccurrence_filters = network_filter_parameters(
+                min_edge_weight=float(display_term_edge_weight),
+                min_degree=int(display_term_degree),
+                max_nodes=int(display_term_max_nodes),
+                cluster_ids=tuple(display_term_clusters),
             )
             st.caption(f"Análise: `{cooccurrence_run.analysis_id}` · exibindo {displayed_cooccurrence.node_count} de {cooccurrence.node_count} nós · {displayed_cooccurrence.edge_count} de {cooccurrence.edge_count} arestas")
             if displayed_cooccurrence.nodes:
@@ -816,6 +905,14 @@ def _render_bibliometrics(root: Path) -> None:
             if displayed_cooccurrence.edges:
                 st.write("Coocorrências mais fortes")
                 st.dataframe(displayed_cooccurrence.edges[:20], width="stretch", hide_index=True)
+            _render_network_exports(
+                displayed_cooccurrence,
+                analysis_id=cooccurrence_run.analysis_id,
+                corpus_hash=selection.corpus_hash,
+                network_type=f"cooccurrence-{term_field}",
+                filter_parameters=cooccurrence_filters,
+                key="cooccurrence",
+            )
             if not displayed_cooccurrence.nodes:
                 st.info("Nenhum keyword ou tópico disponível no corpus selecionado.")
         history = list_bibliometric_runs(root, corpus_hash=selection.corpus_hash)

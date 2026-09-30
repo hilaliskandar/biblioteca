@@ -1,3 +1,5 @@
+import json
+
 import duckdb
 import pytest
 
@@ -7,9 +9,12 @@ from openalex_review.bibliometrics import (
     execute_coauthorship_analysis,
     execute_cooccurrence_analysis,
     execute_performance_analysis,
+    export_network_csv,
+    export_network_json,
     filter_network,
     list_bibliometric_runs,
     list_network,
+    network_filter_parameters,
     network_visualization_data,
 )
 from openalex_review.corpus import resolve_corpus
@@ -349,3 +354,73 @@ def test_filter_network_rejects_invalid_limits():
             pass
         else:
             raise AssertionError("expected ValueError")
+
+
+def test_filter_network_supports_cluster_selection_without_mutating_source():
+    network = NetworkResult(
+        3,
+        2,
+        (
+            {"node_id": "a", "label": "A", "cluster_id": "cluster_001", "weight": 3, "centrality_degree": 1},
+            {"node_id": "b", "label": "B", "cluster_id": "cluster_001", "weight": 2, "centrality_degree": 1},
+            {"node_id": "c", "label": "C", "cluster_id": "cluster_002", "weight": 1, "centrality_degree": 0},
+        ),
+        (
+            {"source_node_id": "a", "target_node_id": "b", "weight": 2},
+            {"source_node_id": "a", "target_node_id": "c", "weight": 1},
+        ),
+    )
+
+    filtered = filter_network(network, cluster_ids=("cluster_001",))
+
+    assert {node["node_id"] for node in filtered.nodes} == {"a", "b"}
+    assert filtered.edge_count == 1
+    assert network.node_count == 3
+    assert network.edge_count == 2
+
+
+def test_network_filter_parameters_are_normalized_and_export_metadata_is_reproducible():
+    network = NetworkResult(
+        1,
+        0,
+        ({"node_id": "a", "label": "A", "cluster_id": "cluster_001", "weight": 1},),
+        (),
+    )
+
+    parameters = network_filter_parameters(
+        min_edge_weight=2,
+        min_degree=1,
+        max_nodes=10,
+        cluster_ids=("cluster_002", "cluster_001", "cluster_001"),
+    )
+    payload = json.loads(
+        export_network_json(
+            network,
+            analysis_id="analysis-1",
+            corpus_hash="hash-1",
+            network_type="coauthorship",
+            filter_parameters=parameters,
+        ).decode("utf-8")
+    )
+
+    assert parameters.cluster_ids == ("cluster_001", "cluster_002")
+    assert payload["metadata"]["analysis_id"] == "analysis-1"
+    assert payload["metadata"]["filters"]["cluster_ids"] == ["cluster_001", "cluster_002"]
+    assert payload["metadata"]["node_count"] == 1
+
+
+def test_network_csv_exports_have_headers_and_utf8_content():
+    network = NetworkResult(
+        1,
+        1,
+        ({"node_id": "a", "label": "Árvore", "weight": 1},),
+        ({"source_node_id": "a", "target_node_id": "b", "weight": 2},),
+    )
+
+    nodes_csv = export_network_csv(network, record_type="nodes").decode("utf-8-sig")
+    edges_csv = export_network_csv(network, record_type="edges").decode("utf-8-sig")
+
+    assert "label" in nodes_csv.splitlines()[0]
+    assert "Árvore" in nodes_csv
+    assert "source_node_id" in edges_csv.splitlines()[0]
+    assert "a" in edges_csv

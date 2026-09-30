@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 import heapq
+import io
 import json
 import math
 import re
@@ -44,6 +46,16 @@ class NetworkResult:
     edge_count: int
     nodes: tuple[dict[str, Any], ...]
     edges: tuple[dict[str, Any], ...]
+
+
+@dataclass(frozen=True)
+class NetworkFilter:
+    """Presentation-only network filter parameters."""
+
+    min_edge_weight: float = 0.0
+    min_degree: int = 0
+    max_nodes: int | None = None
+    cluster_ids: tuple[str, ...] = ()
 
 
 def _ensure_runs_table(root: Path) -> None:
@@ -369,6 +381,7 @@ def filter_network(
     min_edge_weight: float = 0.0,
     min_degree: int = 0,
     max_nodes: int | None = None,
+    cluster_ids: tuple[str, ...] = (),
 ) -> NetworkResult:
     """Return a presentation-only subnetwork without changing persisted data.
 
@@ -382,11 +395,16 @@ def filter_network(
         raise ValueError("min_degree must be non-negative")
     if max_nodes is not None and max_nodes < 1:
         raise ValueError("max_nodes must be positive when provided")
+    normalized_clusters = tuple(sorted({str(cluster) for cluster in cluster_ids if str(cluster)}))
 
     eligible_nodes = [
         node
         for node in network.nodes
         if float(node.get("centrality_degree") or 0) >= min_degree
+        and (
+            not normalized_clusters
+            or str(node.get("cluster_id") or "cluster_000") in normalized_clusters
+        )
     ]
     eligible_nodes.sort(
         key=lambda node: (
@@ -407,6 +425,71 @@ def filter_network(
     )
     filtered = NetworkResult(len(eligible_nodes), len(edges), tuple(eligible_nodes), edges)
     return _with_network_metrics(_with_network_layout(_with_network_clustering(filtered)))
+
+
+def network_filter_parameters(
+    *,
+    min_edge_weight: float = 0.0,
+    min_degree: int = 0,
+    max_nodes: int | None = None,
+    cluster_ids: tuple[str, ...] = (),
+) -> NetworkFilter:
+    """Validate and normalize presentation-only network filter parameters."""
+    filter_network(
+        NetworkResult(0, 0, (), ()),
+        min_edge_weight=min_edge_weight,
+        min_degree=min_degree,
+        max_nodes=max_nodes,
+        cluster_ids=cluster_ids,
+    )
+    return NetworkFilter(
+        min_edge_weight=float(min_edge_weight),
+        min_degree=int(min_degree),
+        max_nodes=None if max_nodes is None else int(max_nodes),
+        cluster_ids=tuple(sorted({str(cluster) for cluster in cluster_ids if str(cluster)})),
+    )
+
+
+def export_network_json(
+    network: NetworkResult,
+    *,
+    analysis_id: str,
+    corpus_hash: str,
+    network_type: str,
+    filter_parameters: NetworkFilter,
+) -> bytes:
+    """Serialize a filtered network and its reproducibility metadata as JSON."""
+    payload = {
+        "metadata": {
+            "analysis_id": analysis_id,
+            "corpus_hash": corpus_hash,
+            "network_type": network_type,
+            "filters": {
+                "min_edge_weight": filter_parameters.min_edge_weight,
+                "min_degree": filter_parameters.min_degree,
+                "max_nodes": filter_parameters.max_nodes,
+                "cluster_ids": list(filter_parameters.cluster_ids),
+            },
+            "node_count": network.node_count,
+            "edge_count": network.edge_count,
+        },
+        "nodes": [dict(node) for node in network.nodes],
+        "edges": [dict(edge) for edge in network.edges],
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8")
+
+
+def export_network_csv(network: NetworkResult, *, record_type: str) -> bytes:
+    """Serialize nodes or edges from a filtered network as UTF-8 CSV."""
+    if record_type not in {"nodes", "edges"}:
+        raise ValueError("record_type must be 'nodes' or 'edges'")
+    records = network.nodes if record_type == "nodes" else network.edges
+    fieldnames = sorted({key for record in records for key in record})
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(records)
+    return output.getvalue().encode("utf-8-sig")
 
 
 def network_visualization_data(
