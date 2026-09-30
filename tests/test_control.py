@@ -5,6 +5,7 @@ import duckdb
 import pytest
 
 from openalex_review.control import (
+    import_evidence_matrix,
     import_fulltext_assets,
     import_reading_status,
     init_control,
@@ -45,6 +46,18 @@ def make_database(tmp_path):
             asset_type VARCHAR, source VARCHAR, status VARCHAR, sha256 VARCHAR,
             size_bytes BIGINT, discovered_at TIMESTAMP, last_attempt_at TIMESTAMP,
             failure_reason VARCHAR, notes VARCHAR
+        )
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE evidence_notes (
+            evidence_id VARCHAR, record_key VARCHAR, theme VARCHAR,
+            regulatory_mechanism VARCHAR, source_question VARCHAR,
+            unit_of_analysis VARCHAR, method VARCHAR, finding VARCHAR,
+            limitation VARCHAR, source_location VARCHAR, evidence_type VARCHAR,
+            researcher_interpretation VARCHAR, manuscript_section VARCHAR,
+            verified BOOLEAN
         )
         """
     )
@@ -116,4 +129,60 @@ def test_import_fulltext_asset_hashes_local_file(tmp_path):
         expected_hash,
         asset.stat().st_size,
     )
+    con.close()
+
+
+def test_import_evidence_matrix_validates_and_is_idempotent(tmp_path):
+    make_database(tmp_path)
+    source = tmp_path / "evidence.csv"
+    write_csv(
+        source,
+        [
+            "evidence_id", "openalex_id", "tema", "achado", "pagina_ou_trecho",
+            "natureza_evidencia", "conferida", "secao_texto",
+        ],
+        [{
+            "evidence_id": "e1",
+            "openalex_id": "W1",
+            "tema": "governanca",
+            "achado": "Achado verificável",
+            "pagina_ou_trecho": "p. 10",
+            "natureza_evidencia": "empirica",
+            "conferida": "sim",
+            "secao_texto": "resultados",
+        }],
+    )
+
+    first = import_evidence_matrix(source, root=tmp_path)
+    second = import_evidence_matrix(source, root=tmp_path)
+
+    assert first.imported == 1
+    assert second.imported == 0
+    assert second.skipped_existing == 1
+    con = duckdb.connect(str(tmp_path / "data/db/openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT evidence_id, record_key, verified FROM evidence_notes"
+    ).fetchall() == [("e1", "openalex:W1", True)]
+    con.close()
+
+
+def test_import_evidence_matrix_rejects_invalid_batch_without_write(tmp_path):
+    make_database(tmp_path)
+    source = tmp_path / "evidence.csv"
+    write_csv(
+        source,
+        ["evidence_id", "openalex_id", "achado", "pagina_ou_trecho", "natureza_evidencia"],
+        [{
+            "evidence_id": "e1",
+            "openalex_id": "W1",
+            "achado": "Achado",
+            "pagina_ou_trecho": "",
+            "natureza_evidencia": "empirica",
+        }],
+    )
+
+    with pytest.raises(ValueError, match="Importacao cancelada"):
+        import_evidence_matrix(source, root=tmp_path)
+    con = duckdb.connect(str(tmp_path / "data/db/openalex.duckdb"), read_only=True)
+    assert con.execute("SELECT COUNT(*) FROM evidence_notes").fetchone() == (0,)
     con.close()

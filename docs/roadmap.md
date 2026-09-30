@@ -78,14 +78,15 @@ integral. O objetivo é:
 - registrar elegibilidade e exclusões de texto integral.
 
 ## P3 — evidências e FAFAT+
-
-A tabela e o modelo de matriz de evidências existem, mas a operação ainda é
+- a matriz de evidências/FAFAT+ tem importação, validação e relatório de lacunas
+  operacionais. O ciclo restante inclui:
 planejada. O ciclo inclui:
 
-- importar a matriz com validação referencial;
-- validar campos, vocabulários e fichamentos estruturados;
-- relacionar evidência à localização da fonte, síntese e FAFAT+;
-- relatar evidência não conferida, lacunas e uso no manuscrito.
+- **Concluído:** importar a matriz com validação referencial;
+- **Concluído:** validar campos, vocabulários e fichamentos estruturados;
+- **Concluído:** relacionar evidência à localização da fonte e seção do manuscrito;
+- **Concluído:** relatar evidência não conferida, lacunas e uso no manuscrito;
+- relacionar evidências a síntese final e completar a redação FAFAT+ com revisão humana.
 
 ## P4 — PRISMA completo
 

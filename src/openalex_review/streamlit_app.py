@@ -120,7 +120,7 @@ def _render_selected_node_review_context(root: Path, node: dict, *, action_key: 
         if evidence:
             st.dataframe(evidence, width="stretch", hide_index=True)
         else:
-            st.info("Nenhuma evidência ou ficha FAFAT+ associada. A estrutura ainda é opcional.")
+            st.info("Nenhuma evidência ou ficha FAFAT+ associada. Use `import-evidence` para importar a matriz validada.")
 
 
 def _render_network_chart(
