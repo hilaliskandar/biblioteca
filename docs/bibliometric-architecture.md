@@ -123,7 +123,8 @@ work_identifiers
   record_key, identifier_type, identifier_value, source, verified
 ```
 
-`work_references` deve preservar referências fora do corpus; a ausência da obra
+`work_references` é materializada durante `build-db` a partir de `referenced_works`
+do JSON bruto e deve preservar referências fora do corpus; a ausência da obra
 citada em `works` não pode impedir a materialização da relação. Os tipos de
 identificador devem incluir, quando disponíveis, `openalex`, `doi`, `pmid`,
 `isbn`, `scopus`, `wos` e `semantic_scholar`.

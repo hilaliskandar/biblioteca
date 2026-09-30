@@ -776,6 +776,190 @@ def _build_cooccurrence(
     )
 
 
+def _citation_node(node_id: str, label: str, analysis_id: str, weight: float) -> dict[str, Any]:
+    return {
+        "analysis_id": analysis_id,
+        "node_id": node_id,
+        "node_type": "work",
+        "label": label,
+        "weight": weight,
+        "cluster_id": None,
+        "x": None,
+        "y": None,
+        "centrality_degree": None,
+        "centrality_betweenness": None,
+        "centrality_closeness": None,
+        "centrality_eigenvector": None,
+        "metadata_json": "",
+    }
+
+
+def _build_bibliographic_coupling(
+    root: Path,
+    selection: CorpusSelection,
+    analysis_id: str,
+) -> NetworkResult:
+    """Build a work network weighted by shared references."""
+    db_path = root / "data" / "db" / "openalex.duckdb"
+    duckdb = _require_duckdb()
+    con = duckdb.connect(str(db_path), read_only=True)
+    try:
+        tables = {
+            row[0]
+            for row in con.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            ).fetchall()
+        }
+        if "work_references" not in tables:
+            return NetworkResult(0, 0, (), ())
+        where, parameters = _corpus_filter(selection)
+        rows = con.execute(
+            f"""
+            SELECT wr.record_key, wr.referenced_openalex_id, w.title
+            FROM work_references wr
+            JOIN works w USING (record_key)
+            WHERE {where}
+            ORDER BY wr.record_key, wr.referenced_openalex_id
+            """,
+            parameters,
+        ).fetchall()
+    finally:
+        con.close()
+
+    references_by_work: dict[str, set[str]] = {}
+    labels: dict[str, str] = {}
+    for record_key, referenced_id, title in rows:
+        references_by_work.setdefault(record_key, set()).add(referenced_id)
+        labels[record_key] = title or record_key
+    node_records = {
+        record_key: _citation_node(
+            f"work:{record_key}",
+            labels[record_key],
+            analysis_id,
+            float(len(references)),
+        )
+        for record_key, references in references_by_work.items()
+    }
+    edge_records: dict[tuple[str, str], dict[str, Any]] = {}
+    for source, target in combinations(sorted(references_by_work), 2):
+        shared = references_by_work[source] & references_by_work[target]
+        if not shared:
+            continue
+        source_id = f"work:{source}"
+        target_id = f"work:{target}"
+        edge_records[(source_id, target_id)] = {
+            "analysis_id": analysis_id,
+            "source_node_id": source_id,
+            "target_node_id": target_id,
+            "weight": float(len(shared)),
+            "relation_type": "bibliographic_coupling",
+            "metadata_json": json.dumps(
+                {"shared_references": sorted(shared)}, ensure_ascii=False
+            ),
+        }
+    for record_key, node in node_records.items():
+        node["metadata_json"] = json.dumps(
+            {
+                "record_key": record_key,
+                "references": sorted(references_by_work[record_key]),
+                "source": "work_references",
+            },
+            ensure_ascii=False,
+        )
+    return NetworkResult(
+        len(node_records),
+        len(edge_records),
+        tuple(sorted(node_records.values(), key=lambda item: (-item["weight"], item["node_id"]))),
+        tuple(sorted(edge_records.values(), key=lambda item: (-item["weight"], item["source_node_id"], item["target_node_id"]))),
+    )
+
+
+def _build_cocitation(
+    root: Path,
+    selection: CorpusSelection,
+    analysis_id: str,
+) -> NetworkResult:
+    """Build a reference network weighted by the number of citing works."""
+    db_path = root / "data" / "db" / "openalex.duckdb"
+    duckdb = _require_duckdb()
+    con = duckdb.connect(str(db_path), read_only=True)
+    try:
+        tables = {
+            row[0]
+            for row in con.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            ).fetchall()
+        }
+        if "work_references" not in tables:
+            return NetworkResult(0, 0, (), ())
+        where, parameters = _corpus_filter(selection)
+        rows = con.execute(
+            f"""
+            SELECT wr.record_key, wr.referenced_openalex_id
+            FROM work_references wr
+            WHERE {where}
+            ORDER BY wr.record_key, wr.referenced_openalex_id
+            """,
+            parameters,
+        ).fetchall()
+    finally:
+        con.close()
+
+    references_by_work: dict[str, set[str]] = {}
+    citing_works: dict[str, set[str]] = {}
+    for record_key, referenced_id in rows:
+        references_by_work.setdefault(record_key, set()).add(referenced_id)
+        citing_works.setdefault(referenced_id, set()).add(record_key)
+    node_records = {
+        referenced_id: _citation_node(
+            f"reference:{referenced_id}",
+            referenced_id,
+            analysis_id,
+            float(len(work_keys)),
+        )
+        for referenced_id, work_keys in citing_works.items()
+    }
+    edge_records: dict[tuple[str, str], dict[str, Any]] = {}
+    reference_ids = sorted(references_by_work.values(), key=lambda values: tuple(sorted(values)))
+    for references in reference_ids:
+        for source, target in combinations(sorted(references), 2):
+            edge_key = (f"reference:{source}", f"reference:{target}")
+            edge = edge_records.setdefault(
+                edge_key,
+                {
+                    "analysis_id": analysis_id,
+                    "source_node_id": edge_key[0],
+                    "target_node_id": edge_key[1],
+                    "weight": 0.0,
+                    "relation_type": "cocitation",
+                    "metadata_json": "",
+                },
+            )
+            edge["weight"] += 1
+    for referenced_id, node in node_records.items():
+        node["metadata_json"] = json.dumps(
+            {
+                "referenced_openalex_id": referenced_id,
+                "citing_records": sorted(citing_works[referenced_id]),
+                "source": "work_references",
+            },
+            ensure_ascii=False,
+        )
+    for edge in edge_records.values():
+        source = edge["source_node_id"].removeprefix("reference:")
+        target = edge["target_node_id"].removeprefix("reference:")
+        edge["metadata_json"] = json.dumps(
+            {"relation": "cocitation", "source_reference": source, "target_reference": target},
+            ensure_ascii=False,
+        )
+    return NetworkResult(
+        len(node_records),
+        len(edge_records),
+        tuple(sorted(node_records.values(), key=lambda item: (-item["weight"], item["node_id"]))),
+        tuple(sorted(edge_records.values(), key=lambda item: (-item["weight"], item["source_node_id"], item["target_node_id"]))),
+    )
+
+
 def _write_network(root: Path, network: NetworkResult) -> None:
     if not network.nodes and not network.edges:
         return
@@ -1186,6 +1370,79 @@ def execute_cooccurrence_analysis(
                 network.nodes,
                 tuple(edge for edge in network.edges if edge["weight"] >= min_edge_weight),
             )
+        network = _with_network_metrics(_with_network_layout(_with_network_clustering(network)))
+        _write_network(root, network)
+    except Exception:
+        _update_run(root, analysis_id, status="failed")
+        raise
+    _update_run(root, analysis_id, status="completed")
+    return BibliometricRun(**{**run.__dict__, "status": "completed"}), network
+
+
+def execute_citation_analysis(
+    root: Path,
+    selection: CorpusSelection,
+    *,
+    mode: str,
+    min_edge_weight: int = 1,
+) -> tuple[BibliometricRun, NetworkResult]:
+    """Persist and execute bibliographic coupling or cocitation."""
+    if mode not in {"bibliographic_coupling", "cocitation"}:
+        raise ValueError("mode deve ser 'bibliographic_coupling' ou 'cocitation'.")
+    if min_edge_weight <= 0:
+        raise ValueError("min_edge_weight deve ser positivo.")
+    _ensure_runs_table(root)
+    _ensure_network_tables(root)
+    analysis_id = _new_analysis_id().replace("performance_", f"{mode}_", 1)
+    relation_type = mode
+    parameters_json = json.dumps(
+        {
+            "clustering": "connected_components_v1",
+            "layout": "clustered_circular_v1",
+            "min_edge_weight": min_edge_weight,
+            "reference_source": "work_references",
+            "seed": 0,
+            "formula": (
+                "|R_i intersection R_j|"
+                if mode == "bibliographic_coupling"
+                else "count of corpus works citing both references"
+            ),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    run = BibliometricRun(
+        analysis_id=analysis_id,
+        created_at=utc_now_iso(),
+        analysis_type=relation_type,
+        corpus_scope=selection.scope,
+        corpus_definition=selection.definition,
+        corpus_hash=selection.corpus_hash,
+        unit_of_analysis="work" if mode == "bibliographic_coupling" else "referenced_work",
+        counting_method="full counting",
+        normalization="none",
+        threshold=str(min_edge_weight),
+        clustering_method="connected_components_v1",
+        layout_method="clustered_circular_v1",
+        parameters_json=parameters_json,
+        software="openalex-review-pipeline",
+        software_version=SOFTWARE_VERSION,
+        status="running",
+        output_path=None,
+    )
+    _write_run(root, run)
+    try:
+        network = (
+            _build_bibliographic_coupling(root, selection, analysis_id)
+            if mode == "bibliographic_coupling"
+            else _build_cocitation(root, selection, analysis_id)
+        )
+        network = NetworkResult(
+            network.node_count,
+            sum(edge["weight"] >= min_edge_weight for edge in network.edges),
+            network.nodes,
+            tuple(edge for edge in network.edges if edge["weight"] >= min_edge_weight),
+        )
         network = _with_network_metrics(_with_network_layout(_with_network_clustering(network)))
         _write_network(root, network)
     except Exception:
