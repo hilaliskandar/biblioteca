@@ -492,6 +492,121 @@ def export_network_csv(network: NetworkResult, *, record_type: str) -> bytes:
     return output.getvalue().encode("utf-8-sig")
 
 
+def _node_record_keys(node: dict[str, Any]) -> tuple[str, ...]:
+    try:
+        metadata = json.loads(node.get("metadata_json") or "{}")
+    except (TypeError, ValueError):
+        return ()
+    values = []
+    for field in ("records", "record_key", "citing_records"):
+        value = metadata.get(field)
+        if isinstance(value, str):
+            values.append(value)
+        elif isinstance(value, list):
+            values.extend(str(item) for item in value if item)
+    return tuple(sorted(set(values)))
+
+
+def network_temporal_overlay(
+    root: Path,
+    network: NetworkResult,
+    *,
+    recent_years: int = 5,
+) -> NetworkResult:
+    """Enrich nodes with reproducible publication-year overlay metrics."""
+    if recent_years < 1:
+        raise ValueError("recent_years must be positive")
+    record_keys = sorted({key for node in network.nodes for key in _node_record_keys(node)})
+    years_by_record: dict[str, int] = {}
+    if record_keys:
+        db_path = root / "data" / "db" / "openalex.duckdb"
+        duckdb = _require_duckdb()
+        con = duckdb.connect(str(db_path), read_only=True)
+        try:
+            placeholders = _placeholders(tuple(record_keys))
+            rows = con.execute(
+                f"SELECT record_key, publication_year FROM works "
+                f"WHERE record_key IN ({placeholders}) AND publication_year IS NOT NULL",
+                record_keys,
+            ).fetchall()
+        finally:
+            con.close()
+        years_by_record = {record_key: int(year) for record_key, year in rows}
+
+    all_years = sorted(years_by_record.values())
+    cutoff = max(all_years) - recent_years + 1 if all_years else None
+    nodes = []
+    for node in network.nodes:
+        years = [years_by_record[key] for key in _node_record_keys(node) if key in years_by_record]
+        counts: dict[int, int] = {}
+        for year in years:
+            counts[year] = counts.get(year, 0) + 1
+        enriched = dict(node)
+        enriched.update(
+            {
+                "temporal_record_count": len(years),
+                "temporal_first_year": min(years) if years else None,
+                "temporal_last_year": max(years) if years else None,
+                "temporal_mean_year": sum(years) / len(years) if years else None,
+                "temporal_recent_count": sum(
+                    count for year, count in counts.items() if cutoff is not None and year >= cutoff
+                ),
+                "temporal_years": tuple(
+                    {"year": year, "records": counts[year]} for year in sorted(counts)
+                ),
+            }
+        )
+        metadata = json.loads(node.get("metadata_json") or "{}")
+        metadata["temporal_overlay"] = {
+            "algorithm": "publication_year_overlay_v1",
+            "recent_years": recent_years,
+            "cutoff_year": cutoff,
+            "record_count": len(years),
+        }
+        enriched["metadata_json"] = json.dumps(metadata, ensure_ascii=False)
+        nodes.append(enriched)
+    return NetworkResult(network.node_count, network.edge_count, tuple(nodes), network.edges)
+
+
+def network_density_grid(
+    network: NetworkResult,
+    *,
+    grid_size: int = 10,
+) -> tuple[dict[str, Any], ...]:
+    """Aggregate persisted node coordinates into a deterministic density grid."""
+    if grid_size < 1 or grid_size > 100:
+        raise ValueError("grid_size must be between 1 and 100")
+    nodes = list(network.nodes)
+    if not nodes:
+        return ()
+    xs = [float(node.get("x") or 0.0) for node in nodes]
+    ys = [float(node.get("y") or 0.0) for node in nodes]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    span_x = max_x - min_x or 1.0
+    span_y = max_y - min_y or 1.0
+    cells: dict[tuple[int, int], dict[str, Any]] = {}
+    for node, x, y in zip(nodes, xs, ys, strict=True):
+        column = min(grid_size - 1, int((x - min_x) / span_x * grid_size))
+        row = min(grid_size - 1, int((y - min_y) / span_y * grid_size))
+        cell = cells.setdefault(
+            (row, column),
+            {
+                "row": row,
+                "column": column,
+                "x": min_x + (column + 0.5) * span_x / grid_size,
+                "y": min_y + (row + 0.5) * span_y / grid_size,
+                "node_count": 0,
+                "weight": 0.0,
+            },
+        )
+        cell["node_count"] += 1
+        cell["weight"] += float(node.get("weight") or 0.0)
+    for cell in cells.values():
+        cell["density"] = cell["node_count"] / (grid_size * grid_size)
+    return tuple(cells[key] for key in sorted(cells))
+
+
 def network_visualization_data(
     network: NetworkResult,
     *,

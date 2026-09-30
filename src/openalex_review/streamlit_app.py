@@ -15,7 +15,9 @@ from openalex_review.bibliometrics import (
     export_network_json,
     filter_network,
     list_bibliometric_runs,
+    network_density_grid,
     network_filter_parameters,
+    network_temporal_overlay,
     network_visualization_data,
 )
 from openalex_review.common import ensure_directories, env_api_key, project_root, run_id_now
@@ -322,6 +324,101 @@ def _render_network_exports(
         mime="text/csv",
         key=f"{key}_edges_export",
     )
+
+
+def _render_temporal_density(
+    root: Path,
+    network,
+    *,
+    key: str,
+) -> None:
+    """Render presentation-only temporal overlay and density summaries."""
+    with st.expander("Overlay temporal e densidade", expanded=False):
+        temporal_enabled = st.checkbox(
+            "Exibir overlay temporal",
+            value=False,
+            key=f"{key}_temporal_enabled",
+        )
+        if temporal_enabled:
+            recent_years = st.number_input(
+                "Janela de recência (anos)",
+                min_value=1,
+                max_value=50,
+                value=5,
+                step=1,
+                key=f"{key}_temporal_recent_years",
+            )
+            temporal_network = network_temporal_overlay(
+                root, network, recent_years=int(recent_years)
+            )
+            temporal_rows = [
+                {
+                    "label": node.get("label"),
+                    "first_year": node.get("temporal_first_year"),
+                    "last_year": node.get("temporal_last_year"),
+                    "mean_year": node.get("temporal_mean_year"),
+                    "records": node.get("temporal_record_count", 0),
+                    "recent_records": node.get("temporal_recent_count", 0),
+                }
+                for node in temporal_network.nodes
+            ]
+            st.dataframe(temporal_rows, width="stretch", hide_index=True)
+            series = {}
+            for node in temporal_network.nodes:
+                for item in node.get("temporal_years", ()):
+                    series[item["year"]] = series.get(item["year"], 0) + item["records"]
+            if series:
+                st.line_chart(
+                    [{"year": year, "records": count} for year, count in sorted(series.items())],
+                    x="year",
+                    y="records",
+                )
+            else:
+                st.info("Não há anos de publicação associados aos nós desta rede.")
+
+        density_enabled = st.checkbox(
+            "Exibir densidade espacial",
+            value=False,
+            key=f"{key}_density_enabled",
+        )
+        if density_enabled:
+            grid_size = st.slider(
+                "Tamanho da grade de densidade",
+                min_value=2,
+                max_value=30,
+                value=10,
+                step=1,
+                key=f"{key}_density_grid_size",
+            )
+            density = network_density_grid(network, grid_size=int(grid_size))
+            if density:
+                st.vega_lite_chart(
+                    {
+                        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                        "width": "container",
+                        "height": 360,
+                        "data": {"values": list(density)},
+                        "mark": {"type": "rect"},
+                        "encoding": {
+                            "x": {"field": "column", "type": "ordinal", "title": "Coluna"},
+                            "y": {"field": "row", "type": "ordinal", "title": "Linha"},
+                            "color": {
+                                "field": "weight",
+                                "type": "quantitative",
+                                "title": "Peso agregado",
+                            },
+                            "tooltip": [
+                                {"field": "node_count", "title": "Nós"},
+                                {"field": "weight", "title": "Peso"},
+                                {"field": "density", "title": "Densidade"},
+                            ],
+                        },
+                    },
+                    width="stretch",
+                )
+                st.dataframe(density, width="stretch", hide_index=True)
+            else:
+                st.info("Não há coordenadas para calcular densidade.")
 
 
 def _download_mime(path: Path) -> str:
@@ -829,6 +926,7 @@ def _render_bibliometrics(root: Path) -> None:
                 filter_parameters=coauthorship_filters,
                 key="coauthorship",
             )
+            _render_temporal_density(root, displayed_network, key="coauthorship")
             if not displayed_network.nodes:
                 st.info("Nenhuma autoria disponível no corpus selecionado.")
         st.subheader("Rede de coocorrência")
@@ -914,6 +1012,7 @@ def _render_bibliometrics(root: Path) -> None:
                 filter_parameters=cooccurrence_filters,
                 key="cooccurrence",
             )
+            _render_temporal_density(root, displayed_cooccurrence, key="cooccurrence")
             if not displayed_cooccurrence.nodes:
                 st.info("Nenhum keyword ou tópico disponível no corpus selecionado.")
         st.subheader("Redes de citação")
@@ -1027,6 +1126,7 @@ def _render_bibliometrics(root: Path) -> None:
                 filter_parameters=citation_filters,
                 key="citation",
             )
+            _render_temporal_density(root, displayed_citation, key="citation")
             if not displayed_citation.nodes:
                 st.info(
                     "Nenhuma referência materializada está disponível no corpus. "

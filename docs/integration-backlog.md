@@ -149,8 +149,8 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | UI-B05 | Comunicação grafo → Python | UI-B04 | **Concluído e integrado na `main`:** clique e limpeza retornam eventos com `node_id` ao Streamlit; a seleção é persistida por corpus/rede e abre painel contextual com métricas, coordenadas, cluster, vizinhos, arestas incidentes, obras associadas e estado de triagem/leitura/evidências quando disponível. |
 | UI-B06 | Filtros interativos | UI-B05 | **Concluído nesta entrega:** filtra peso, grau, cluster e limite de nós sem alterar a fonte persistida; período, corpus e tipo permanecem definidos pela análise selecionada. |
 | UI-B07 | Modos de rede | UI-B06 | **Concluído nesta entrega:** alterna coautoria, coocorrência, cocitação e acoplamento bibliográfico; todos usam os mesmos filtros, visualização e exportação. |
-| UI-B08 | Overlay temporal | UI-B06 | Exibe ano médio, emergência e crescimento com parâmetros registrados. |
-| UI-B09 | Densidade | UI-B06 | Gera mapa de densidade sem substituir nós/arestas como fonte de dados. |
+| UI-B08 | Overlay temporal | UI-B06 | **Concluído nesta entrega:** calcula primeiro/último/ano médio, janela de recência e série anual por nó a partir das obras associadas; registra algoritmo e parâmetros no metadado visual sem alterar a rede persistida. |
+| UI-B09 | Densidade | UI-B06 | **Concluído nesta entrega:** agrega coordenadas persistidas em grade determinística com contagem e peso, exibida como mapa Vega-Lite sem substituir nós/arestas. |
 | UI-B10 | Exportar rede filtrada | UI-B06 | **Concluído nesta entrega:** exporta nós/arestas em CSV e a rede filtrada em JSON com `analysis_id`, `corpus_hash`, tipo de rede e parâmetros dos filtros. |
 | UI-B11 | Avaliar Sigma.js | UI-B03 | Só adota backend opcional se benchmark em 1k–25k nós demonstrar ganho material. |
 

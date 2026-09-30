@@ -109,7 +109,7 @@ Permanecem como evolução:
 - **Concluído:** KPIs e tabelas de desempenho;
 - filtros por peso, grau, cluster e limite de nós, além de exportação CSV/JSON com parâmetros, estão concluídos;
 - modos de rede de coautoria, coocorrência, cocitação e acoplamento bibliográfico estão concluídos;
-- overlay temporal e densidade permanecem como evolução;
+- overlay temporal e densidade estão concluídos como camadas de apresentação reproduzíveis;
 - **Concluído:** visualização interativa básica de nós e arestas com coordenadas, clusters,
   pesos e tooltips de métricas, preservando os resultados persistidos;
 - **Concluído:** componente principal Cytoscape.js via Streamlit Components, com layout `preset`,
