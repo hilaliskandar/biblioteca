@@ -72,13 +72,17 @@ flowchart TD
     AR --> AS[PRISMA inicial, contagens por consulta,<br/>sobreposição e resumo de triagem]
     AS --> AT[init_control]
     AT --> AU[Modelos vazios de triagem,<br/>leitura e matriz de evidências]
-    AO --> AV[Triagem humana no ASReview]
-    AV --> AW[import-screening]
-    AW --> AX[Resolve obra por record_key,<br/>OpenAlex ID, DOI ou título]
-    AX --> AY{CSV íntegro e decisões válidas?}
-    AY -- não --> AZ[Cancelamento atômico<br/>arquivo de erros local]
-    AY -- sim --> BA[Atualiza DuckDB e CSV de controle]
-    BA --> BB[Próximo report mostra inclusão,<br/>exclusão, conflitos e pendências]
+    AU --> AVR[import-references<br/>BibTeX/RIS]
+    AVR --> AWR[Normaliza e deduplica referências]
+    AWR --> AXR[Correspondência OpenAlex por ID,<br/>DOI ou título/ano]
+    AXR --> AYR[Relatório para revisão humana<br/>sem download automático]
+    AO --> AVS[Triagem humana no ASReview]
+    AVS --> AWS[import-screening]
+    AWS --> AXS[Resolve obra por record_key,<br/>OpenAlex ID, DOI ou título]
+    AXS --> AYS{CSV íntegro e decisões válidas?}
+    AYS -- não --> AZS[Cancelamento atômico<br/>arquivo de erros local]
+    AYS -- sim --> BAS[Atualiza DuckDB e CSV de controle]
+    BAS --> BBS[Próximo report mostra inclusão,<br/>exclusão, conflitos e pendências]
 ```
 
 ## Etapas e invariantes
@@ -161,8 +165,22 @@ concordância por etapa. A concordância percentual usa apenas obras avaliadas p
 ambos; decisões individuais, discordâncias e adjudicação não são misturadas.
 Cohen's kappa só é calculado para exatamente dois revisores comparáveis e pelo
 menos dois casos comparáveis. O PRISMA implementado cobre identificação,
-deduplicação e triagem inicial; adjudicação, texto integral e síntese final
-dependem de etapas posteriores.
+deduplicação, triagem inicial e detalhes de texto integral por decisão,
+exclusão, conflito e pendência. Conflitos ficam fora do corpus final até
+resolução humana.
+
+O comando `reading-queue` cria uma projeção de leitura a partir de nós de obras
+persistidos. A prioridade usa `0.45*bridge_score + 0.30*recency_score +
+  0.25*cluster_representativeness_scaled`; a execução e os parâmetros ficam no
+JSON. A fila é auxiliar, determinística e não altera decisões.
+
+O comando `import-references` lê `.bib`, `.bibtex` ou `.ris`, normaliza autores,
+DOI, título, ano e URLs, deduplica deterministicamente por identificador disponível
+e tenta correspondência com `works` por OpenAlex ID, DOI ou título/ano. O resultado
+é gravado em `reports/reference_imports.csv` e nos arquivos de controle. Para uma
+correspondência, `openalex_source_url` indica a página OpenAlex; o sistema não
+baixa PDFs ou artigos. O pesquisador deve confirmar a obra, abrir a fonte indicada
+e registrar manualmente a decisão de triagem/elegibilidade.
 
 ### 5. Triagem humana
 

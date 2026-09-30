@@ -259,6 +259,36 @@ fulltext_assets
 O estado de leitura permanece em `reading_status` e é importado separadamente
 com vocabulário controlado e validação referencial.
 
+`reports/reading_queue.csv` e `reports/reading_queue.json` são projeções
+reproduzíveis derivadas de redes persistidas e do estado de revisão. A fórmula
+combina bridge score, recência e representatividade de cluster. Esses arquivos
+não são fonte de verdade e não substituem critérios de inclusão, elegibilidade
+ou síntese.
+
+`reports/prisma_fulltext_details.csv` é uma projeção por obra candidata a texto
+integral, com estado `incluido`, `excluido`, `conflito` ou `pendente`, motivos
+controlados e número de decisões. Uma obra em conflito não entra no corpus final
+até resolução humana.
+
+### Importações externas de referências
+
+`import-references` aceita arquivos BibTeX e RIS sem alterar `works`, decisões de
+triagem ou o corpus automaticamente. A importação normaliza e deduplica por
+OpenAlex ID, DOI ou título/ano, tenta correspondência com `works` e gera:
+
+```text
+reports/reference_imports.csv
+data/control/reference_imports.csv
+data/control/reference_import_errors.csv
+```
+
+O relatório preserva `source_file`, `source_format`, `source_row`, identificadores,
+dados bibliográficos e `match_method`. `openalex_source_url` aponta para a página
+da obra em OpenAlex quando uma correspondência é encontrada. `landing_page_url` e
+`pdf_url` são somente referências para acesso manual; nenhum texto é baixado pelo
+importador. A confirmação da correspondência, acesso ao texto e decisão de
+elegibilidade são responsabilidades humanas.
+
 ## 6. Unidade canônica e identificadores
 
 `record_key` é construído preferencialmente a partir do identificador OpenAlex. DOI normalizado também é preservado e pode resolver registros na importação de triagem.

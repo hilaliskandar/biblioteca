@@ -154,6 +154,59 @@ def _fulltext_summary(con) -> dict[str, int]:
     }
 
 
+def _fulltext_details(con) -> list[dict[str, object]]:
+    """Return one auditable PRISMA row per title/abstract candidate."""
+    if not _table_exists(con, "screening_decisions"):
+        return []
+    work_columns = {
+        row[0]
+        for row in con.execute(
+            """
+            SELECT column_name FROM information_schema.columns
+            WHERE table_schema = 'main' AND table_name = 'works'
+            """
+        ).fetchall()
+    }
+    openalex_expression = "w.openalex_id" if "openalex_id" in work_columns else "NULL"
+    title_expression = "w.title" if "title" in work_columns else "NULL"
+    return _records_from_result(
+        con.execute(
+            f"""
+            WITH title_included AS (
+                SELECT DISTINCT record_key
+                FROM screening_decisions
+                WHERE stage = 'titulo_resumo' AND decision = 'incluir'
+            ), text_decisions AS (
+                SELECT record_key,
+                       COUNT(*) AS decisions,
+                       BOOL_OR(decision = 'incluir') AS has_include,
+                       BOOL_OR(decision = 'excluir') AS has_exclude,
+                       STRING_AGG(DISTINCT NULLIF(exclusion_reason, ''), '; ')
+                         FILTER (WHERE decision = 'excluir') AS exclusion_reasons
+                FROM screening_decisions
+                WHERE stage = 'texto_integral'
+                GROUP BY record_key
+            )
+            SELECT ti.record_key,
+                   {openalex_expression} AS openalex_id,
+                   {title_expression} AS title,
+                   CASE
+                     WHEN td.has_include AND td.has_exclude THEN 'conflito'
+                     WHEN td.has_include THEN 'incluido'
+                     WHEN td.has_exclude THEN 'excluido'
+                     ELSE 'pendente'
+                   END AS elegibilidade,
+                   COALESCE(td.exclusion_reasons, '') AS motivos_exclusao,
+                   COALESCE(td.decisions, 0) AS decisoes_texto_integral
+            FROM title_included ti
+            JOIN works w USING (record_key)
+            LEFT JOIN text_decisions td USING (record_key)
+            ORDER BY ti.record_key
+            """
+        )
+    )
+
+
 def _evidence_summary(con) -> tuple[dict[str, int], list[dict[str, object]]]:
     if not _table_exists(con, "evidence_notes"):
         return (
@@ -234,6 +287,7 @@ def generate_report(root: Path | None = None) -> Path:
     ))
     screening = _screening_summary(con)
     fulltext = _fulltext_summary(con)
+    fulltext_details = _fulltext_details(con)
     evidence, evidence_by_theme = _evidence_summary(con)
     agreement_path = base / "reports" / "reviewer_agreement.csv"
     agreement_summaries, agreement_details = write_reviewer_agreement(con, agreement_path)
@@ -243,6 +297,7 @@ def generate_report(root: Path | None = None) -> Path:
     _write_csv(by_query, reports / "prisma_by_query.csv")
     _write_csv(overlap, reports / "query_overlap.csv")
     _write_csv(screening, reports / "screening_summary.csv")
+    _write_csv(fulltext_details, reports / "prisma_fulltext_details.csv")
     screening_markdown = (
         _markdown_table(screening)
         if screening
@@ -295,6 +350,13 @@ Gerado em: {utc_now_iso()}
 ## Triagem de titulo e resumo
 
 {title_abstract_markdown}
+
+## Elegibilidade de texto integral
+
+{_markdown_table(fulltext_details) if fulltext_details else "Nenhuma candidatura de texto integral foi incluída na triagem."}
+
+O estado `incluido` exige decisão de inclusão sem exclusão; `excluido` exige
+motivo controlado; `conflito` permanece fora do corpus final até resolução humana.
 
 ## Resumo de decisoes por etapa
 
