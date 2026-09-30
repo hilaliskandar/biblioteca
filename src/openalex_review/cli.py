@@ -9,7 +9,12 @@ from dotenv import load_dotenv
 
 from .common import ensure_directories, env_api_key, project_root, run_id_now
 from .config import load_search_config, override_config
-from .control import import_screening_decisions, init_control
+from .control import (
+    import_fulltext_assets,
+    import_reading_status,
+    import_screening_decisions,
+    init_control,
+)
 from .screening_resolutions import import_screening_resolutions
 from .screening_vocabulary import STAGE_CODES
 
@@ -75,6 +80,14 @@ def build_parser() -> argparse.ArgumentParser:
     resolutions = sub.add_parser("import-resolutions", help="Importa resolucoes sem alterar decisoes individuais.")
     resolutions.add_argument("--input", required=True, help="CSV de resolucoes.")
     resolutions.add_argument("--replace", action="store_true", help="Substitui a resolucao existente da obra e etapa.")
+
+    reading = sub.add_parser("import-reading", help="Importa estado de leitura integral para CSV e DuckDB.")
+    reading.add_argument("--input", required=True, help="CSV de estado de leitura.")
+    reading.add_argument("--replace", action="store_true", help="Substitui o estado anterior da obra.")
+
+    assets = sub.add_parser("import-fulltext-assets", help="Registra ativos de texto integral sem copiar conteúdo protegido.")
+    assets.add_argument("--input", required=True, help="CSV de ativos de texto integral.")
+    assets.add_argument("--replace", action="store_true", help="Substitui o ativo com o mesmo asset_id.")
 
     pipeline = sub.add_parser("pipeline")
     pipeline.add_argument("--config", required=True)
@@ -184,6 +197,26 @@ def main(argv: list[str] | None = None) -> None:
             f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
             f"Ja existentes: {result.skipped_existing} | Substituidas: {result.replaced}\n"
             f"Erros: {result.errors_path}"
+        )
+    elif args.command == "import-reading":
+        source = Path(args.input)
+        if not source.is_absolute():
+            source = root / source
+        result = import_reading_status(source, root=root, replace=args.replace)
+        print(
+            f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
+            f"Ja existentes: {result.skipped_existing}\n"
+            f"Controle: {result.control_path}\nErros: {result.errors_path}"
+        )
+    elif args.command == "import-fulltext-assets":
+        source = Path(args.input)
+        if not source.is_absolute():
+            source = root / source
+        result = import_fulltext_assets(source, root=root, replace=args.replace)
+        print(
+            f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
+            f"Ja existentes: {result.skipped_existing}\n"
+            f"Controle: {result.control_path}\nErros: {result.errors_path}"
         )
     elif args.command == "pipeline":
         from .collector import collect_config

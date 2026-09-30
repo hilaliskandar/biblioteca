@@ -48,6 +48,25 @@ def test_report_includes_screening_metrics_and_conflicts(tmp_path):
     assert "titulo_resumo" in summary
 
 
+def test_report_includes_fulltext_metrics_when_text_full_decisions_exist(tmp_path):
+    make_database(tmp_path)
+    con = duckdb.connect(str(tmp_path / "data/db/openalex.duckdb"))
+    con.execute(
+        "INSERT INTO screening_decisions VALUES ('openalex:W1', 'texto_integral', 'incluir', '', 'r1', CURRENT_TIMESTAMP, '')"
+    )
+    con.execute(
+        "INSERT INTO screening_decisions VALUES ('openalex:W3', 'texto_integral', 'excluir', 'sem_texto_integral', 'r1', CURRENT_TIMESTAMP, '')"
+    )
+    con.close()
+
+    report = generate_report(tmp_path)
+    text = report.read_text(encoding="utf-8")
+
+    assert "Candidatas a texto integral: **2**" in text
+    assert "Incluídas após texto integral: **1**" in text
+    assert "Excluídas no texto integral: **1**" in text
+
+
 def test_validate_seeds_accepts_custom_file(tmp_path):
     make_database(tmp_path)
     reference = tmp_path / "reference"

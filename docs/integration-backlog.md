@@ -49,7 +49,7 @@ como backlog pendente.
 | Eixo | Já existe | Próxima lacuna funcional |
 |---|---|---|
 | Triagem | Importação ASReview, decisões controladas, resolução de registros, idempotência, concordância, conflitos e resoluções manuais. | Exportação auditável consolidada e eventual fluxo de adjudicação guiado, se necessário além de `import-resolutions`. |
-| Texto integral | Tabela `reading_status` e modelo CSV são criados e preservados. | Importação/validação, ativos de texto, disponibilidade, hash, aquisição, leitura e elegibilidade. |
+| Texto integral | **Parcial ampliado nesta entrega:** `reading_status` e `fulltext_assets` são criados/preservados; importadores atômicos validam estado, obra, URI/local e hash SHA-256. | Aquisição automatizada, validação de leitura integral e elegibilidade final ainda pendentes. |
 | Evidências | Tabela `evidence_notes` e modelo CSV são criados e preservados. | Importação, validação referencial, fichamento estruturado e relatórios de rastreabilidade. |
 | PRISMA | Identificação, deduplicação, sobreposição e título/resumo são reportados. | Texto integral, exclusões por motivo e corpus final. |
 | Interface | Shell local com navegação, visão geral, seleção explícita de corpus, bibliometria, redes interativas, estratégia, execução, produtos e importação. | Filtros/exportações avançadas, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
@@ -180,9 +180,9 @@ A especificação completa está em
 
 | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|
-| Modelar ativos de texto integral | — | Estrutura registra obra, URL/local, tipo, origem e estado sem versionar conteúdo protegido. |
-| Registrar disponibilidade, aquisição e hash | Modelo de ativos | Tentativas, falhas, disponibilidade e hashes são auditáveis. |
-| Importar e validar leitura integral | Vocabulários P1 e ativos | Estado de leitura e responsável são validados, importados e preservados. |
+| Modelar ativos de texto integral | — | **Concluído nesta entrega:** `fulltext_assets` registra obra, URI/local, tipo, origem e estado sem versionar conteúdo protegido. |
+| Registrar disponibilidade, aquisição e hash | Modelo de ativos | **Concluído nesta entrega:** importador calcula/valida SHA-256 e tamanho para arquivos locais e preserva tentativa/falha. |
+| Importar e validar leitura integral | Vocabulários P1 e ativos | **Concluído nesta entrega:** `import-reading` valida estados, resolve identificadores, é idempotente e grava atomicamente. |
 | Registrar elegibilidade de texto integral | Leitura integral | Inclusão/exclusão final e motivo ficam associados à obra. |
 
 ### P3 — evidências e FAFAT+

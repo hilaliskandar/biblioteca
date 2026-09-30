@@ -26,7 +26,13 @@ def _require_duckdb():
     return duckdb
 
 
-CONTROL_TABLES = ("screening_decisions", "screening_resolutions", "reading_status", "evidence_notes")
+CONTROL_TABLES = (
+    "screening_decisions",
+    "screening_resolutions",
+    "reading_status",
+    "evidence_notes",
+    "fulltext_assets",
+)
 WORK_INSERT_BATCH_SIZE = 1000
 
 
@@ -500,6 +506,12 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
             source_question VARCHAR, unit_of_analysis VARCHAR, method VARCHAR, finding VARCHAR,
             limitation VARCHAR, source_location VARCHAR, evidence_type VARCHAR,
             researcher_interpretation VARCHAR, manuscript_section VARCHAR, verified BOOLEAN
+        );
+        CREATE TABLE fulltext_assets (
+            asset_id VARCHAR PRIMARY KEY, record_key VARCHAR, uri VARCHAR,
+            asset_type VARCHAR, source VARCHAR, status VARCHAR, sha256 VARCHAR,
+            size_bytes BIGINT, discovered_at TIMESTAMP, last_attempt_at TIMESTAMP,
+            failure_reason VARCHAR, notes VARCHAR
         );
         """
     )

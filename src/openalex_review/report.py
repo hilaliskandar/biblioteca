@@ -97,6 +97,63 @@ def _screening_summary(con):
     ))
 
 
+def _table_exists(con, table_name: str) -> bool:
+    return bool(
+        con.execute(
+            """
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'main' AND table_name = ?
+            """,
+            [table_name],
+        ).fetchone()
+    )
+
+
+def _fulltext_summary(con) -> dict[str, int]:
+    if not _table_exists(con, "screening_decisions"):
+        return {
+            "text_full_candidates": 0,
+            "text_full_included": 0,
+            "text_full_excluded": 0,
+            "final_included": 0,
+        }
+    row = con.execute(
+        """
+        WITH title_included AS (
+            SELECT DISTINCT record_key
+            FROM screening_decisions
+            WHERE stage = 'titulo_resumo' AND decision = 'incluir'
+        ), text_decisions AS (
+            SELECT record_key,
+                   BOOL_OR(decision = 'incluir') AS has_include,
+                   BOOL_OR(decision = 'excluir') AS has_exclude,
+                   COUNT(*) AS decision_count
+            FROM screening_decisions
+            WHERE stage = 'texto_integral'
+            GROUP BY record_key
+        ), classified AS (
+            SELECT ti.record_key,
+                   td.has_include,
+                   td.has_exclude,
+                   td.decision_count
+            FROM title_included ti
+            LEFT JOIN text_decisions td USING (record_key)
+        )
+        SELECT COUNT(*) AS candidates,
+               COUNT(*) FILTER (WHERE has_include AND NOT has_exclude) AS included,
+               COUNT(*) FILTER (WHERE has_exclude AND NOT has_include) AS excluded,
+               COUNT(*) FILTER (WHERE has_include AND NOT has_exclude) AS final_included
+        FROM classified
+        """
+    ).fetchone()
+    return {
+        "text_full_candidates": int(row[0]),
+        "text_full_included": int(row[1]),
+        "text_full_excluded": int(row[2]),
+        "final_included": int(row[3]),
+    }
+
+
 def generate_report(root: Path | None = None) -> Path:
     base = root or project_root()
     db_path = base / "data" / "db" / "openalex.duckdb"
@@ -129,6 +186,7 @@ def generate_report(root: Path | None = None) -> Path:
            ) GROUP BY number_of_queries ORDER BY number_of_queries"""
     ))
     screening = _screening_summary(con)
+    fulltext = _fulltext_summary(con)
     agreement_path = base / "reports" / "reviewer_agreement.csv"
     agreement_summaries, agreement_details = write_reviewer_agreement(con, agreement_path)
     con.close()
@@ -169,6 +227,10 @@ Gerado em: {utc_now_iso()}
 - Obras com resumo: **{summary[3]}**
 - Obras com DOI: **{summary[4]}**
 - Obras em acesso aberto: **{summary[5]}**
+- Candidatas a texto integral: **{fulltext['text_full_candidates']}**
+- Incluídas após texto integral: **{fulltext['text_full_included']}**
+- Excluídas no texto integral: **{fulltext['text_full_excluded']}**
+- Corpus final incluído: **{fulltext['final_included']}**
 
 ## Por consulta
 
@@ -190,7 +252,7 @@ Gerado em: {utc_now_iso()}
 
 {reviewer_agreement_markdown}
 
-> As contagens de texto integral e corpus final dependem das proximas etapas de leitura e evidencia.
+> As contagens de texto integral e corpus final dependem das decisões registradas na etapa `texto_integral`; ativos e leitura são rastreados separadamente.
 """,
         encoding="utf-8",
     )

@@ -249,6 +249,8 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 `import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza rótulos ASReview para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Etapas e motivos usam os códigos de `screening_vocabulary.py`; exclusão em `texto_integral` requer motivo válido. Use `--stage-column`/`--reason-column` para indicar colunas no CSV. Valores inválidos ou obra desconhecida cancelam o lote sem escrita parcial. Inclusões não exigem motivo; motivos históricos não são recodificados automaticamente.
 
+`import-reading --input leitura.csv` importa estados `pendente`, `em_leitura`, `lido`, `nao_localizado` ou `nao_disponivel` para `reading_status`, resolvendo a obra por `record_key`, OpenAlex, DOI ou título. O lote é validado antes da transação e reimportações idênticas são ignoradas. `import-fulltext-assets --input ativos.csv` registra URLs ou caminhos locais em `fulltext_assets`; arquivos locais têm SHA-256 e tamanho calculados, mas não são copiados para o repositório.
+
 Resoluções ou decisões finais manuais são registradas separadamente com:
 
 ```text

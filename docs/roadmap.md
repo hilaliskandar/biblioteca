@@ -72,9 +72,9 @@ inclusão ou julgamento metodológico.
 O banco preserva a estrutura de leitura, mas ainda não controla o ciclo de texto
 integral. O objetivo é:
 
-- modelar ativos de texto sem versionar PDFs ou conteúdo protegido;
-- registrar disponibilidade, origem, tentativa, falha e hash;
-- importar e validar estado de leitura integral;
+- **Concluído nesta entrega:** modelar ativos de texto sem versionar PDFs ou conteúdo protegido;
+- **Concluído nesta entrega:** registrar disponibilidade, origem, tentativa, falha e hash;
+- **Concluído nesta entrega:** importar e validar estado de leitura integral;
 - registrar elegibilidade e exclusões de texto integral.
 
 ## P3 — evidências e FAFAT+
