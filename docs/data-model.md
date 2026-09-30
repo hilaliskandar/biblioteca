@@ -238,13 +238,28 @@ evidence_type, researcher_interpretation, manuscript_section, verified
 
 A estrutura é criada e preservada. Importação, validação referencial e relatórios de qualidade de evidência ainda são planejados.
 
+### `fulltext_assets`
+
+`fulltext_assets` registra disponibilidade e proveniência de ativos associados à
+obra sem copiar PDFs ou conteúdo protegido para o repositório. O importador aceita
+URLs e caminhos locais; para arquivos locais calcula e valida SHA-256 e tamanho.
+
+```text
+fulltext_assets
+  asset_id, record_key, uri, asset_type, source, status, sha256,
+  size_bytes, discovered_at, last_attempt_at, failure_reason, notes
+```
+
+O estado de leitura permanece em `reading_status` e é importado separadamente
+com vocabulário controlado e validação referencial.
+
 ## 6. Unidade canônica e identificadores
 
 `record_key` é construído preferencialmente a partir do identificador OpenAlex. DOI normalizado também é preservado e pode resolver registros na importação de triagem.
 
 Esta versão não cria `work_identifiers`; a relação entre chave, OpenAlex ID e DOI está materializada em `works` e `works_stage`.
 
-## 7. Estruturas planejadas, não implementadas
+## 7. Estruturas implementadas e planejadas
 
 | Estrutura futura | Finalidade |
 |---|---|
@@ -252,10 +267,12 @@ Esta versão não cria `work_identifiers`; a relação entre chave, OpenAlex ID 
 | `work_identifiers` | Registrar múltiplos identificadores por obra. |
 | `authorships` | Preservar autoria, ordem, ORCID e instituições em forma relacional. |
 | `work_topics` | Preservar tópicos e escores em forma relacional. |
-| `work_references` | Registrar referências OpenAlex por obra. |
-| Aquisição de texto integral | Controlar URL, arquivo local, hash, tentativas e falhas. |
+| `work_references` | **Implementado:** registrar referências OpenAlex internas e externas por obra. |
+| `fulltext_assets` | **Implementado:** controlar URI/local, tipo, origem, hash, tentativas e falhas. |
 
-Essas expansões exigem migração explícita, testes e documentação antes de serem tratadas como recursos disponíveis.
+`runs`, `work_identifiers` e `authorships` continuam sendo expansões futuras; as
+tabelas bibliométricas e de texto integral marcadas como implementadas já fazem
+parte do `build-db` e têm testes de reconstrução/preservação.
 
 ## 8. Dados versionados e dados locais
 

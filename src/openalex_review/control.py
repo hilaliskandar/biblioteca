@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -39,6 +40,10 @@ TEMPLATES: dict[str, list[str]] = {
         "unidade_analise", "metodo", "achado", "limite", "pagina_ou_trecho",
         "natureza_evidencia", "interpretacao_pesquisador", "secao_texto", "conferida",
     ],
+    "fulltext_assets.csv": [
+        "asset_id", "record_key", "uri", "asset_type", "source", "status",
+        "sha256", "size_bytes", "discovered_at", "last_attempt_at", "failure_reason", "notes",
+    ],
 }
 
 DECISION_COLUMNS = ("label", "decision", "included", "relevant", "relevance")
@@ -53,6 +58,24 @@ class ScreeningImportResult:
     skipped_existing: int
     unknown_records: int
     invalid_decisions: int
+    control_path: Path
+    errors_path: Path
+
+
+@dataclass(frozen=True)
+class ReadingImportResult:
+    source_rows: int
+    imported: int
+    skipped_existing: int
+    control_path: Path
+    errors_path: Path
+
+
+@dataclass(frozen=True)
+class FulltextAssetImportResult:
+    source_rows: int
+    imported: int
+    skipped_existing: int
     control_path: Path
     errors_path: Path
 
@@ -323,6 +346,169 @@ def import_screening_decisions(
         control_path=control_path,
         errors_path=errors_path,
     )
+
+
+READING_STATUSES = frozenset({"pendente", "em_leitura", "lido", "nao_localizado", "nao_disponivel"})
+
+
+def _import_control_rows(
+    source: Path,
+    *,
+    root: Path,
+    table: str,
+    template_name: str,
+    columns: tuple[str, ...],
+    replace: bool,
+    resolver,
+    row_builder,
+    result_type,
+) :
+    if not source.exists():
+        raise FileNotFoundError(f"Arquivo de controle nao encontrado: {source}")
+    db_path = root / "data" / "db" / "openalex.duckdb"
+    if not db_path.exists():
+        raise FileNotFoundError("Banco DuckDB nao encontrado. Execute build-db antes da importacao.")
+    with source.open("r", encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        if not reader.fieldnames:
+            raise ValueError("CSV sem cabecalho.")
+        lookup = _column_lookup(reader.fieldnames)
+        rows = list(reader)
+    try:
+        import duckdb
+    except ImportError as exc:
+        raise RuntimeError("Dependencia duckdb nao instalada.") from exc
+    con = duckdb.connect(str(db_path))
+    errors: list[dict[str, str]] = []
+    imported_rows: list[tuple] = []
+    try:
+        index = _record_index(con)
+        existing_rows = con.execute(f"SELECT * FROM {table}").fetchall()
+        existing_keys = {resolver.key_from_existing(row) for row in existing_rows}
+        for line_number, row in enumerate(rows, start=2):
+            try:
+                record_key = _resolve_record(row, lookup, index)
+                if not record_key:
+                    raise ValueError("Registro nao encontrado no DuckDB")
+                candidate = row_builder(row, lookup, record_key, line_number)
+                key = resolver.key_from_new(candidate)
+                if key in existing_keys and not replace:
+                    continue
+                imported_rows.append(candidate)
+            except (TypeError, ValueError, OSError) as exc:
+                errors.append({"linha": str(line_number), "erro": str(exc)})
+        if errors:
+            raise ValueError(
+                f"Importacao cancelada: {len(errors)} linhas invalidas. "
+                + "; ".join(item["erro"] for item in errors)
+            )
+        control_path = root / "data" / "control" / template_name
+        errors_path = root / "data" / "control" / f"{table}_import_errors.csv"
+        control_path.parent.mkdir(parents=True, exist_ok=True)
+        old_control = control_path.read_bytes() if control_path.exists() else None
+        projected = [row for row in existing_rows if not (replace and resolver.key_from_existing(row) in {resolver.key_from_new(item) for item in imported_rows})]
+        projected.extend(imported_rows)
+        temporary_control = control_path.with_suffix(".csv.tmp")
+        with temporary_control.open("w", encoding="utf-8-sig", newline="") as stream:
+            writer = csv.writer(stream)
+            writer.writerow(columns)
+            writer.writerows(projected)
+        con.execute("BEGIN TRANSACTION")
+        try:
+            if replace and imported_rows:
+                for key in {resolver.key_from_new(item) for item in imported_rows}:
+                    con.execute(resolver.delete_sql, list(key))
+            if imported_rows:
+                placeholders = ", ".join("?" for _ in columns)
+                con.executemany(f"INSERT INTO {table} VALUES ({placeholders})", imported_rows)
+            con.commit()
+            temporary_control.replace(control_path)
+        except Exception:
+            con.rollback()
+            temporary_control.unlink(missing_ok=True)
+            if old_control is not None:
+                control_path.write_bytes(old_control)
+            raise
+        with errors_path.open("w", encoding="utf-8-sig", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=["linha", "erro"])
+            writer.writeheader()
+            writer.writerows(errors)
+    finally:
+        con.close()
+    return result_type(len(rows), len(imported_rows), len(rows) - len(imported_rows), control_path, errors_path)
+
+
+class _ReadingResolver:
+    delete_sql = "DELETE FROM reading_status WHERE record_key = ?"
+
+    @staticmethod
+    def key_from_existing(row):
+        return (row[0],)
+
+    @staticmethod
+    def key_from_new(row):
+        return (row[0],)
+
+
+def import_reading_status(source: Path, *, root: Path | None = None, replace: bool = False) -> ReadingImportResult:
+    base = root or project_root()
+
+    def build(row, lookup, record_key, line_number):
+        status_field = next((lookup[name] for name in ("status", "estado") if name in lookup), None)
+        if not status_field or str(row.get(status_field) or "").strip() not in READING_STATUSES:
+            raise ValueError("status invalido ou ausente")
+        def value(*names):
+            field = next((lookup[name] for name in names if name in lookup), None)
+            return str(row.get(field) or "").strip() if field else ""
+        def nullable(*names):
+            result = value(*names)
+            return result or None
+        requires = value("requires_verification", "necessita_conferencia").lower() in {"1", "true", "sim", "yes"}
+        return (record_key, nullable("priority", "prioridade"), str(row[status_field]).strip(), nullable("responsible", "responsavel"), nullable("started_at", "data_inicio"), nullable("completed_at", "data_conclusao"), nullable("note_path", "local_fichamento"), requires, nullable("notes", "observacoes"))
+
+    return _import_control_rows(source, root=base, table="reading_status", template_name="reading_status.csv", columns=tuple(TEMPLATES["reading_status.csv"]), replace=replace, resolver=_ReadingResolver, row_builder=build, result_type=ReadingImportResult)
+
+
+class _AssetResolver:
+    delete_sql = "DELETE FROM fulltext_assets WHERE asset_id = ?"
+
+    @staticmethod
+    def key_from_existing(row):
+        return (row[0],)
+
+    @staticmethod
+    def key_from_new(row):
+        return (row[0],)
+
+
+def import_fulltext_assets(source: Path, *, root: Path | None = None, replace: bool = False) -> FulltextAssetImportResult:
+    base = root or project_root()
+
+    def build(row, lookup, record_key, line_number):
+        def value(name):
+            field = lookup.get(name)
+            return str(row.get(field) or "").strip() if field else ""
+        asset_id = value("asset_id")
+        uri = value("uri")
+        if not asset_id or not uri:
+            raise ValueError("asset_id e uri sao obrigatorios")
+        asset_type = value("asset_type") or "url"
+        source_name = value("source") or "manual"
+        status = value("status") or "discovered"
+        sha256 = value("sha256") or None
+        size = value("size_bytes") or None
+        local_path = Path(uri)
+        if not local_path.is_absolute():
+            local_path = base / local_path
+        if local_path.is_file():
+            digest = hashlib.sha256(local_path.read_bytes()).hexdigest()
+            if sha256 and sha256 != digest:
+                raise ValueError(f"hash SHA-256 divergente para {asset_id}")
+            sha256 = digest
+            size = str(local_path.stat().st_size)
+        return (asset_id, record_key, uri, asset_type, source_name, status, sha256, int(size) if size else None, value("discovered_at") or None, value("last_attempt_at") or None, value("failure_reason") or None, value("notes") or None)
+
+    return _import_control_rows(source, root=base, table="fulltext_assets", template_name="fulltext_assets.csv", columns=tuple(TEMPLATES["fulltext_assets.csv"]), replace=replace, resolver=_AssetResolver, row_builder=build, result_type=FulltextAssetImportResult)
 
 
 def init_control(root: Path | None = None, overwrite: bool = False) -> list[Path]:
