@@ -15,7 +15,9 @@ from openalex_review.bibliometrics import (
     filter_network,
     list_bibliometric_runs,
     list_network,
+    network_density_grid,
     network_filter_parameters,
+    network_temporal_overlay,
     network_visualization_data,
 )
 from openalex_review.corpus import resolve_corpus
@@ -486,3 +488,86 @@ def test_network_csv_exports_have_headers_and_utf8_content():
     assert "Árvore" in nodes_csv
     assert "source_node_id" in edges_csv.splitlines()[0]
     assert "a" in edges_csv
+
+
+def test_network_temporal_overlay_is_reproducible_and_counts_recent_records(tmp_path):
+    make_database(tmp_path)
+    network = NetworkResult(
+        2,
+        1,
+        (
+            {
+                "node_id": "a",
+                "label": "A",
+                "weight": 2,
+                "metadata_json": '{"records": ["openalex:W1", "openalex:W2"]}',
+            },
+            {
+                "node_id": "b",
+                "label": "B",
+                "weight": 1,
+                "metadata_json": '{"records": ["openalex:W3"]}',
+            },
+        ),
+        ({"source_node_id": "a", "target_node_id": "b", "weight": 1},),
+    )
+
+    first = network_temporal_overlay(tmp_path, network, recent_years=2)
+    second = network_temporal_overlay(tmp_path, network, recent_years=2)
+
+    first_nodes = {node["node_id"]: node for node in first.nodes}
+    second_nodes = {node["node_id"]: node for node in second.nodes}
+    assert first_nodes["a"]["temporal_first_year"] == 2020
+    assert first_nodes["a"]["temporal_last_year"] == 2020
+    assert first_nodes["a"]["temporal_recent_count"] == 2
+    assert first_nodes["b"]["temporal_mean_year"] == 2021.0
+    assert first_nodes == second_nodes
+    assert network.nodes[0].get("temporal_record_count") is None
+
+
+def test_network_temporal_overlay_handles_missing_years(tmp_path):
+    make_database(tmp_path)
+    network = NetworkResult(
+        1,
+        0,
+        ({"node_id": "a", "label": "A", "metadata_json": '{"records": ["missing"]}'},),
+        (),
+    )
+
+    overlay = network_temporal_overlay(tmp_path, network)
+
+    assert overlay.nodes[0]["temporal_record_count"] == 0
+    assert overlay.nodes[0]["temporal_years"] == ()
+
+
+def test_network_density_grid_is_deterministic_and_preserves_totals():
+    network = NetworkResult(
+        3,
+        0,
+        (
+            {"node_id": "a", "x": 0.0, "y": 0.0, "weight": 2},
+            {"node_id": "b", "x": 0.1, "y": 0.1, "weight": 3},
+            {"node_id": "c", "x": 1.0, "y": 1.0, "weight": 4},
+        ),
+        (),
+    )
+
+    first = network_density_grid(network, grid_size=2)
+    second = network_density_grid(network, grid_size=2)
+
+    assert first == second
+    assert sum(cell["node_count"] for cell in first) == 3
+    assert sum(cell["weight"] for cell in first) == 9
+    assert len(first) == 2
+
+
+def test_network_density_grid_rejects_invalid_size():
+    network = NetworkResult(0, 0, (), ())
+
+    for grid_size in (0, 101):
+        try:
+            network_density_grid(network, grid_size=grid_size)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("expected ValueError")

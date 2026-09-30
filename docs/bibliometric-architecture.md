@@ -160,6 +160,11 @@ network_edges
 
 Layout visual, cluster e métricas devem registrar algoritmo, parâmetros e seed
 quando aplicável. Layout não define cluster; cluster não deve ser interpretado
+
+O overlay temporal e a densidade são camadas derivadas da rede filtrada. O
+overlay usa `publication_year` das obras associadas ao `metadata_json` do nó e
+registra janela de recência; a densidade agrega `x`/`y` persistidos em uma grade
+determinística. Nenhuma dessas camadas altera `network_nodes` ou `network_edges`.
 sem retorno às obras e aos textos.
 
 ## Métodos prioritários
