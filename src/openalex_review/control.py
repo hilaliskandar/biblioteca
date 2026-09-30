@@ -80,6 +80,15 @@ class FulltextAssetImportResult:
     errors_path: Path
 
 
+@dataclass(frozen=True)
+class EvidenceImportResult:
+    source_rows: int
+    imported: int
+    skipped_existing: int
+    control_path: Path
+    errors_path: Path
+
+
 def _column_lookup(fieldnames: Iterable[str | None]) -> dict[str, str]:
     return {
         name.strip().lower().replace(" ", "_").replace("-", "_"): name
@@ -349,6 +358,7 @@ def import_screening_decisions(
 
 
 READING_STATUSES = frozenset({"pendente", "em_leitura", "lido", "nao_localizado", "nao_disponivel"})
+EVIDENCE_TYPES = frozenset({"empirica", "teorica", "documental", "metodologica", "sintese"})
 
 
 def _import_control_rows(
@@ -481,6 +491,18 @@ class _AssetResolver:
         return (row[0],)
 
 
+class _EvidenceResolver:
+    delete_sql = "DELETE FROM evidence_notes WHERE evidence_id = ?"
+
+    @staticmethod
+    def key_from_existing(row):
+        return (row[0],)
+
+    @staticmethod
+    def key_from_new(row):
+        return (row[0],)
+
+
 def import_fulltext_assets(source: Path, *, root: Path | None = None, replace: bool = False) -> FulltextAssetImportResult:
     base = root or project_root()
 
@@ -509,6 +531,68 @@ def import_fulltext_assets(source: Path, *, root: Path | None = None, replace: b
         return (asset_id, record_key, uri, asset_type, source_name, status, sha256, int(size) if size else None, value("discovered_at") or None, value("last_attempt_at") or None, value("failure_reason") or None, value("notes") or None)
 
     return _import_control_rows(source, root=base, table="fulltext_assets", template_name="fulltext_assets.csv", columns=tuple(TEMPLATES["fulltext_assets.csv"]), replace=replace, resolver=_AssetResolver, row_builder=build, result_type=FulltextAssetImportResult)
+
+
+def import_evidence_matrix(
+    source: Path, *, root: Path | None = None, replace: bool = False
+) -> EvidenceImportResult:
+    base = root or project_root()
+
+    def build(row, lookup, record_key, line_number):
+        def value(*names):
+            field = next((lookup[name] for name in names if name in lookup), None)
+            return str(row.get(field) or "").strip() if field else ""
+
+        evidence_id = value("evidence_id", "id_evidencia")
+        finding = value("finding", "achado")
+        source_location = value("source_location", "pagina_ou_trecho")
+        evidence_type = value("evidence_type", "natureza_evidencia")
+        verified_value = value("verified", "conferida").lower()
+        if not evidence_id:
+            raise ValueError("evidence_id e obrigatorio")
+        if not finding:
+            raise ValueError(f"achado obrigatorio para {evidence_id}")
+        if not source_location:
+            raise ValueError(f"pagina_ou_trecho obrigatorio para {evidence_id}")
+        if evidence_type not in EVIDENCE_TYPES:
+            raise ValueError(
+                f"natureza_evidencia invalida para {evidence_id}; "
+                f"valores: {', '.join(sorted(EVIDENCE_TYPES))}"
+            )
+        if verified_value not in {"", "0", "1", "false", "true", "nao", "sim", "no", "yes"}:
+            raise ValueError(f"conferida invalida para {evidence_id}")
+        verified = verified_value in {"1", "true", "sim", "yes"}
+        def optional(*names):
+            return value(*names) or None
+
+        return (
+            evidence_id,
+            record_key,
+            optional("theme", "tema"),
+            optional("regulatory_mechanism", "mecanismo_regulatorio"),
+            optional("source_question", "pergunta_fonte"),
+            optional("unit_of_analysis", "unidade_analise"),
+            optional("method", "metodo"),
+            finding,
+            optional("limitation", "limite"),
+            source_location,
+            evidence_type,
+            optional("researcher_interpretation", "interpretacao_pesquisador"),
+            optional("manuscript_section", "secao_texto"),
+            verified,
+        )
+
+    return _import_control_rows(
+        source,
+        root=base,
+        table="evidence_notes",
+        template_name="evidence_matrix.csv",
+        columns=tuple(TEMPLATES["evidence_matrix.csv"]),
+        replace=replace,
+        resolver=_EvidenceResolver,
+        row_builder=build,
+        result_type=EvidenceImportResult,
+    )
 
 
 def init_control(root: Path | None = None, overwrite: bool = False) -> list[Path]:

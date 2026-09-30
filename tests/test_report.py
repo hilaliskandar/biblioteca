@@ -67,6 +67,39 @@ def test_report_includes_fulltext_metrics_when_text_full_decisions_exist(tmp_pat
     assert "Excluídas no texto integral: **1**" in text
 
 
+def test_report_includes_evidence_metrics_and_theme_gaps(tmp_path):
+    make_database(tmp_path)
+    con = duckdb.connect(str(tmp_path / "data/db/openalex.duckdb"))
+    con.execute(
+        """
+        CREATE TABLE evidence_notes (
+            evidence_id VARCHAR, record_key VARCHAR, theme VARCHAR,
+            regulatory_mechanism VARCHAR, source_question VARCHAR,
+            unit_of_analysis VARCHAR, method VARCHAR, finding VARCHAR,
+            limitation VARCHAR, source_location VARCHAR, evidence_type VARCHAR,
+            researcher_interpretation VARCHAR, manuscript_section VARCHAR,
+            verified BOOLEAN
+        )
+        """
+    )
+    con.execute(
+        """
+        INSERT INTO evidence_notes VALUES
+        ('e1', 'openalex:W1', 'governanca', '', '', '', '', 'Achado 1', '', 'p. 1', 'empirica', '', 'resultados', true),
+        ('e2', 'openalex:W3', 'governanca', '', '', '', '', 'Achado 2', '', '', 'teorica', '', '', false)
+        """
+    )
+    con.close()
+
+    report = generate_report(tmp_path)
+    text = report.read_text(encoding="utf-8")
+
+    assert "Evidências registradas: **2**" in text
+    assert "Evidências conferidas: **1**" in text
+    assert "Evidências não conferidas: **1**" in text
+    assert "governanca" in text
+
+
 def test_validate_seeds_accepts_custom_file(tmp_path):
     make_database(tmp_path)
     reference = tmp_path / "reference"

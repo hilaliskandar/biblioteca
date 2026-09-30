@@ -154,6 +154,53 @@ def _fulltext_summary(con) -> dict[str, int]:
     }
 
 
+def _evidence_summary(con) -> tuple[dict[str, int], list[dict[str, object]]]:
+    if not _table_exists(con, "evidence_notes"):
+        return (
+            {
+                "total": 0,
+                "verified": 0,
+                "unverified": 0,
+                "without_manuscript_section": 0,
+            },
+            [],
+        )
+    summary = con.execute(
+        """
+        SELECT COUNT(*) AS total,
+               COUNT(*) FILTER (WHERE verified) AS verified,
+               COUNT(*) FILTER (WHERE NOT verified) AS unverified,
+               COUNT(*) FILTER (WHERE manuscript_section IS NULL OR manuscript_section = '')
+                 AS without_manuscript_section
+        FROM evidence_notes
+        """
+    ).fetchone()
+    by_theme = _records_from_result(
+        con.execute(
+            """
+            SELECT COALESCE(NULLIF(theme, ''), 'sem_tema') AS tema,
+                   COUNT(*) AS evidencias,
+                   COUNT(*) FILTER (WHERE verified) AS conferidas,
+                   COUNT(*) FILTER (
+                       WHERE source_location IS NULL OR source_location = ''
+                   ) AS sem_localizacao
+            FROM evidence_notes
+            GROUP BY COALESCE(NULLIF(theme, ''), 'sem_tema')
+            ORDER BY tema
+            """
+        )
+    )
+    return (
+        {
+            "total": int(summary[0]),
+            "verified": int(summary[1]),
+            "unverified": int(summary[2]),
+            "without_manuscript_section": int(summary[3]),
+        },
+        by_theme,
+    )
+
+
 def generate_report(root: Path | None = None) -> Path:
     base = root or project_root()
     db_path = base / "data" / "db" / "openalex.duckdb"
@@ -187,6 +234,7 @@ def generate_report(root: Path | None = None) -> Path:
     ))
     screening = _screening_summary(con)
     fulltext = _fulltext_summary(con)
+    evidence, evidence_by_theme = _evidence_summary(con)
     agreement_path = base / "reports" / "reviewer_agreement.csv"
     agreement_summaries, agreement_details = write_reviewer_agreement(con, agreement_path)
     con.close()
@@ -231,6 +279,10 @@ Gerado em: {utc_now_iso()}
 - Incluídas após texto integral: **{fulltext['text_full_included']}**
 - Excluídas no texto integral: **{fulltext['text_full_excluded']}**
 - Corpus final incluído: **{fulltext['final_included']}**
+- Evidências registradas: **{evidence['total']}**
+- Evidências conferidas: **{evidence['verified']}**
+- Evidências não conferidas: **{evidence['unverified']}**
+- Evidências sem seção de manuscrito: **{evidence['without_manuscript_section']}**
 
 ## Por consulta
 
@@ -251,6 +303,13 @@ Gerado em: {utc_now_iso()}
 ## Concordância entre revisores
 
 {reviewer_agreement_markdown}
+
+## Evidências / FAFAT+
+
+{_markdown_table(evidence_by_theme) if evidence_by_theme else "Nenhuma evidência foi importada."}
+
+As linhas sem localização da fonte, conferência ou seção de manuscrito exigem
+revisão manual antes de serem usadas em síntese ou redação.
 
 > As contagens de texto integral e corpus final dependem das decisões registradas na etapa `texto_integral`; ativos e leitura são rastreados separadamente.
 """,

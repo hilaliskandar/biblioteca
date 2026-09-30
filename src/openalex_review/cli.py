@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from .common import ensure_directories, env_api_key, project_root, run_id_now
 from .config import load_search_config, override_config
 from .control import (
+    import_evidence_matrix,
     import_fulltext_assets,
     import_reading_status,
     import_screening_decisions,
@@ -88,6 +89,10 @@ def build_parser() -> argparse.ArgumentParser:
     assets = sub.add_parser("import-fulltext-assets", help="Registra ativos de texto integral sem copiar conteúdo protegido.")
     assets.add_argument("--input", required=True, help="CSV de ativos de texto integral.")
     assets.add_argument("--replace", action="store_true", help="Substitui o ativo com o mesmo asset_id.")
+
+    evidence = sub.add_parser("import-evidence", help="Importa matriz de evidências/FAFAT+ para CSV e DuckDB.")
+    evidence.add_argument("--input", required=True, help="CSV da matriz de evidências.")
+    evidence.add_argument("--replace", action="store_true", help="Substitui evidências com o mesmo evidence_id.")
 
     pipeline = sub.add_parser("pipeline")
     pipeline.add_argument("--config", required=True)
@@ -213,6 +218,16 @@ def main(argv: list[str] | None = None) -> None:
         if not source.is_absolute():
             source = root / source
         result = import_fulltext_assets(source, root=root, replace=args.replace)
+        print(
+            f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
+            f"Ja existentes: {result.skipped_existing}\n"
+            f"Controle: {result.control_path}\nErros: {result.errors_path}"
+        )
+    elif args.command == "import-evidence":
+        source = Path(args.input)
+        if not source.is_absolute():
+            source = root / source
+        result = import_evidence_matrix(source, root=root, replace=args.replace)
         print(
             f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
             f"Ja existentes: {result.skipped_existing}\n"

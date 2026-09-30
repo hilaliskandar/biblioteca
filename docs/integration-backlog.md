@@ -50,7 +50,7 @@ como backlog pendente.
 |---|---|---|
 | Triagem | Importação ASReview, decisões controladas, resolução de registros, idempotência, concordância, conflitos e resoluções manuais. | Exportação auditável consolidada e eventual fluxo de adjudicação guiado, se necessário além de `import-resolutions`. |
 | Texto integral | **Parcial ampliado nesta entrega:** `reading_status` e `fulltext_assets` são criados/preservados; importadores atômicos validam estado, obra, URI/local e hash SHA-256. | Aquisição automatizada, validação de leitura integral e elegibilidade final ainda pendentes. |
-| Evidências | Tabela `evidence_notes` e modelo CSV são criados e preservados. | Importação, validação referencial, fichamento estruturado e relatórios de rastreabilidade. |
+| Evidências | **Parcial ampliado nesta entrega:** `evidence_notes` e `evidence_matrix.csv` têm importação atômica, validação referencial, vocabulários de natureza/conferência e relatório de lacunas. | Fluxo de síntese/FAFAT+ no manuscrito continua dependente de revisão humana. |
 | PRISMA | Identificação, deduplicação, sobreposição e título/resumo são reportados. | Texto integral, exclusões por motivo e corpus final. |
 | Interface | Shell local com navegação, visão geral, seleção explícita de corpus, bibliometria, redes interativas, estratégia, execução, produtos e importação. | Filtros/exportações avançadas, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
 | Fontes e deduplicação | Coleta e normalização OpenAlex; deduplicação por `record_key` e proveniência por consulta. | Importação multibase e reconciliação avançada de identificadores/versões. |
@@ -189,9 +189,9 @@ A especificação completa está em
 
 | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|
-| Importar matriz de evidências | Obras e decisões estáveis | Importação é atômica e cada evidência referencia uma obra existente. |
-| Validar matriz e fichamentos estruturados | Importação da matriz | Campos obrigatórios, vocabulários e localização da fonte são validados. |
-| Rastrear evidência para síntese/FAFAT+ | Fichamentos validados | Relatórios identificam evidência não conferida, uso no manuscrito e lacunas. |
+| Importar matriz de evidências | Obras e decisões estáveis | **Concluído nesta entrega:** importação atômica e cada evidência referencia uma obra existente. |
+| Validar matriz e fichamentos estruturados | Importação da matriz | **Concluído nesta entrega:** campos obrigatórios, vocabulários, conferência e localização da fonte são validados. |
+| Rastrear evidência para síntese/FAFAT+ | Fichamentos validados | **Concluído nesta entrega:** relatório identifica evidências não conferidas, sem seção de manuscrito e lacunas por tema. |
 
 ### P4 — PRISMA completo
 

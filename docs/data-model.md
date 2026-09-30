@@ -226,7 +226,9 @@ record_key, priority, status, responsible, started_at, completed_at,
 note_path, requires_verification, notes
 ```
 
-A estrutura é criada e preservada pelo banco. Importação, validação e vocabulários controlados de leitura ainda são planejados.
+A estrutura é criada e preservada pelo banco. `import-reading` valida estados
+controlados, resolve a obra por identificadores e grava o lote atomicamente;
+aquisição automatizada e elegibilidade final permanecem fora deste contrato.
 
 ### `evidence_notes`
 
@@ -236,7 +238,11 @@ unit_of_analysis, method, finding, limitation, source_location,
 evidence_type, researcher_interpretation, manuscript_section, verified
 ```
 
-A estrutura é criada e preservada. Importação, validação referencial e relatórios de qualidade de evidência ainda são planejados.
+A estrutura é criada e preservada. `import-evidence` valida referência à obra,
+`evidence_id`, achado, localização, natureza da evidência e conferência; o
+relatório agrega evidências por tema e explicita lacunas de localização,
+conferência e seção do manuscrito. A interpretação e a síntese FAFAT+ continuam
+responsabilidade do pesquisador.
 
 ### `fulltext_assets`
 

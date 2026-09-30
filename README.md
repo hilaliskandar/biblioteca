@@ -251,6 +251,8 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 `import-reading --input leitura.csv` importa estados `pendente`, `em_leitura`, `lido`, `nao_localizado` ou `nao_disponivel` para `reading_status`, resolvendo a obra por `record_key`, OpenAlex, DOI ou título. O lote é validado antes da transação e reimportações idênticas são ignoradas. `import-fulltext-assets --input ativos.csv` registra URLs ou caminhos locais em `fulltext_assets`; arquivos locais têm SHA-256 e tamanho calculados, mas não são copiados para o repositório.
 
+`import-evidence --input evidencia.csv` importa a matriz FAFAT+ para `evidence_notes`. Cada linha exige `evidence_id`, obra existente, achado, página/trecho, natureza (`empirica`, `teorica`, `documental`, `metodologica` ou `sintese`) e valor de conferência. Evidências repetidas são ignoradas; substituição exige `--replace`. O relatório agrega evidências por tema e destaca lacunas antes da síntese.
+
 Resoluções ou decisões finais manuais são registradas separadamente com:
 
 ```text
