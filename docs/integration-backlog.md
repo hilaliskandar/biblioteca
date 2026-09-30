@@ -142,16 +142,16 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
-| UI-B01 | Aba Bibliometria | B10 | **Concluído e integrado na `main`:** permite selecionar corpus, persistir execuções de desempenho/coautoria/coocorrência e exibir KPIs/tabelas e redes com `analysis_id`; filtros avançados e exportações ainda pendentes. |
+| UI-B01 | Aba Bibliometria | B10 | **Concluído e integrado na `main`:** permite selecionar corpus, persistir execuções de desempenho/coautoria/coocorrência e exibir KPIs/tabelas e redes com `analysis_id`. |
 | UI-B02 | Gráficos de desempenho | B12 | Exibe publicações, citações, autores, fontes e instituições. |
 | UI-B03 | Spike comparativo de redes | B11 | Compara PyVis, Cytoscape.js e Sigma.js offline em redes pequenas/médias. |
 | UI-B04 | Componente Cytoscape.js | UI-B03 | **Concluído e integrado na `main`:** componente local recebe nodes/edges/configuração, usa layout `preset` com coordenadas persistidas, suporta zoom, pan, seleção por clique, tooltip visual, destaque de vizinhos e reset. |
 | UI-B05 | Comunicação grafo → Python | UI-B04 | **Concluído e integrado na `main`:** clique e limpeza retornam eventos com `node_id` ao Streamlit; a seleção é persistida por corpus/rede e abre painel contextual com métricas, coordenadas, cluster, vizinhos, arestas incidentes, obras associadas e estado de triagem/leitura/evidências quando disponível. |
-| UI-B06 | Filtros interativos | UI-B05 | Filtra threshold, cluster, período, corpus, tipo e peso sem alterar a fonte persistida. |
+| UI-B06 | Filtros interativos | UI-B05 | **Concluído nesta entrega:** filtra peso, grau, cluster e limite de nós sem alterar a fonte persistida; período, corpus e tipo permanecem definidos pela análise selecionada. |
 | UI-B07 | Modos de rede | UI-B06 | Alterna coautoria, coocorrência, cocitação e acoplamento. |
 | UI-B08 | Overlay temporal | UI-B06 | Exibe ano médio, emergência e crescimento com parâmetros registrados. |
 | UI-B09 | Densidade | UI-B06 | Gera mapa de densidade sem substituir nós/arestas como fonte de dados. |
-| UI-B10 | Exportar rede filtrada | UI-B06 | Exporta CSV, JSON e parâmetros da visualização. |
+| UI-B10 | Exportar rede filtrada | UI-B06 | **Concluído nesta entrega:** exporta nós/arestas em CSV e a rede filtrada em JSON com `analysis_id`, `corpus_hash`, tipo de rede e parâmetros dos filtros. |
 | UI-B11 | Avaliar Sigma.js | UI-B03 | Só adota backend opcional se benchmark em 1k–25k nós demonstrar ganho material. |
 
 ### Orientação metodológica contextual na interface
