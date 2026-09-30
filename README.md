@@ -286,7 +286,8 @@ exclusão e nenhuma inclusão -> excluir
 inclusão e exclusão         -> conflito
 ```
 
-`report` também gera `reports/reviewer_agreement.csv` e acrescenta a seção
+`report` também gera `reports/reviewer_agreement.csv`,
+`reports/prisma_fulltext_details.csv` e acrescenta as seções
 **Concordância entre revisores** ao Markdown. O CSV contém linhas de resumo por
 etapa e linhas por registro, distinguindo acordo, conflito não resolvido,
 conflito resolvido e decisão final. As decisões individuais permanecem
@@ -302,9 +303,52 @@ ambos, como `(acordos em incluir + acordos em excluir) / obras avaliadas por
 ambos`. Cohen's kappa só é apresentado quando há exatamente dois revisores
 comparáveis e pelo menos dois casos comparáveis; nos demais casos o relatório
 registra o motivo da não aplicação. Para `titulo_resumo`, pendentes são obras
-deduplicadas sem decisão. O PRISMA atual cobre identificação, deduplicação e
-triagem inicial; adjudicação, texto integral e síntese final são incrementos
-futuros.
+deduplicadas sem decisão. O relatório detalha candidatos de texto integral por
+estado (`incluido`, `excluido`, `conflito` ou `pendente`) e motivos controlados;
+conflitos não entram no corpus final até resolução humana.
+
+`reading-queue` gera `reports/reading_queue.csv` e `reports/reading_queue.json`.
+A fila combina bridge score/betweenness, recência e representatividade de
+cluster de forma reproduzível. É uma prioridade auxiliar e não altera triagem,
+elegibilidade ou síntese. Use `--analysis-id` para fixar a execução, `--limit`
+para limitar a fila e `--include-completed` para incluir obras já lidas.
+
+As redes filtradas da interface também podem ser exportadas para VOSviewer em
+arquivos tabulados de itens e relações, sem alterar as tabelas persistidas.
+
+### Importação BibTeX/RIS e fonte de download
+
+`import-references --input referencias.bib` e `import-references --input referencias.ris`
+aceitam referências externas nos formatos BibTeX e RIS. A importação é auxiliar e não
+altera automaticamente `works`, decisões de triagem, elegibilidade ou o corpus final.
+Ela gera:
+
+- `data/control/reference_imports.csv`: projeção de controle da importação;
+- `reports/reference_imports.csv`: arquivo principal a ser analisado humanamente;
+- `data/control/reference_import_errors.csv`: arquivo de erros do lote.
+
+O importador deduplica por OpenAlex ID, DOI ou título/ano, tenta correspondência com
+`works` e registra `match_method`. Para obras correspondentes, a fonte é indicada em
+`openalex_source_url` (`https://openalex.org/<ID>`), além de `landing_page_url` e
+`pdf_url` quando já existirem na referência. O sistema **não baixa artigos, PDFs ou
+outros textos**.
+
+Dependência humana obrigatória:
+
+1. abrir `reports/reference_imports.csv`;
+2. conferir cada linha com `status = correspondencia_openalex` ou
+   `pendente_correspondencia`;
+3. acessar a fonte por `openalex_source_url`, `landing_page_url` ou `pdf_url`;
+4. confirmar a identidade da obra e decidir a etapa de triagem;
+5. registrar a decisão em `templates/screening_decisions.csv`/importador ASReview;
+6. usar `data/control/screening_resolutions.csv` somente para conflitos ou decisões
+   finais manuais.
+
+O painel **PRISMA** exibe um gráfico de identificação, deduplicação, título/resumo,
+texto integral e inclusão final. O painel também indica que o arquivo humano de
+análise é `reports/prisma_fulltext_details.csv`. Para cada linha, o pesquisador deve
+abrir a fonte indicada, analisar o texto integral, registrar incluir/excluir e motivo;
+conflitos continuam fora do corpus final até resolução humana.
 
 ## Próximos marcos
 
@@ -317,15 +361,17 @@ organizado em marcos pequenos e reversíveis:
    já implementados.
 2. **Cálculos:** desempenho, coautoria, coocorrência, acoplamento bibliográfico,
    cocitação, métricas de rede, clustering e layouts reproduzíveis.
-3. **Interoperabilidade:** exportações enriquecidas para Bibliometrix e
-   VOSviewer, registro de resultados externos, metadados de reprodutibilidade do
-   ASReview e estudo de Zotero RDF.
+3. **Interoperabilidade:** exportação VOSviewer básica já está disponível; ainda
+   faltam exportação Bibliometrix enriquecida com round-trip, registro de
+   resultados externos, metadados de reprodutibilidade do ASReview e estudo de
+   Zotero RDF.
 4. **Interface:** painel bibliométrico, gráficos de desempenho, protótipo local
    e depois componente Cytoscape.js via Streamlit Components v2. PyVis fica
    restrito a prova de conceito; Sigma.js é uma otimização futura para redes
    grandes, condicionada a benchmark.
-5. **Leitura e síntese:** prioridade bibliométrica auxiliar, ativos de texto
-   integral, FAFAT+, matriz de evidências e PRISMA completo.
+5. **Leitura e síntese:** fila bibliométrica auxiliar e PRISMA detalhado já estão
+   disponíveis; permanecem aquisição automatizada, adjudicação/elegibilidade
+   final operacionalizada e síntese FAFAT+ com revisão humana.
 
 Nenhum desses marcos deve ser interpretado como funcionalidade disponível até
 que exista implementação, teste, documentação operacional e validação na CI.
@@ -424,6 +470,7 @@ openalex-review --root F:\ale_2_0\openalex\biblioteca report
 | `build-db` | Normaliza e reconstrói DuckDB. |
 | `export [--filter <nome>]` | Exporta obras deduplicadas. |
 | `report` | Gera relatórios Markdown e CSV. |
+| `reading-queue [--analysis-id ...]` | Gera fila auxiliar de leitura em CSV/JSON. |
 | `validate-seeds [--fail-on-missing]` | Confere DOIs-semente. |
 | `init-control [--overwrite]` | Cria modelos CSV. |
 | `import-screening ...` | Importa decisões. |

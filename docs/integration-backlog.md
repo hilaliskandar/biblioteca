@@ -1,8 +1,8 @@
 # Backlog de integração
 
-**Atualizado em:** 27 de setembro de 2026
+**Atualizado em:** 30 de setembro de 2026
 
-**Base verificada:** `origin/main` em `fdf7153`
+**Base verificada:** `origin/main` em `82522fe`
 
 **Repositório:** `hilaliskandar/biblioteca`
 
@@ -49,13 +49,13 @@ como backlog pendente.
 | Eixo | Já existe | Próxima lacuna funcional |
 |---|---|---|
 | Triagem | Importação ASReview, decisões controladas, resolução de registros, idempotência, concordância, conflitos e resoluções manuais. | Exportação auditável consolidada e eventual fluxo de adjudicação guiado, se necessário além de `import-resolutions`. |
-| Texto integral | **Parcial ampliado nesta entrega:** `reading_status` e `fulltext_assets` são criados/preservados; importadores atômicos validam estado, obra, URI/local e hash SHA-256. | Aquisição automatizada, validação de leitura integral e elegibilidade final ainda pendentes. |
+| Texto integral | **Parcial ampliado nesta entrega:** `reading_status` e `fulltext_assets` são criados/preservados; importadores atômicos validam estado, obra, URI/local e hash SHA-256; PRISMA detalha elegibilidade e motivos por candidato. | Aquisição automatizada e resolução humana da elegibilidade final ainda pendentes. |
 | Evidências | **Parcial ampliado nesta entrega:** `evidence_notes` e `evidence_matrix.csv` têm importação atômica, validação referencial, vocabulários de natureza/conferência e relatório de lacunas. | Fluxo de síntese/FAFAT+ no manuscrito continua dependente de revisão humana. |
-| PRISMA | Identificação, deduplicação, sobreposição e título/resumo são reportados. | Texto integral, exclusões por motivo e corpus final. |
+| PRISMA | **Implementado:** relatório e painel Streamlit visualizam identificação, deduplicação, título/resumo, texto integral, exclusões por motivo, conflitos, pendências e incluídos finais. | Integração de fontes externas adicionais e decisão final continuam dependentes de revisão humana. |
 | Interface | Shell local com navegação, visão geral, seleção explícita de corpus, bibliometria, redes interativas, estratégia, execução, produtos e importação. | Filtros/exportações avançadas, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
 | Fontes e deduplicação | Coleta e normalização OpenAlex; deduplicação por `record_key` e proveniência por consulta. | Importação multibase e reconciliação avançada de identificadores/versões. |
-| Bibliometria | Seleção/hash de corpus, execuções persistidas, indicadores, redes de coautoria/coocorrência, métricas, clustering inicial e layouts reproduzíveis. | Referências, identificadores multibase, cocitação, acoplamento, métricas/clustering/layouts avançados e interoperabilidade. |
-| Visualização | Streamlit local com fallback Vega-Lite e componente Cytoscape.js para redes persistidas, seleção de nós e contexto de revisão. | Filtros avançados, exportação de redes, overlay temporal, densidade e benchmark de Sigma.js. |
+| Bibliometria | Seleção/hash de corpus, execuções persistidas, indicadores, redes de coautoria/coocorrência/cocitação/acoplamento, métricas, clustering inicial, layouts, fila de leitura e exportação VOSviewer básica. | Identificadores multibase, Bibliometrix enriquecido, registro de resultados externos e clustering/layouts avançados. |
+| Visualização | Streamlit local com fallback Vega-Lite e componente Cytoscape.js para redes persistidas, seleção de nós, contexto de revisão, filtros e exportações CSV/JSON/VOSviewer. | Acompanhamento visual de leitura, lacunas integradas à UI e benchmark de Sigma.js. |
 
 ## Próximo ciclo de desenvolvimento
 
@@ -117,7 +117,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
 | B20 | Exportação Bibliometrix enriquecida | B03–B19 | Existe mapa documentado campo interno → campo exportado e round-trip dos metadados críticos. |
-| B21 | Exportação VOSviewer | B11, B18 | Exporta nós, arestas, metadados e thesaurus opcional; procedimento de importação é documentado. |
+| B21 | Exportação VOSviewer | B11, B18 | **Parcial:** exporta itens e relações tabulados, com IDs, rótulos, pesos e clusters; thesaurus, round-trip e procedimento formal ainda pendentes. |
 | B22 | Registrar resultados externos | B10, B20, B21 | Outputs externos são associados a `analysis_id` sem sobrescrever cálculos internos. |
 
 ### Reprodutibilidade do ASReview
@@ -172,9 +172,9 @@ A especificação completa está em
 
 | ID | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|---|
-| BL01 | Indicadores auxiliares de leitura | B12–B19 | Deriva cluster, percentil de citações, centralidade, bridge score e recência sem alterar inclusão. |
-| BL02 | Filas de leitura por estratégia | BL01, `reading_status` | Gera filas centrais, pontes, fundacionais, recentes e representativas de cluster. |
-| BL03 | Associar prioridade a `reading_status` | BL02 | Prioridade é metadado auxiliar, auditável e não substitui critérios metodológicos. |
+| BL01 | Indicadores auxiliares de leitura | B12–B19 | **Parcial:** deriva cluster, centralidade, bridge score e recência; percentil de citações ainda não é componente separado. |
+| BL02 | Filas de leitura por estratégia | BL01, `reading_status` | **Concluído nesta entrega:** `reading-queue` gera CSV/JSON determinístico com ponte, recência e representatividade de cluster. |
+| BL03 | Associar prioridade a `reading_status` | BL02 | **Parcial:** a fila lê `reading_status` e preserva a prioridade como projeção; não sobrescreve o estado automaticamente. |
 
 ### P2 — texto integral
 
@@ -183,7 +183,7 @@ A especificação completa está em
 | Modelar ativos de texto integral | — | **Concluído nesta entrega:** `fulltext_assets` registra obra, URI/local, tipo, origem e estado sem versionar conteúdo protegido. |
 | Registrar disponibilidade, aquisição e hash | Modelo de ativos | **Concluído nesta entrega:** importador calcula/valida SHA-256 e tamanho para arquivos locais e preserva tentativa/falha. |
 | Importar e validar leitura integral | Vocabulários P1 e ativos | **Concluído nesta entrega:** `import-reading` valida estados, resolve identificadores, é idempotente e grava atomicamente. |
-| Registrar elegibilidade de texto integral | Leitura integral | Inclusão/exclusão final e motivo ficam associados à obra. |
+| Registrar elegibilidade de texto integral | Leitura integral | **Parcial:** decisões controladas e relatório detalhado por motivo ficam associados à obra; resolução final segue humana. |
 
 ### P3 — evidências e FAFAT+
 
@@ -197,13 +197,13 @@ A especificação completa está em
 
 | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|
-| Completar fluxo PRISMA | P1 e P2 | Reporta identificação, deduplicação, triagem, texto integral, exclusões por motivo e incluídos finais. |
+| Completar fluxo PRISMA | P1 e P2 | **Concluído nesta entrega:** relatório e painel visual reportam identificação, deduplicação, triagem, texto integral, exclusões por motivo, conflitos, pendências e incluídos finais. A confirmação de fontes e a elegibilidade final continuam humanas. |
 
 ### P5 — multibase e deduplicação avançada
 
 | Entrega planejada | Dependência | Critério de aceite |
 |---|---|---|
-| Importar RIS/BibTeX e fontes autorizadas | Política de proveniência | Registros externos preservam fonte, consulta e dados brutos necessários à auditoria. |
+| Importar RIS/BibTeX e fontes autorizadas | Política de proveniência | **Concluído nesta entrega:** BibTeX/RIS é normalizado, deduplicado, correspondido por OpenAlex ID/DOI/título-ano e exportado para revisão humana sem baixar texto. |
 | Integrar múltiplas bases | Importação externa | Crossref, Semantic Scholar, Lens ou outra fonte autorizada são adicionados por conectores testados. |
 | Deduplicação avançada | Multibase | Reconcilia identificadores e possíveis versões distintas com regras auditáveis e revisão humana quando necessário. |
 
@@ -211,8 +211,8 @@ A especificação completa está em
 
 1. Revisar e publicar esta reconciliação documental.
 2. Preparar a release `0.3.0` sem misturar mudanças funcionais.
-3. Abrir B01 — seleção formal de corpus — como primeiro PR funcional do ciclo.
-4. Seguir B02–B11 antes de implementar cálculos ou visualizações.
+3. Formalizar a revisão humana dos relatórios `reference_imports.csv` e `prisma_fulltext_details.csv`.
+4. Adicionar conectores multibase somente após política de proveniência e direitos.
 5. Manter ASReview e Zotero como integrações incrementais, sem duplicar suas funções especializadas.
 
 ## Checklist para novos PRs

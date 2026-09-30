@@ -13,6 +13,7 @@ from openalex_review.bibliometrics import (
     execute_performance_analysis,
     export_network_csv,
     export_network_json,
+    export_network_vosviewer,
     filter_network,
     list_bibliometric_runs,
     network_density_grid,
@@ -31,6 +32,8 @@ from openalex_review.interface import (
     save_guided_config,
     split_terms,
 )
+from openalex_review.reference_import import import_references
+from openalex_review.report import _fulltext_details, _fulltext_summary
 from openalex_review.review_context import selected_node_review_context
 from openalex_review.screening_vocabulary import STAGE_CODES
 from openalex_review.ui_help import render_help_popover, short_help
@@ -301,8 +304,9 @@ def _render_network_exports(
     )
     nodes_csv = export_network_csv(network, record_type="nodes")
     edges_csv = export_network_csv(network, record_type="edges")
+    vosviewer = export_network_vosviewer(network)
     st.caption("As exportações representam apenas a rede filtrada; os dados persistidos não são alterados.")
-    left, middle, right = st.columns(3)
+    left, middle, right, vos_items, vos_network = st.columns(5)
     left.download_button(
         "Baixar JSON + parâmetros",
         data=json_data,
@@ -323,6 +327,20 @@ def _render_network_exports(
         file_name=f"{network_type}-{analysis_id}-edges.csv",
         mime="text/csv",
         key=f"{key}_edges_export",
+    )
+    vos_items.download_button(
+        "VOSviewer itens",
+        data=vosviewer["items"],
+        file_name=f"{network_type}-{analysis_id}-items.txt",
+        mime="text/tab-separated-values",
+        key=f"{key}_vosviewer_items",
+    )
+    vos_network.download_button(
+        "VOSviewer rede",
+        data=vosviewer["network"],
+        file_name=f"{network_type}-{analysis_id}-network.txt",
+        mime="text/tab-separated-values",
+        key=f"{key}_vosviewer_network",
     )
 
 
@@ -730,6 +748,125 @@ def _render_screening(root: Path) -> None:
             )
         except Exception as exc:
             st.error(str(exc))
+
+
+def _read_only_database(root: Path):
+    import duckdb
+
+    path = root / "data" / "db" / "openalex.duckdb"
+    if not path.exists():
+        return None
+    return duckdb.connect(str(path), read_only=True)
+
+
+def _render_prisma(root: Path) -> None:
+    _section_help("PRISMA e texto integral", "screening.stage")
+    st.caption(
+        "Este painel visualiza contagens automáticas. A decisão de elegibilidade, a conferência da obra e a síntese "
+        "continuam humanas e devem ser registradas nos arquivos de controle."
+    )
+    con = _read_only_database(root)
+    if con is None:
+        st.info("Ainda não há banco DuckDB para montar o visual PRISMA.")
+        return
+    try:
+        summary = con.execute(
+            "SELECT COUNT(*) FROM works_stage"
+        ).fetchone()[0]
+        deduplicated = con.execute("SELECT COUNT(*) FROM works").fetchone()[0]
+        decisions = con.execute(
+            """
+            SELECT
+              COUNT(DISTINCT record_key) FILTER (WHERE stage = 'titulo_resumo') AS title_abstract,
+              COUNT(DISTINCT record_key) FILTER (WHERE stage = 'texto_integral') AS fulltext,
+              COUNT(DISTINCT record_key) FILTER (WHERE stage = 'texto_integral' AND decision = 'incluir') AS fulltext_included,
+              COUNT(DISTINCT record_key) FILTER (WHERE stage = 'texto_integral' AND decision = 'excluir') AS fulltext_excluded
+            FROM screening_decisions
+            """
+        ).fetchone()
+        fulltext = _fulltext_summary(con)
+        details = _fulltext_details(con)
+    except Exception as exc:
+        st.error(f"Não foi possível montar o PRISMA: {exc}")
+        con.close()
+        return
+    finally:
+        con.close()
+
+    title_abstract, fulltext_candidates, fulltext_included, fulltext_excluded = [int(value or 0) for value in decisions]
+    included = int(fulltext["final_included"])
+    stages = [
+        {"etapa": "Identificação", "quantidade": int(summary), "estado": "automático"},
+        {"etapa": "Deduplicação", "quantidade": int(deduplicated), "estado": "automático"},
+        {"etapa": "Título/resumo", "quantidade": title_abstract, "estado": "depende de triagem"},
+        {"etapa": "Texto integral", "quantidade": fulltext_candidates, "estado": "depende de leitura"},
+        {"etapa": "Incluídos finais", "quantidade": included, "estado": "sem conflito"},
+    ]
+    st.vega_lite_chart(
+        {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "data": {"values": stages},
+            "mark": {"type": "bar", "cornerRadiusEnd": 5},
+            "encoding": {
+                "y": {"field": "etapa", "type": "nominal", "sort": ["Identificação", "Deduplicação", "Título/resumo", "Texto integral", "Incluídos finais"]},
+                "x": {"field": "quantidade", "type": "quantitative", "title": "Registros"},
+                "color": {"field": "estado", "type": "nominal", "title": "Interpretação"},
+                "tooltip": ["etapa", "quantidade", "estado"],
+            },
+        },
+        width="stretch",
+    )
+    metrics = st.columns(4)
+    metrics[0].metric("Candidatas texto integral", fulltext_candidates)
+    metrics[1].metric("Incluídas", fulltext_included)
+    metrics[2].metric("Excluídas", fulltext_excluded)
+    metrics[3].metric("Conflitos", len([row for row in details if row.get("elegibilidade") == "conflito"]))
+    st.subheader("Arquivo para análise humana")
+    st.info(
+        "Analise `reports/prisma_fulltext_details.csv`: abra cada obra, confirme o texto integral na fonte indicada, "
+        "registre inclusão/exclusão e motivo em `templates/screening_decisions.csv` e use "
+        "`data/control/screening_resolutions.csv` somente para conflitos ou decisões finais manuais."
+    )
+    if details:
+        st.dataframe(details, width="stretch", hide_index=True)
+        report_path = root / "reports" / "prisma_fulltext_details.csv"
+        if report_path.exists():
+            st.download_button("Baixar detalhes PRISMA", report_path.read_bytes(), report_path.name, "text/csv")
+
+
+def _render_reference_import(root: Path) -> None:
+    _section_help("Importar BibTeX/RIS", "screening.stage")
+    st.caption(
+        "A importação não baixa artigos nem altera o corpus. Ela normaliza referências, encontra correspondências "
+        "com `works` por OpenAlex ID/DOI/título-ano e indica a fonte OpenAlex para download manual."
+    )
+    uploaded = st.file_uploader("Arquivo BibTeX ou RIS", type=["bib", "bibtex", "ris"])
+    replace = st.checkbox("Substituir o relatório anterior", value=False)
+    if uploaded is not None and st.button("Importar referências", type="primary"):
+        target = root / "data" / "control" / "imports" / uploaded.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(uploaded.getvalue())
+        try:
+            result = import_references(target, root=root, replace=replace)
+            st.success(
+                f"{result.imported_rows} referências importadas; {result.matched_openalex} correspondências OpenAlex; "
+                f"{result.unmatched_rows} pendentes de correspondência."
+            )
+        except Exception as exc:
+            st.error(str(exc))
+    report_path = root / "reports" / "reference_imports.csv"
+    if report_path.exists():
+        st.subheader("Resultado da importação")
+        st.info(
+            "Arquivo para análise humana: `reports/reference_imports.csv`. Filtre `status` e confirme "
+            "correspondências antes de qualquer triagem. Use `openalex_source_url`, `landing_page_url` ou `pdf_url` "
+            "para acessar a fonte; o sistema não faz download automático."
+        )
+        import pandas as pd
+
+        frame = pd.read_csv(report_path)
+        st.dataframe(frame, width="stretch", hide_index=True)
+        st.download_button("Baixar relatório de referências", report_path.read_bytes(), report_path.name, "text/csv")
 
 
 def _render_overview(root: Path) -> None:
@@ -1168,7 +1305,16 @@ def main() -> None:
         st.header("Navegação")
         page = st.radio(
             "Fluxo",
-            ("Visão geral", "Corpus", "Bibliometria", "Busca e coleta", "Produtos", "Triagem ASReview"),
+            (
+                "Visão geral",
+                "Corpus",
+                "Bibliometria",
+                "Busca e coleta",
+                "Produtos",
+                "PRISMA",
+                "BibTeX/RIS",
+                "Triagem ASReview",
+            ),
             key="navigation_page",
             label_visibility="collapsed",
         )
@@ -1192,6 +1338,10 @@ def main() -> None:
             _render_execution(root)
     elif page == "Produtos":
         _render_products(root)
+    elif page == "PRISMA":
+        _render_prisma(root)
+    elif page == "BibTeX/RIS":
+        _render_reference_import(root)
     else:
         _render_screening(root)
 

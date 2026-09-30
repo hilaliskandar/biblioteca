@@ -29,10 +29,10 @@ registram algoritmo e seed; clustering comunitário e layouts avançados
 continuam planejados.
 
 Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
-bloqueiam filtros incompatíveis de data e DOI. A bibliometria reproduzível e a
-primeira visualização de redes estão operacionais; permanecem incompletos o
-PRISMA integral, a gestão de texto integral, a matriz de evidências operacional
-e a deduplicação multibase.
+bloqueiam filtros incompatíveis de data e DOI. A bibliometria reproduzível, a
+visualização de redes e o painel visual PRISMA estão operacionais. Permanecem
+incompletos a aquisição automatizada de texto integral, a síntese FAFAT+
+operacionalizada, conectores multibase adicionais e a deduplicação avançada.
 
 ## P0 — consolidação e release
 
@@ -69,18 +69,21 @@ inclusão ou julgamento metodológico.
 
 ## P2 — texto integral
 
-O banco preserva a estrutura de leitura, mas ainda não controla o ciclo de texto
-integral. O objetivo é:
+O banco preserva a estrutura de leitura e o relatório já detalha a elegibilidade
+de texto integral. O objetivo restante é:
 
 - **Concluído nesta entrega:** modelar ativos de texto sem versionar PDFs ou conteúdo protegido;
 - **Concluído nesta entrega:** registrar disponibilidade, origem, tentativa, falha e hash;
 - **Concluído nesta entrega:** importar e validar estado de leitura integral;
-- registrar elegibilidade e exclusões de texto integral.
+- **Concluído nesta entrega:** reportar elegibilidade, exclusões, conflitos e
+  pendências por obra em `prisma_fulltext_details.csv`;
+- automatizar aquisição somente após política de proveniência e direitos;
+- manter a decisão final como responsabilidade humana.
 
 ## P3 — evidências e FAFAT+
-- a matriz de evidências/FAFAT+ tem importação, validação e relatório de lacunas
-  operacionais. O ciclo restante inclui:
-planejada. O ciclo inclui:
+
+A matriz de evidências/FAFAT+ tem importação, validação e relatório de lacunas
+operacionais. O ciclo restante inclui:
 
 - **Concluído:** importar a matriz com validação referencial;
 - **Concluído:** validar campos, vocabulários e fichamentos estruturados;
@@ -90,15 +93,18 @@ planejada. O ciclo inclui:
 
 ## P4 — PRISMA completo
 
-Expandir o relatório atual para incluir leitura/elegibilidade de texto integral,
-exclusões por motivo e estudos incluídos no corpus final.
+O relatório e o painel Streamlit incluem leitura/elegibilidade de texto integral,
+exclusões por motivo, conflitos, pendências e estudos incluídos no corpus final.
+O fluxo visual está implementado; a confirmação de correspondência, acesso ao
+texto integral e decisão de elegibilidade permanecem humanas.
 
 ## P5 — multibase e deduplicação avançada
 
-Depois de consolidar proveniência e triagem, ampliar a recuperação com RIS,
-BibTeX e bases autorizadas, como Crossref, Semantic Scholar, Lens ou outras
-fontes permitidas. A deduplicação deverá reconciliar identificadores e versões
-entre bases com regras auditáveis e revisão humana quando necessária.
+BibTeX e RIS já são importados com preservação de proveniência, deduplicação e
+correspondência OpenAlex. Depois de consolidar essa política, ampliar a
+recuperação com bases autorizadas, como Crossref, Semantic Scholar, Lens ou
+outras fontes permitidas. A deduplicação deverá reconciliar identificadores e
+versões entre bases com regras auditáveis e revisão humana quando necessária.
 
 ## P6 — interface bibliométrica
 
@@ -110,6 +116,7 @@ Permanecem como evolução:
 - **Concluído:** KPIs e tabelas de desempenho;
 - filtros por peso, grau, cluster e limite de nós, além de exportação CSV/JSON com parâmetros, estão concluídos;
 - modos de rede de coautoria, coocorrência, cocitação e acoplamento bibliográfico estão concluídos;
+- **Concluído nesta entrega:** exportação VOSviewer básica de itens e relações tabuladas;
 - overlay temporal e densidade estão concluídos como camadas de apresentação reproduzíveis;
 - **Concluído:** visualização interativa básica de nós e arestas com coordenadas, clusters,
   pesos e tooltips de métricas, preservando os resultados persistidos;
@@ -129,7 +136,8 @@ sem inferir associações pelo rótulo visual do nó.
 Após estabilizar identidade, corpus e leitura:
 
 - modelar `fulltext_assets` sem versionar PDFs ou conteúdo protegido;
-- operacionalizar `reading_status` e elegibilidade;
+- **Concluído parcialmente:** operacionalizar `reading_status`, fila auxiliar e
+  relatório de elegibilidade;
 - especificar e persistir FAFAT+;
 - criar matriz de evidências com localização verificável;
 - completar o fluxo PRISMA de texto integral e síntese.

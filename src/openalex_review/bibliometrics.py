@@ -492,6 +492,33 @@ def export_network_csv(network: NetworkResult, *, record_type: str) -> bytes:
     return output.getvalue().encode("utf-8-sig")
 
 
+def export_network_vosviewer(network: NetworkResult) -> dict[str, bytes]:
+    """Serialize a network using VOSviewer ``items`` and ``network`` files."""
+    item_output = io.StringIO(newline="")
+    item_writer = csv.writer(item_output, delimiter="\t", lineterminator="\n")
+    item_writer.writerow(["id", "label", "weight", "cluster"])
+    for node in network.nodes:
+        item_writer.writerow(
+            [
+                node.get("node_id", ""),
+                node.get("label", ""),
+                node.get("weight", ""),
+                node.get("cluster_id", "") or "",
+            ]
+        )
+    network_output = io.StringIO(newline="")
+    network_writer = csv.writer(network_output, delimiter="\t", lineterminator="\n")
+    network_writer.writerow(["source", "target", "weight"])
+    for edge in network.edges:
+        network_writer.writerow(
+            [edge.get("source_node_id", ""), edge.get("target_node_id", ""), edge.get("weight", "")]
+        )
+    return {
+        "items": item_output.getvalue().encode("utf-8-sig"),
+        "network": network_output.getvalue().encode("utf-8-sig"),
+    }
+
+
 def _node_record_keys(node: dict[str, Any]) -> tuple[str, ...]:
     try:
         metadata = json.loads(node.get("metadata_json") or "{}")

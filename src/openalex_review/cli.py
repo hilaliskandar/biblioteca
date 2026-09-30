@@ -16,6 +16,7 @@ from .control import (
     import_screening_decisions,
     init_control,
 )
+from .reference_import import import_references
 from .screening_resolutions import import_screening_resolutions
 from .screening_vocabulary import STAGE_CODES
 
@@ -60,6 +61,11 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--filter", default="all", choices=["all", "open_access", "with_abstract", "with_doi", "not_retracted"])
     sub.add_parser("report")
     sub.add_parser("export-screening", help="Exporta estado, pendencias e conflitos da triagem do DuckDB.")
+    queue = sub.add_parser("reading-queue", help="Gera fila de leitura bibliométrica auditável.")
+    queue.add_argument("--analysis-id")
+    queue.add_argument("--limit", type=int, default=100)
+    queue.add_argument("--recent-years", type=int, default=5)
+    queue.add_argument("--include-completed", action="store_true")
     seeds = sub.add_parser("validate-seeds")
     seeds.add_argument("--fail-on-missing", action="store_true")
     seeds.add_argument(
@@ -93,6 +99,13 @@ def build_parser() -> argparse.ArgumentParser:
     evidence = sub.add_parser("import-evidence", help="Importa matriz de evidências/FAFAT+ para CSV e DuckDB.")
     evidence.add_argument("--input", required=True, help="CSV da matriz de evidências.")
     evidence.add_argument("--replace", action="store_true", help="Substitui evidências com o mesmo evidence_id.")
+
+    references = sub.add_parser(
+        "import-references",
+        help="Importa referências BibTeX/RIS sem baixar texto e gera correspondências OpenAlex.",
+    )
+    references.add_argument("--input", required=True, help="Arquivo .bib/.bibtex ou .ris.")
+    references.add_argument("--replace", action="store_true", help="Substitui o relatório de importação existente.")
 
     pipeline = sub.add_parser("pipeline")
     pipeline.add_argument("--config", required=True)
@@ -159,6 +172,16 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "export-screening":
         from .screening_export import export_screening
         for path in export_screening(root).values():
+            print(path)
+    elif args.command == "reading-queue":
+        from .reading_queue import write_reading_queue
+        for path in write_reading_queue(
+            root,
+            analysis_id=args.analysis_id,
+            limit=args.limit,
+            recent_years=args.recent_years,
+            include_completed=args.include_completed,
+        ).values():
             print(path)
     elif args.command == "validate-seeds":
         from .report import validate_seeds
@@ -232,6 +255,17 @@ def main(argv: list[str] | None = None) -> None:
             f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
             f"Ja existentes: {result.skipped_existing}\n"
             f"Controle: {result.control_path}\nErros: {result.errors_path}"
+        )
+    elif args.command == "import-references":
+        source = Path(args.input)
+        if not source.is_absolute():
+            source = root / source
+        result = import_references(source, root=root, replace=args.replace)
+        print(
+            f"Linhas: {result.source_rows} | Importadas: {result.imported_rows} | "
+            f"Correspondências OpenAlex: {result.matched_openalex} | "
+            f"Sem correspondência: {result.unmatched_rows} | Duplicadas: {result.duplicate_rows}\n"
+            f"Relatório: {result.output_path}\nErros: {result.errors_path}"
         )
     elif args.command == "pipeline":
         from .collector import collect_config
