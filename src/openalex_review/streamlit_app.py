@@ -7,6 +7,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from openalex_review.bibliometrics import (
+    execute_citation_analysis,
     execute_coauthorship_analysis,
     execute_cooccurrence_analysis,
     execute_performance_analysis,
@@ -915,6 +916,122 @@ def _render_bibliometrics(root: Path) -> None:
             )
             if not displayed_cooccurrence.nodes:
                 st.info("Nenhum keyword ou tópico disponível no corpus selecionado.")
+        st.subheader("Redes de citação")
+        st.caption(
+            "Usa referências OpenAlex materializadas em `work_references`; referências externas são preservadas para cocitação."
+        )
+        citation_mode = st.selectbox(
+            "Modo de citação",
+            ("bibliographic_coupling", "cocitation"),
+            format_func=lambda value: (
+                "Acoplamento bibliográfico" if value == "bibliographic_coupling" else "Cocitação"
+            ),
+            key="citation_mode",
+        )
+        min_citation_edge_weight = st.number_input(
+            "Peso mínimo da relação de citação", min_value=1, max_value=100, value=1, step=1
+        )
+        if st.button("Gerar rede de citação", width="stretch"):
+            try:
+                st.session_state["citation_result"] = execute_citation_analysis(
+                    root,
+                    selection,
+                    mode=citation_mode,
+                    min_edge_weight=int(min_citation_edge_weight),
+                )
+            except (FileNotFoundError, ValueError, RuntimeError) as exc:
+                st.error(str(exc))
+        citation_result = st.session_state.get("citation_result")
+        if citation_result is not None and citation_result[0].corpus_hash == selection.corpus_hash:
+            citation_run, citation_network = citation_result
+            display_citation_edge_weight = st.number_input(
+                "Peso mínimo exibido na citação",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key="citation_display_edge_weight",
+            )
+            display_citation_degree = st.number_input(
+                "Grau mínimo exibido na citação",
+                min_value=0,
+                value=0,
+                step=1,
+                key="citation_display_degree",
+            )
+            display_citation_max_nodes = st.number_input(
+                "Máximo de nós exibidos na citação",
+                min_value=1,
+                max_value=5000,
+                value=100,
+                step=10,
+                key="citation_display_max_nodes",
+            )
+            citation_clusters = sorted(
+                {str(node.get("cluster_id") or "cluster_000") for node in citation_network.nodes}
+            )
+            display_citation_clusters = st.multiselect(
+                "Clusters exibidos na citação (vazio = todos)",
+                options=citation_clusters,
+                key="citation_display_clusters",
+            )
+            displayed_citation = filter_network(
+                citation_network,
+                min_edge_weight=float(display_citation_edge_weight),
+                min_degree=int(display_citation_degree),
+                max_nodes=int(display_citation_max_nodes),
+                cluster_ids=tuple(display_citation_clusters),
+            )
+            citation_filters = network_filter_parameters(
+                min_edge_weight=float(display_citation_edge_weight),
+                min_degree=int(display_citation_degree),
+                max_nodes=int(display_citation_max_nodes),
+                cluster_ids=tuple(display_citation_clusters),
+            )
+            st.caption(
+                f"Análise: `{citation_run.analysis_id}` · exibindo "
+                f"{displayed_citation.node_count} de {citation_network.node_count} nós · "
+                f"{displayed_citation.edge_count} de {citation_network.edge_count} arestas"
+            )
+            if displayed_citation.nodes:
+                _render_network_chart(
+                    displayed_citation,
+                    "Visualização da rede de citação",
+                    key="citation",
+                    selection_scope=selection.corpus_hash,
+                    root=root,
+                )
+                st.dataframe(
+                    [
+                        {
+                            "label": node["label"],
+                            "cluster": node.get("cluster_id"),
+                            "weight": node["weight"],
+                            "degree": node.get("centrality_degree", 0),
+                            "weighted_degree": node.get("weighted_degree", 0),
+                            "betweenness": node.get("centrality_betweenness", 0),
+                            "closeness": node.get("centrality_closeness", 0),
+                            "eigenvector": node.get("centrality_eigenvector", 0),
+                        }
+                        for node in displayed_citation.nodes[:20]
+                    ],
+                    width="stretch",
+                    hide_index=True,
+                )
+            if displayed_citation.edges:
+                st.dataframe(displayed_citation.edges[:20], width="stretch", hide_index=True)
+            _render_network_exports(
+                displayed_citation,
+                analysis_id=citation_run.analysis_id,
+                corpus_hash=selection.corpus_hash,
+                network_type=citation_run.analysis_type,
+                filter_parameters=citation_filters,
+                key="citation",
+            )
+            if not displayed_citation.nodes:
+                st.info(
+                    "Nenhuma referência materializada está disponível no corpus. "
+                    "Reconstrua o banco a partir de JSONL que contenha `referenced_works`."
+                )
         history = list_bibliometric_runs(root, corpus_hash=selection.corpus_hash)
         if history:
             st.subheader("Histórico de análises deste corpus")

@@ -6,7 +6,7 @@ import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 
-from .common import project_root, sha256_file, utc_now_iso, write_text_atomic
+from .common import openalex_short_id, project_root, sha256_file, utc_now_iso, write_text_atomic
 from .normalize import (
     normalize_affiliations,
     normalize_authorships,
@@ -133,6 +133,7 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
     source_rows: list[tuple] = []
     keyword_rows: list[tuple] = []
     topic_rows: list[tuple] = []
+    reference_rows: list[tuple] = []
     duckdb = _require_duckdb()
     control_rows = _existing_control_rows(db_path, duckdb)
     con = duckdb.connect(str(temp_db))
@@ -189,6 +190,12 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
                     record = json.loads(line)
                     normalized = normalize_work(record, run_id=run_id, query_id=query_id, rank=rank)
                     work_rows.append([normalized[column] for column in columns])
+                    for referenced_work in record.get("referenced_works") or []:
+                        referenced_openalex_id = openalex_short_id(referenced_work)
+                        if referenced_openalex_id:
+                            reference_rows.append(
+                                (normalized["record_key"], referenced_openalex_id, None, "openalex")
+                            )
                     if len(work_rows) >= WORK_INSERT_BATCH_SIZE:
                         flush_work_rows()
                     authorship_rows.extend(
@@ -426,6 +433,34 @@ def build_database(root: Path | None = None, run_ids: Sequence[str] | None = Non
         copy_rows("topics", topic_entities.values())
     if topic_relationships:
         copy_rows("work_topics", topic_relationships.values())
+    con.execute(
+        """
+        CREATE TABLE work_references (
+            record_key VARCHAR, referenced_openalex_id VARCHAR,
+            referenced_record_key VARCHAR, source VARCHAR,
+            UNIQUE(record_key, referenced_openalex_id, source)
+        );
+        """
+    )
+    existing_openalex_keys = {
+        openalex_id: record_key
+        for record_key, openalex_id in con.execute(
+            "SELECT record_key, openalex_id FROM works WHERE openalex_id IS NOT NULL"
+        ).fetchall()
+    }
+    reference_relationships: dict[tuple[str, str, str], tuple] = {}
+    for record_key, referenced_openalex_id, _referenced_record_key, source in reference_rows:
+        if record_key not in existing_keys:
+            continue
+        relationship = (
+            record_key,
+            referenced_openalex_id,
+            existing_openalex_keys.get(referenced_openalex_id),
+            source,
+        )
+        reference_relationships[(record_key, referenced_openalex_id, source)] = relationship
+    if reference_relationships:
+        copy_rows("work_references", reference_relationships.values())
     con.execute(
         """
         CREATE TABLE work_queries AS

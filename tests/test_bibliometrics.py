@@ -6,6 +6,7 @@ import pytest
 from openalex_review.bibliometrics import (
     NetworkResult,
     calculate_overview,
+    execute_citation_analysis,
     execute_coauthorship_analysis,
     execute_cooccurrence_analysis,
     execute_performance_analysis,
@@ -40,6 +41,31 @@ def make_database(tmp_path):
         ('openalex:W1', 'A', 2020, 10, true, true, 'article', 'Journal A', 'Ana Silva; Bruno Lima', 'AI; Law', 'Artificial Intelligence'),
         ('openalex:W2', 'B', 2020, 0, false, true, 'review', 'Journal A', 'Ana Silva', 'AI; Ethics', 'Artificial Intelligence'),
         ('openalex:W3', 'C', 2021, 5, true, false, 'article', 'Journal B', 'Bruno Lima; Carla Souza', 'AI; Ethics', 'Legal Ethics')
+        """
+    )
+    con.close()
+
+
+def make_citation_database(tmp_path):
+    make_database(tmp_path)
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"))
+    con.execute(
+        """
+        CREATE TABLE work_references (
+            record_key VARCHAR, referenced_openalex_id VARCHAR,
+            referenced_record_key VARCHAR, source VARCHAR
+        )
+        """
+    )
+    con.execute(
+        """
+        INSERT INTO work_references VALUES
+        ('openalex:W1', 'W10', NULL, 'openalex'),
+        ('openalex:W1', 'W11', NULL, 'openalex'),
+        ('openalex:W2', 'W10', NULL, 'openalex'),
+        ('openalex:W2', 'W11', NULL, 'openalex'),
+        ('openalex:W3', 'W11', NULL, 'openalex'),
+        ('openalex:W3', 'W12', NULL, 'openalex')
         """
     )
     con.close()
@@ -129,6 +155,42 @@ def test_execute_cooccurrence_analysis_normalizes_terms_and_applies_threshold(tm
     assert ai["cluster_id"] == "cluster_001"
     assert ai["x"] is not None
     assert ai["y"] is not None
+
+
+def test_execute_bibliographic_coupling_uses_shared_references(tmp_path):
+    make_citation_database(tmp_path)
+    selection = resolve_corpus(
+        "custom", root=tmp_path, custom_record_keys=["openalex:W1", "openalex:W2", "openalex:W3"]
+    )
+
+    run, network = execute_citation_analysis(
+        tmp_path, selection, mode="bibliographic_coupling"
+    )
+
+    assert run.analysis_type == "bibliographic_coupling"
+    assert run.unit_of_analysis == "work"
+    assert '"|R_i intersection R_j|"' in run.parameters_json
+    assert network.node_count == 3
+    assert network.edge_count == 3
+    assert network.edges[0]["weight"] == 2
+    assert network.edges[0]["relation_type"] == "bibliographic_coupling"
+    assert list_network(tmp_path, run.analysis_id).edge_count == 3
+
+
+def test_execute_cocitation_counts_jointly_cited_references(tmp_path):
+    make_citation_database(tmp_path)
+    selection = resolve_corpus(
+        "custom", root=tmp_path, custom_record_keys=["openalex:W1", "openalex:W2", "openalex:W3"]
+    )
+
+    run, network = execute_citation_analysis(tmp_path, selection, mode="cocitation")
+
+    assert run.analysis_type == "cocitation"
+    assert run.unit_of_analysis == "referenced_work"
+    assert network.node_count == 3
+    assert network.edge_count == 2
+    assert network.edges[0]["weight"] == 2
+    assert all(node["node_id"].startswith("reference:") for node in network.nodes)
 
 
 def test_advanced_network_metrics_are_deterministic_for_a_chain():

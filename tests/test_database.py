@@ -61,6 +61,31 @@ def test_build_database_defaults_to_combining_runs_and_preserves_provenance(tmp_
     con.close()
 
 
+def test_build_database_materializes_internal_and_external_references(tmp_path):
+    first = _raw_work()
+    first["referenced_works"] = [
+        "https://openalex.org/W456",
+        "https://openalex.org/W999",
+        "https://openalex.org/W456",
+    ]
+    second = _raw_work()
+    second["id"] = "https://openalex.org/W456"
+    _write_run(tmp_path, "run1", "q1", first)
+    _write_run(tmp_path, "run2", "q2", second)
+
+    build_database(tmp_path)
+
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT record_key, referenced_openalex_id, referenced_record_key, source "
+        "FROM work_references ORDER BY referenced_openalex_id"
+    ).fetchall() == [
+        ("openalex:W123", "W456", "openalex:W456", "openalex"),
+        ("openalex:W123", "W999", None, "openalex"),
+    ]
+    con.close()
+
+
 def test_build_database_inserts_large_stage_in_batches(tmp_path):
     raw_dir = tmp_path / "data" / "raw"
     manifest_dir = tmp_path / "data" / "manifests"

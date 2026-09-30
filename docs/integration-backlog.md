@@ -105,8 +105,8 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | B12 | Indicadores de desempenho | B10 | Gera CSV/Markdown de publicações, autores, fontes, instituições, países e citações; fonte/data da citação são registradas. |
 | B13 | Rede de coautoria | B03, B04 | **Parcial:** rede de autores baseada em `works.authors`, com contagem integral, pesos, `analysis_id` e persistência em `network_nodes`/`network_edges`; instituições, países, contagem fracionada e entidades normalizadas dependem de B03/B04. |
 | B14 | Rede de coocorrência | B06, B07 | **Parcial:** keywords/topics agregados de `works`, normalização, frequência mínima, unidade, `analysis_id` e persistência em `network_nodes`/`network_edges`; thesaurus e entidades normalizadas ainda pendentes. |
-| B15 | Acoplamento bibliográfico | B08, B11 | Calcula referências compartilhadas com fórmula, normalização e parâmetros persistidos. |
-| B16 | Cocitação | B08, B11 | Calcula inicialmente documentos citados conjuntamente e preserva relações externas. |
+| B15 | Acoplamento bibliográfico | B08, B11 | **Concluído nesta entrega:** materializa `work_references`, calcula `|R_i ∩ R_j|` entre obras do corpus, preserva referências externas e registra fórmula/parâmetros em `bibliometric_runs`. |
+| B16 | Cocitação | B08, B11 | **Concluído nesta entrega:** calcula referências citadas conjuntamente pelas obras do corpus, preserva nós externos e registra a origem em `metadata_json`. |
 | B17 | Métricas de rede | B11 | **Parcial:** calcula e persiste `degree`, `weighted_degree`, `betweenness`, `closeness` e `eigenvector` ponderados nos nós de coautoria/coocorrência; demais métricas continuam pendentes. |
 | B18 | Clustering reproduzível | B11 | **Parcial:** atribui `cluster_id` por componentes conexos com algoritmo `connected_components_v1`, parâmetros e seed determinísticos; métodos comunitários continuam pendentes. |
 | B19 | Layouts reproduzíveis | B11, B18 | **Parcial:** persiste coordenadas `x`/`y` com algoritmo `clustered_circular_v1` e seed determinísticos, sem tornar o layout parte da identidade da rede; layouts avançados continuam pendentes. |
@@ -148,7 +148,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | UI-B04 | Componente Cytoscape.js | UI-B03 | **Concluído e integrado na `main`:** componente local recebe nodes/edges/configuração, usa layout `preset` com coordenadas persistidas, suporta zoom, pan, seleção por clique, tooltip visual, destaque de vizinhos e reset. |
 | UI-B05 | Comunicação grafo → Python | UI-B04 | **Concluído e integrado na `main`:** clique e limpeza retornam eventos com `node_id` ao Streamlit; a seleção é persistida por corpus/rede e abre painel contextual com métricas, coordenadas, cluster, vizinhos, arestas incidentes, obras associadas e estado de triagem/leitura/evidências quando disponível. |
 | UI-B06 | Filtros interativos | UI-B05 | **Concluído nesta entrega:** filtra peso, grau, cluster e limite de nós sem alterar a fonte persistida; período, corpus e tipo permanecem definidos pela análise selecionada. |
-| UI-B07 | Modos de rede | UI-B06 | Alterna coautoria, coocorrência, cocitação e acoplamento. |
+| UI-B07 | Modos de rede | UI-B06 | **Concluído nesta entrega:** alterna coautoria, coocorrência, cocitação e acoplamento bibliográfico; todos usam os mesmos filtros, visualização e exportação. |
 | UI-B08 | Overlay temporal | UI-B06 | Exibe ano médio, emergência e crescimento com parâmetros registrados. |
 | UI-B09 | Densidade | UI-B06 | Gera mapa de densidade sem substituir nós/arestas como fonte de dados. |
 | UI-B10 | Exportar rede filtrada | UI-B06 | **Concluído nesta entrega:** exporta nós/arestas em CSV e a rede filtrada em JSON com `analysis_id`, `corpus_hash`, tipo de rede e parâmetros dos filtros. |
