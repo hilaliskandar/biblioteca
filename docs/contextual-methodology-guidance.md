@@ -294,6 +294,38 @@ Explicar que coupling aproxima documentos que compartilham referências e tende
 a ser mais útil para frentes contemporâneas que ainda não acumularam muitas
 citações.
 
+### Threshold e filtros
+
+Thresholds analíticos alteram a rede calculada e devem ser persistidos em
+`bibliometric_runs`. Filtros de exibição operam apenas sobre uma rede já
+calculada e não devem mudar `analysis_id` nem a fonte persistida.
+
+A interface deve sempre mostrar:
+
+- quantidade de nós e arestas antes do filtro;
+- quantidade visível após o filtro;
+- peso mínimo analítico;
+- peso mínimo de exibição;
+- grau mínimo;
+- limite máximo de nós;
+- clusters selecionados.
+
+A escolha de threshold não deve ser guiada apenas pela aparência visual.
+
+### Métricas de rede
+
+Métricas estruturais respondem a perguntas distintas:
+
+- **degree**: quantidade de conexões diretas;
+- **weighted degree**: intensidade acumulada das conexões;
+- **betweenness**: participação em caminhos mínimos e possível função de ponte;
+- **closeness**: proximidade estrutural aos nós alcançáveis;
+- **eigenvector**: conexão com nós que também possuem posição estrutural forte.
+
+Nenhuma dessas métricas equivale automaticamente a qualidade, impacto científico
+ou relevância substantiva. O significado depende do tipo de rede, corpus,
+normalização, threshold e regra de peso.
+
 ### Clustering
 
 Mostrar algoritmo, resolução, seed e quantidade de clusters. O nome do cluster
