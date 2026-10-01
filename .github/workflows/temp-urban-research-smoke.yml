@@ -1,0 +1,93 @@
+name: Temporary urban research smoke test
+
+on:
+  push:
+    branches:
+      - docs/bibliometric-contextual-catalog
+
+jobs:
+  research-smoke:
+    runs-on: ubuntu-latest
+    env:
+      OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Check OpenAlex credential
+        run: |
+          if [ -z "$OPENALEX_API_KEY" ]; then
+            echo "OPENALEX_API_KEY secret is not configured"
+            exit 2
+          fi
+          openalex-review check
+      - name: Create controlled urban search config
+        run: |
+          cat > /tmp/urban_smoke.yaml <<'YAML'
+          project_name: urban_method_smoke
+          defaults:
+            types: [article, review]
+            exclude_retracted: true
+            max_records: 25
+            sort_by: relevance_score
+            sort_order: desc
+          queries:
+            - id: q01_vacant_land_exact
+              mode: lexical
+              search: '"urban vacant land"'
+            - id: q02_reuse_regeneration
+              mode: lexical
+              search: '(brownfield OR "vacant land" OR "adaptive reuse") AND ("urban regeneration" OR "land use planning")'
+            - id: q03_reuse_semantic
+              mode: semantic
+              search: 'how cities can reduce outward urban expansion by reusing vacant land, brownfields, and existing buildings'
+          YAML
+          openalex-review validate-config --config /tmp/urban_smoke.yaml
+      - name: Count filtered universe
+        run: openalex-review count --config /tmp/urban_smoke.yaml | tee /tmp/counts.txt
+      - name: Run controlled pipeline
+        run: openalex-review pipeline --config /tmp/urban_smoke.yaml --run-id urban_smoke_20261001
+      - name: Summarize results
+        run: |
+          python - <<'PY' | tee /tmp/results.txt
+          import duckdb
+          con=duckdb.connect("data/db/openalex.duckdb", read_only=True)
+          print("=== QUERY YIELD ===")
+          print(con.execute("""
+            select query_id, count(*) as occurrences, count(distinct record_key) as unique_records
+            from work_queries group by query_id order by query_id
+          """).fetchdf().to_string(index=False))
+          print("\n=== COMBINED CORPUS ===")
+          print(con.execute("select count(*) works, count(distinct doi) dois from works").fetchdf().to_string(index=False))
+          print("\n=== OVERLAP ===")
+          print(con.execute("""
+            with n as (
+              select record_key, count(distinct query_id) n_queries
+              from work_queries group by record_key
+            )
+            select n_queries, count(*) records from n group by n_queries order by n_queries
+          """).fetchdf().to_string(index=False))
+          print("\n=== TOP RESULTS BY QUERY ===")
+          for (qid,) in con.execute("select distinct query_id from work_queries order by query_id").fetchall():
+              print("\n--",qid)
+              rows=con.execute("""
+                select w.publication_year, w.cited_by_count, w.title, w.doi
+                from work_queries q join works w using(record_key)
+                where q.query_id=?
+                order by q.position nulls last
+                limit 10
+              """,[qid]).fetchall()
+              for row in rows:
+                  print(row)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: urban-research-smoke-results
+          path: |
+            /tmp/counts.txt
+            /tmp/results.txt
+            data/manifests/
+            reports/
+            exports/asreview/
