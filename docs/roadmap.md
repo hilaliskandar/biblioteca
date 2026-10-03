@@ -87,13 +87,16 @@ inclusão ou julgamento metodológico.
 ## P2 — texto integral
 
 O banco preserva a estrutura de leitura e o relatório já detalha a elegibilidade
-de texto integral. O objetivo restante é:
+de texto integral. Concluído em `0.4.0`:
 
-- **Concluído nesta entrega:** modelar ativos de texto sem versionar PDFs ou conteúdo protegido;
-- **Concluído nesta entrega:** registrar disponibilidade, origem, tentativa, falha e hash;
-- **Concluído nesta entrega:** importar e validar estado de leitura integral;
-- **Concluído nesta entrega:** reportar elegibilidade, exclusões, conflitos e
-  pendências por obra em `prisma_fulltext_details.csv`;
+- modelar ativos de texto sem versionar PDFs ou conteúdo protegido;
+- registrar disponibilidade, origem, tentativa, falha e hash;
+- importar e validar estado de leitura integral;
+- reportar elegibilidade, exclusões, conflitos e
+  pendências por obra em `prisma_fulltext_details.csv`.
+
+Permanecem como evolução:
+
 - automatizar aquisição somente após política de proveniência e direitos;
 - manter a decisão final como responsabilidade humana.
 
@@ -125,7 +128,7 @@ versões entre bases com regras auditáveis e revisão humana quando necessária
 
 ## P6 — interface bibliométrica
 
-Entrega atual: os contratos de análise, a seleção de corpus, os KPIs, as redes
+Entregas de `0.4.0`: os contratos de análise, a seleção de corpus, os KPIs, as redes
 persistidas e a integração Streamlit/Cytoscape.js já estão operacionais.
 Permanecem como evolução:
 
@@ -133,7 +136,7 @@ Permanecem como evolução:
 - **Concluído:** KPIs e tabelas de desempenho;
 - filtros por peso, grau, cluster e limite de nós, além de exportação CSV/JSON com parâmetros, estão concluídos;
 - modos de rede de coautoria, coocorrência, cocitação e acoplamento bibliográfico estão concluídos;
-- **Concluído nesta entrega:** exportação VOSviewer básica de itens e relações tabuladas;
+- **Concluído (0.4.0):** exportação VOSviewer básica de itens e relações tabuladas;
 - overlay temporal e densidade estão concluídos como camadas de apresentação reproduzíveis;
 - **Concluído:** visualização interativa básica de nós e arestas com coordenadas, clusters,
   pesos e tooltips de métricas, preservando os resultados persistidos;
