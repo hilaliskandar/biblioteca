@@ -60,7 +60,10 @@ def build_parser() -> argparse.ArgumentParser:
     export = sub.add_parser("export")
     export.add_argument("--filter", default="all", choices=["all", "open_access", "with_abstract", "with_doi", "not_retracted"])
     sub.add_parser("report")
-    sub.add_parser("export-screening", help="Exporta estado, pendencias e conflitos da triagem do DuckDB.")
+    sub.add_parser(
+        "export-screening",
+        help="Exporta decisoes, pendencias, conflitos e resolucoes da triagem do DuckDB.",
+    )
     queue = sub.add_parser("reading-queue", help="Gera fila de leitura bibliométrica auditável.")
     queue.add_argument("--analysis-id")
     queue.add_argument("--limit", type=int, default=100)

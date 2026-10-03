@@ -18,6 +18,19 @@ EXPORT_COLUMNS = (
     "observacoes",
 )
 
+RESOLUTIONS_EXPORT_COLUMNS = (
+    "record_key",
+    "openalex_id",
+    "doi",
+    "title",
+    "etapa",
+    "decisao_final",
+    "motivo_exclusao",
+    "resolver",
+    "data_resolucao",
+    "observacoes",
+)
+
 
 def export_screening(root: Path | None = None) -> dict[str, Path]:
     """Export consolidated screening state and stage-specific pending records from DuckDB."""
@@ -32,6 +45,27 @@ def export_screening(root: Path | None = None) -> dict[str, Path]:
 
     con = duckdb.connect(str(db_path), read_only=True)
     try:
+        has_resolutions = (
+            con.execute(
+                "SELECT COUNT(*) FROM information_schema.tables "
+                "WHERE table_name = 'screening_resolutions'"
+            ).fetchone()[0]
+            > 0
+        )
+        resolutions: list[tuple] = []
+        if has_resolutions:
+            # LEFT JOIN preserva resolucoes cujo record ainda nao esta em works.
+            resolutions = con.execute(
+                """
+                SELECT r.record_key, w.openalex_id, w.doi, w.title, r.stage,
+                       r.final_decision, r.exclusion_reason, r.resolver,
+                       r.resolved_at, r.notes
+                FROM screening_resolutions AS r
+                LEFT JOIN works AS w USING (record_key)
+                ORDER BY r.stage, r.record_key, r.resolved_at, r.resolver,
+                         r.final_decision, r.exclusion_reason, r.notes
+                """
+            ).fetchall()
         decisions = con.execute(
             """
             SELECT d.record_key, w.openalex_id, w.doi, w.title, d.stage,
@@ -89,10 +123,22 @@ def export_screening(root: Path | None = None) -> dict[str, Path]:
         "decisions": output_dir / "screening_decisions.csv",
         "pending": output_dir / "screening_pending.csv",
         "conflicts": output_dir / "screening_conflicts.csv",
+        # Nome distinto do arquivo de controle de importacao
+        # (data/control/screening_resolutions.csv, schema bruto).
+        "resolutions": output_dir / "screening_conflict_resolutions.csv",
     }
-    for name, rows in (("decisions", decisions), ("pending", pending), ("conflicts", conflicts)):
+    headered = (
+        ("decisions", decisions, EXPORT_COLUMNS),
+        ("pending", pending, EXPORT_COLUMNS),
+        ("conflicts", conflicts, EXPORT_COLUMNS),
+    )
+    for name, rows, header in headered:
         with paths[name].open("w", encoding="utf-8-sig", newline="") as stream:
             writer = csv.writer(stream)
-            writer.writerow(EXPORT_COLUMNS)
+            writer.writerow(header)
             writer.writerows(rows)
+    with paths["resolutions"].open("w", encoding="utf-8-sig", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(RESOLUTIONS_EXPORT_COLUMNS)
+        writer.writerows(resolutions)
     return paths
