@@ -91,6 +91,13 @@ def build_parser() -> argparse.ArgumentParser:
     resolutions.add_argument("--input", required=True, help="CSV de resolucoes.")
     resolutions.add_argument("--replace", action="store_true", help="Substitui a resolucao existente da obra e etapa.")
 
+    sub.add_parser("export-adjudication", help="Exporta conflitos nao resolvidos para adjudicao com justificativa.")
+    adjudication = sub.add_parser(
+        "import-adjudication", help="Valida e registra adjudicacoes com justificacao obrigatoria."
+    )
+    adjudication.add_argument("--input", required=True, help="Planilha de adjudicacao preenchida.")
+    adjudication.add_argument("--replace", action="store_true", help="Substitui a resolucao existente da obra e etapa.")
+
     reading = sub.add_parser("import-reading", help="Importa estado de leitura integral para CSV e DuckDB.")
     reading.add_argument("--input", required=True, help="CSV de estado de leitura.")
     reading.add_argument("--replace", action="store_true", help="Substitui o estado anterior da obra.")
@@ -226,6 +233,22 @@ def main(argv: list[str] | None = None) -> None:
         result = import_screening_resolutions(source, root=root, replace=args.replace)
         print(
             f"Linhas: {result.source_rows} | Importadas: {result.imported} | "
+            f"Ja existentes: {result.skipped_existing} | Substituidas: {result.replaced}\n"
+            f"Erros: {result.errors_path}"
+        )
+    elif args.command == "export-adjudication":
+        from .adjudication import export_adjudication
+
+        print(export_adjudication(root))
+    elif args.command == "import-adjudication":
+        from .adjudication import import_adjudications
+
+        source = Path(args.input)
+        if not source.is_absolute():
+            source = root / source
+        result = import_adjudications(source, root=root, replace=args.replace)
+        print(
+            f"Linhas: {result.source_rows} | Adjudicadas: {result.imported} | "
             f"Ja existentes: {result.skipped_existing} | Substituidas: {result.replaced}\n"
             f"Erros: {result.errors_path}"
         )

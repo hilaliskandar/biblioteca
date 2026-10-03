@@ -152,6 +152,8 @@ tests/                   testes automatizados
 | `report` | DuckDB | Gera identificação, sobreposição e triagem. |
 | `import-screening` | CSV + DuckDB | Importa decisões validadas. |
 | `import-resolutions` | CSV + DuckDB | Importa resoluções e decisões finais manuais sem alterar decisões individuais. |
+| `export-adjudication` | DuckDB | Gera planilha com conflitos não resolvidos para adjudicação com justificativa. |
+| `import-adjudication` | CSV + DuckDB | Registra adjudicações com justificativa obrigatória, preservando as decisões originais. |
 | `pipeline` | YAML + `run_id` | Executa coleta, banco, exportação, relatório e controles. |
 
 Durante `build-db`, a fundação bibliométrica já materializa autores, instituições,
@@ -258,7 +260,7 @@ Resoluções ou decisões finais manuais são registradas separadamente com:
 ```text
 screening_resolutions
 record_key, stage, final_decision, exclusion_reason,
-resolver, resolved_at, notes
+resolver, resolved_at, notes, justification
 ```
 
 Use `openalex-review import-resolutions --input resolucoes.csv` para registrar
@@ -277,6 +279,26 @@ a transação do DuckDB; falhas normais provocam rollback e restauração do est
 anterior. Como DuckDB e CSV são arquivos independentes, um encerramento abrupto
 exatamente entre a troca do CSV e o commit ainda exige tratar o DuckDB como
 autoridade e regenerar o CSV a partir da tabela.
+
+### Adjudicação de conflitos
+
+O fluxo guiado de adjudicação usa dois comandos:
+
+```text
+openalex-review export-adjudication
+openalex-review import-adjudication --input adjudicacao_preenchida.csv
+```
+
+`export-adjudication` gera `data/control/adjudication_worksheet.csv` apenas com
+conflitos ainda não resolvidos — obra com `incluir` e `excluir` na mesma etapa
+e sem resolução registrada — já com o resumo das decisões de cada revisor
+(`decisoes_revisores`). O adjudicador preenche `decisao_final`,
+`motivo_exclusao` (quando exigido pela etapa), `adjudicador`, `justificacao` e
+`data`. `import-adjudication` valida a planilha (vocabulários controlados,
+justificativa obrigatória, etapa com conflito real) e grava em
+`screening_resolutions`, preservando as decisões individuais; erros vão para
+`data/control/adjudication_errors.csv`. Substituição de adjudicação exige
+`--replace`.
 
 No relatório, por obra e etapa:
 

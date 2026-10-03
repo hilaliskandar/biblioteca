@@ -24,7 +24,18 @@ RESOLUTION_COLUMNS = (
     "resolver",
     "resolved_at",
     "notes",
+    "justificacao",
 )
+
+
+def _ensure_justification_column(con) -> None:
+    """Adiciona `justification` em bancos criados antes da coluna existir."""
+    exists = con.execute(
+        "SELECT COUNT(*) FROM information_schema.columns "
+        "WHERE table_name = 'screening_resolutions' AND column_name = 'justification'"
+    ).fetchone()[0]
+    if exists == 0:
+        con.execute("ALTER TABLE screening_resolutions ADD COLUMN justification VARCHAR")
 
 
 @dataclass(frozen=True)
@@ -51,10 +62,12 @@ def ensure_resolution_table(con) -> None:
             resolver VARCHAR,
             resolved_at TIMESTAMP,
             notes VARCHAR,
+            justification VARCHAR,
             UNIQUE(record_key, stage)
         )
         """
     )
+    _ensure_justification_column(con)
 
 
 def _column_lookup(fieldnames: list[str | None]) -> dict[str, str]:
@@ -118,6 +131,14 @@ def import_screening_resolutions(
             "notes": next(
                 (lookup[name] for name in ("notes", "notas", "observacoes") if name in lookup), None
             ),
+            "justification": next(
+                (
+                    lookup[name]
+                    for name in ("justificacao", "justificativa", "justification", "justif")
+                    if name in lookup
+                ),
+                None,
+            ),
         }
         rows = list(reader)
 
@@ -136,7 +157,7 @@ def import_screening_resolutions(
     old_control = control_path.read_bytes() if control_path.exists() else None
     control_replaced = False
     try:
-        parsed: list[tuple[str, str, str, str, str, str, str]] = []
+        parsed: list[tuple[str, str, str, str, str, str, str, str]] = []
         errors: list[dict[str, str]] = []
         for line_number, row in enumerate(rows, start=2):
             try:
@@ -154,13 +175,27 @@ def import_screening_resolutions(
                     raise ValueError("resolver obrigatorio.")
                 resolved_at = _parse_timestamp(row.get(fields["resolved_at"]) if fields["resolved_at"] else None)
                 notes = str(row.get(fields["notes"]) or "").strip() if fields["notes"] else ""
+                justification = (
+                    str(row.get(fields["justification"]) or "").strip() if fields["justification"] else ""
+                )
                 exists = con.execute(
                     "SELECT 1 FROM screening_decisions WHERE record_key = ? AND stage = ? LIMIT 1",
                     [record_key, stage],
                 ).fetchone()
                 if not exists:
                     raise ValueError("obra sem decisao individual para a etapa.")
-                parsed.append((record_key, stage, final_decision, exclusion_reason, resolver, resolved_at, notes))
+                parsed.append(
+                    (
+                        record_key,
+                        stage,
+                        final_decision,
+                        exclusion_reason,
+                        resolver,
+                        resolved_at,
+                        notes,
+                        justification,
+                    )
+                )
             except ValueError as exc:
                 errors.append({"linha": str(line_number), "erro": str(exc)})
         if errors:
@@ -177,7 +212,8 @@ def import_screening_resolutions(
             ensure_resolution_table(con)
             for row in parsed:
                 existing = con.execute(
-                    "SELECT final_decision, exclusion_reason, resolver, resolved_at, notes "
+                    "SELECT final_decision, exclusion_reason, resolver, resolved_at, notes, "
+                    "justification "
                     "FROM screening_resolutions WHERE record_key = ? AND stage = ?",
                     row[:2],
                 ).fetchone()
@@ -188,6 +224,7 @@ def import_screening_resolutions(
                         str(existing[2] or ""),
                         _parse_timestamp(existing[3]),
                         str(existing[4] or ""),
+                        str(existing[5] or ""),
                     )
                     incoming = (
                         row[2],
@@ -195,6 +232,7 @@ def import_screening_resolutions(
                         row[4],
                         _parse_timestamp(row[5]),
                         row[6],
+                        row[7],
                     )
                     if current == incoming:
                         skipped_existing += 1
@@ -208,14 +246,16 @@ def import_screening_resolutions(
                         row[:2],
                     )
                     replaced_count += 1
-                con.execute("INSERT INTO screening_resolutions VALUES (?, ?, ?, ?, ?, ?, ?)", row)
+                con.execute(
+                    "INSERT INTO screening_resolutions VALUES (?, ?, ?, ?, ?, ?, ?, ?)", row
+                )
                 imported += 1
 
             control_path.parent.mkdir(parents=True, exist_ok=True)
             control_rows = con.execute(
                 """
                 SELECT record_key, stage, final_decision, exclusion_reason,
-                       resolver, resolved_at, notes
+                       resolver, resolved_at, notes, justification
                 FROM screening_resolutions
                 ORDER BY stage, record_key
                 """
