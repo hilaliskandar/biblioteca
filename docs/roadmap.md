@@ -44,8 +44,13 @@ operacionalizada, conectores multibase adicionais e a deduplicação avançada.
 ## P0 — consolidação e release
 
 1. Manter documentação de planejamento reconciliada com a `main`.
-2. Preparar a release `0.3.0` a partir das entregas já integradas.
-3. Definir e aplicar a política de lint para scripts legados.
+2. **Concluído:** tag `v0.3.0` publicada em 2026-09-27; as entregas subsequentes
+   (fundação bibliométrica, texto integral, evidências, referências BibTeX/RIS,
+   interface e entregas UX) estão consolidadas na `CHANGELOG.md` para a release
+   `0.4.0`.
+3. **Concluído:** scripts legados de `scripts/` seguem o mesmo perfil Ruff
+   (`E, F, I, UP, B, SIM`, com `E501` ignorado e alvo `py310`); `ruff check .`
+   cobre a pasta sem exclusões.
 4. **Concluído:** selecionar rodadas com `build-db --run-id`
    repetido; a ausência da opção mantém a composição cumulativa legada, e o
    banco registra arquivos e hashes usados.
