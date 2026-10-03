@@ -16,7 +16,7 @@ from .common import utc_now_iso
 from .corpus import CorpusSelection
 
 ANALYSIS_TYPE = "performance"
-SOFTWARE_VERSION = "0.3.0"
+SOFTWARE_VERSION = "0.4.0"
 
 
 @dataclass(frozen=True)
