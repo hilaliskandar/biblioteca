@@ -28,12 +28,14 @@ from openalex_review.common import (
     format_openalex_error,
     run_id_now,
 )
+from openalex_review.config import load_search_config
 from openalex_review.control import import_screening_decisions
 from openalex_review.corpus import get_work_record, search_corpus_works, work_query_ids
 from openalex_review.interface import (
     build_lexical_expression,
     guided_config_payload,
     list_product_files,
+    list_run_summaries,
     load_and_count,
     render_guided_yaml,
     run_guided_pipeline,
@@ -682,8 +684,8 @@ def _render_search(root: Path) -> None:
 def _render_execution(root: Path) -> None:
     _section_help("Contar e executar", "run.strategy")
     st.caption(
-        "Contagem, coleta e análise são estados diferentes. A contagem estima o universo; o teto de coleta "
-        "e as regras da estratégia continuam valendo na execução."
+        "Contar, executar e analisar são estados diferentes. A contagem estima o universo sem gravar artefatos; "
+        "a execução exige confirmação explícita e grava JSONL, manifestos, banco e produtos derivados."
     )
     configured = st.session_state.get("config_path")
     custom_configs = sorted((root / "config" / "custom").glob("*.y*ml"))
@@ -698,10 +700,18 @@ def _render_execution(root: Path) -> None:
         format_func=lambda path: str(path.relative_to(root)),
         help=short_help("run.strategy"),
     )
+    try:
+        config = load_search_config(selected)
+    except Exception as exc:
+        st.error(f"Não foi possível ler a estratégia {selected.name}: {exc}")
+        return
+    query = config.queries[0]
+
+    st.subheader("1. Contar o universo")
     if st.button(
         "Contar resultados na OpenAlex",
         width="stretch",
-        help="Conta o universo filtrado sem coletar os registros.",
+        help="Conta o universo filtrado sem coletar os registros e sem registrar rodada.",
     ):
         try:
             configure_openalex()
@@ -714,6 +724,34 @@ def _render_execution(root: Path) -> None:
             st.warning("A contagem não remove o teto operacional de coleta configurado no YAML.")
         except Exception as exc:
             st.error(format_openalex_error(exc))
+
+    st.subheader("2. Confirmar e executar a rodada")
+    filters = "; ".join(
+        part
+        for part in (
+            "tipo=" + "|".join(query.types) if query.types else "",
+            "idioma=" + "|".join(query.languages) if query.languages else "",
+            "acesso_aberto=true" if query.open_access_only else "",
+            "resumo=true" if query.has_abstract_only else "",
+            "doi=true" if query.has_doi_only else "",
+            "retraídos=excluídos" if query.exclude_retracted else "",
+        )
+        if part
+    )
+    st.dataframe(
+        [
+            {"Parâmetro": "Modo", "Valor": query.mode},
+            {"Parâmetro": "Expressão", "Valor": query.search},
+            {"Parâmetro": "Teto de coleta (max_records)", "Valor": str(query.max_records)},
+            {
+                "Parâmetro": "Intervalo de datas",
+                "Valor": f"{query.from_publication_date or 'início aberto'} → {query.to_publication_date or 'fim aberto'}",
+            },
+            {"Parâmetro": "Filtros", "Valor": filters or "nenhum"},
+        ],
+        width="stretch",
+        hide_index=True,
+    )
     run_id = st.text_input(
         "Identificador da rodada",
         value=run_id_now(),
@@ -724,11 +762,20 @@ def _render_execution(root: Path) -> None:
         value=False,
         help=short_help("run.overwrite"),
     )
-    st.warning("A coleta grava JSONL e manifestos locais. Revise o YAML e o run_id antes de executar.")
+    confirmed = st.checkbox(
+        f"Confirmo que revisei a expressão, os filtros e o teto de coleta ({query.max_records}) desta estratégia.",
+        value=False,
+        help="Confirmação explícita antes da coleta; a contagem da etapa 1 não registra rodada.",
+    )
+    st.warning(
+        f"A coleta grava JSONL e manifestos locais e reconstrói o banco. Revise o YAML ({selected.name}) "
+        f"e o identificador da rodada ({run_id or '…'}) antes de executar."
+    )
     if st.button(
         "Executar coleta, banco, exportações e relatório",
         type="primary",
         width="stretch",
+        disabled=not confirmed,
         help="Executa a cadeia local preservando JSONL, manifestos, banco e produtos derivados.",
     ):
         try:
@@ -743,6 +790,33 @@ def _render_execution(root: Path) -> None:
             st.write(f"Relatório: {Path(result['report']).relative_to(root)}")
         except Exception as exc:
             st.error(format_openalex_error(exc))
+
+    st.subheader("3. Rodadas e estado local")
+    summaries = list_run_summaries(root)
+    if not summaries:
+        st.info("Ainda não há rodadas registradas nesta raiz. Execute uma coleta para ver o estado aqui.")
+    else:
+        st.dataframe(
+            [
+                {
+                    "Rodada": item["run_id"],
+                    "Projeto": item["project"] or "—",
+                    "Execução": item["executed_at"] or "—",
+                    "Consultas": ", ".join(record["query_id"] for record in item["queries"]),
+                    "Estado": item["status"],
+                    "Registros": item["total_records"],
+                    "Estratégia": item["strategy_version"] or "—",
+                }
+                for item in summaries
+            ],
+            width="stretch",
+            hide_index=True,
+        )
+        st.caption(
+            f"{len(summaries)} rodada(s) agregadas de `data/control/search_log.csv` e `data/manifests`. "
+            "Uma rodada só conta como completa quando os manifestos das consultas estão completos e os "
+            "artefatos (JSONL, banco, exportações) existem localmente."
+        )
 
 
 def _render_products(root: Path) -> None:

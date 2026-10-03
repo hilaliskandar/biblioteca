@@ -7,6 +7,9 @@ import pytest
 from streamlit.testing.v1 import AppTest
 from test_corpus import make_explorer_database
 
+from openalex_review.control import append_search_log
+from openalex_review.interface import guided_config_payload, save_guided_config
+
 APP_FILE = Path(__file__).parent.parent / "src" / "openalex_review" / "streamlit_app.py"
 
 # Página -> wrapper executado por pages/*.py em openalex_review.ui.app_pages.
@@ -93,3 +96,45 @@ def test_search_page_shows_guided_steps_and_yaml_preview(tmp_path_factory):
         assert expected in steps
     codes = [str(item.value) for item in test.code]
     assert any("project_name: minha_revisao" in value for value in codes)
+
+
+def test_execution_page_separates_count_confirm_and_history(tmp_path_factory, monkeypatch):
+    root = tmp_path_factory.mktemp("ui_execution")
+    payload = guided_config_payload(
+        project_name="projeto_execucao",
+        query_id="q01",
+        mode="lexical",
+        expression='"dados abertos"',
+        max_records=40,
+    )
+    save_guided_config(payload, root=root)
+    append_search_log(
+        {
+            "id_consulta": "r2026__q01",
+            "projeto": "projeto_execucao",
+            "data_execucao": "2026-10-01T10:00:00Z",
+            "resultados": "7",
+            "arquivo_exportado": "data/raw/r2026__q01.jsonl",
+            "versao_estrategia": "projeto_execucao.yaml",
+        },
+        root=root,
+    )
+    monkeypatch.setenv("OPENALEX_REVIEW_ROOT", str(root))
+    test = _app_for("render_busca_coleta", tmp_path_factory)
+    assert not test.exception
+    steps = [str(item.value) for item in test.subheader]
+    for expected in ("1. Contar o universo", "2. Confirmar e executar a rodada", "3. Rodadas e estado local"):
+        assert expected in steps
+
+    execute = next(item for item in test.button if item.label == "Executar coleta, banco, exportações e relatório")
+    assert execute.disabled, "a coleta exige confirmação explícita antes de habilitar o botão"
+
+    confirm = next(item for item in test.checkbox if item.label.startswith("Confirmo que revisei"))
+    confirm.set_value(True)
+    test.run()
+    assert not test.exception
+    execute = next(item for item in test.button if item.label == "Executar coleta, banco, exportações e relatório")
+    assert not execute.disabled
+
+    captions = [str(caption.value) for caption in test.caption]
+    assert any("rodada(s) agregadas" in caption for caption in captions)

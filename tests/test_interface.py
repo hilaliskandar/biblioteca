@@ -1,12 +1,15 @@
+import json
 from pathlib import Path
 
 import pytest
 
+from openalex_review.control import append_search_log
 from openalex_review.interface import (
     ProductFile,
     build_lexical_expression,
     guided_config_payload,
     list_product_files,
+    list_run_summaries,
     render_guided_yaml,
     save_guided_config,
 )
@@ -101,3 +104,72 @@ def test_render_guided_yaml_matches_saved_file(tmp_path):
     path, _ = save_guided_config(payload, root=tmp_path)
 
     assert path.read_text(encoding="utf-8") == text
+
+
+def test_list_run_summaries_aggregates_log_and_manifests(tmp_path):
+    append_search_log(
+        {
+            "id_consulta": "r2026__q1",
+            "projeto": "projeto_alpha",
+            "data_execucao": "2026-10-01T10:00:00Z",
+            "resultados": "12",
+            "arquivo_exportado": "data/raw/r2026__q1.jsonl",
+            "versao_estrategia": "projeto_alpha.yaml",
+        },
+        root=tmp_path,
+    )
+    append_search_log(
+        {
+            "id_consulta": "r2025__q1",
+            "projeto": "projeto_alpha",
+            "data_execucao": "2026-09-01T09:00:00Z",
+            "resultados": "4",
+            "arquivo_exportado": "data/raw/r2025__q1.jsonl",
+        },
+        root=tmp_path,
+    )
+    append_search_log(
+        {
+            "id_consulta": "r2024__q9",
+            "projeto": "projeto_beta",
+            "data_execucao": "2026-08-01T08:00:00Z",
+            "resultados": "0",
+        },
+        root=tmp_path,
+    )
+    manifest_dir = tmp_path / "data" / "manifests"
+    manifest_dir.mkdir(parents=True)
+    (manifest_dir / "r2026__q1.manifest.json").write_text(
+        json.dumps(
+            {
+                "run_id": "r2026",
+                "query_id": "q1",
+                "project_name": "projeto_alpha",
+                "status": "completed",
+                "records_written": 12,
+                "raw_file": "data/raw/r2026__q1.jsonl",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (manifest_dir / "r2025__q1.manifest.json").write_text(
+        json.dumps({"run_id": "r2025", "query_id": "q1", "status": "failed", "records_written": 0}),
+        encoding="utf-8",
+    )
+
+    summaries = list_run_summaries(tmp_path)
+
+    assert [item["run_id"] for item in summaries] == ["r2026", "r2025", "r2024"]
+    latest = summaries[0]
+    assert latest["status"] == "completed"
+    assert latest["total_records"] == 12
+    assert latest["strategy_version"] == "projeto_alpha.yaml"
+    assert latest["queries"][0]["raw_file"] == "data/raw/r2026__q1.jsonl"
+    assert summaries[1]["status"] == "failed"
+    assert summaries[1]["total_records"] == 4
+    assert summaries[2]["status"] == "registered"
+    assert summaries[2]["queries"][0]["records"] == 0
+
+
+def test_list_run_summaries_returns_empty_without_artifacts(tmp_path):
+    assert list_run_summaries(tmp_path) == []
