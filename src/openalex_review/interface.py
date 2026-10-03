@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import json
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -229,3 +231,111 @@ def list_product_files(root: Path) -> list[ProductFile]:
             if path.is_file() and path.name != ".gitkeep":
                 products.append(ProductFile(path.relative_to(root), path.stat().st_size))
     return sorted(products, key=lambda product: str(product.relative_path).casefold())
+
+
+def list_run_summaries(root: Path) -> list[dict[str, Any]]:
+    """Agrega o estado das rodadas a partir do diario de buscas e dos manifestos.
+
+    O diario ``data/control/search_log.csv`` registra as consultas executadas
+    (projeto, data, resultados e versao da estrategia); os manifestos em
+    ``data/manifests`` trazem o estado real de cada consulta (running,
+    completed ou failed). Consultas presentes apenas no diario, sem manifesto
+    lido, recebem o estado ``registered``. Uma rodada so conta como
+    ``completed`` quando todas as suas consultas estao completas.
+    """
+    runs: dict[str, dict[str, Any]] = {}
+
+    def entry(run_id: str) -> dict[str, Any]:
+        if run_id not in runs:
+            runs[run_id] = {
+                "run_id": run_id,
+                "project": "",
+                "executed_at": "",
+                "strategy_version": "",
+                "queries": {},
+            }
+        return runs[run_id]
+
+    log_path = root / "data" / "control" / "search_log.csv"
+    if log_path.is_file():
+        with log_path.open(encoding="utf-8-sig", newline="") as stream:
+            for row in csv.DictReader(stream):
+                raw_id = (row.get("id_consulta") or "").strip()
+                if not raw_id:
+                    continue
+                run_id, _, query_id = raw_id.partition("__")
+                item = entry(run_id)
+                item["project"] = (row.get("projeto") or "").strip() or item["project"]
+                item["executed_at"] = (row.get("data_execucao") or "").strip() or item["executed_at"]
+                item["strategy_version"] = (row.get("versao_estrategia") or "").strip() or item[
+                    "strategy_version"
+                ]
+                try:
+                    records = int((row.get("resultados") or "0").strip() or 0)
+                except ValueError:
+                    records = 0
+                item["queries"][query_id] = {
+                    "query_id": query_id,
+                    "status": "registered",
+                    "records": records,
+                    "raw_file": (row.get("arquivo_exportado") or "").strip(),
+                }
+
+    manifests_dir = root / "data" / "manifests"
+    if manifests_dir.is_dir():
+        for manifest_path in sorted(manifests_dir.glob("*.manifest.json")):
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            run_id = str(manifest.get("run_id") or "").strip()
+            if not run_id:
+                continue
+            query_id = str(manifest.get("query_id") or "").strip()
+            status = str(manifest.get("status") or "unknown")
+            try:
+                records = int(manifest.get("records_written") or 0)
+            except (TypeError, ValueError):
+                records = 0
+            item = entry(run_id)
+            item["project"] = str(manifest.get("project_name") or "") or item["project"]
+            raw_file = str(manifest.get("raw_file") or "")
+            existing = item["queries"].get(query_id)
+            if existing is None:
+                item["queries"][query_id] = {
+                    "query_id": query_id,
+                    "status": status,
+                    "records": records,
+                    "raw_file": raw_file,
+                }
+            elif status in {"running", "completed", "failed"}:
+                existing["status"] = status
+                existing["records"] = records or existing["records"]
+                existing["raw_file"] = raw_file or existing["raw_file"]
+
+    summaries: list[dict[str, Any]] = []
+    for item in runs.values():
+        queries = sorted(item["queries"].values(), key=lambda record: record["query_id"])
+        statuses = {record["status"] for record in queries}
+        if queries and statuses == {"completed"}:
+            status = "completed"
+        elif "failed" in statuses:
+            status = "failed"
+        elif "running" in statuses:
+            status = "running"
+        elif queries and statuses == {"registered"}:
+            status = "registered"
+        else:
+            status = "partial"
+        summaries.append(
+            {
+                "run_id": item["run_id"],
+                "project": item["project"],
+                "executed_at": item["executed_at"],
+                "strategy_version": item["strategy_version"],
+                "queries": queries,
+                "total_records": sum(record["records"] for record in queries),
+                "status": status,
+            }
+        )
+    return sorted(summaries, key=lambda item: (item["executed_at"], item["run_id"]), reverse=True)
