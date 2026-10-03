@@ -1,9 +1,10 @@
 import csv
+import io
 
 import duckdb
 
 from openalex_review.report import generate_report
-from openalex_review.reviewer_agreement import build_reviewer_agreement
+from openalex_review.reviewer_agreement import agreement_csv_text, build_reviewer_agreement
 
 
 def make_database(tmp_path, decisions):
@@ -158,3 +159,20 @@ def test_report_writes_agreement_csv_and_markdown(tmp_path):
     assert "Concordância entre revisores" in text
     assert "Discordâncias para adjudicação" in text
     assert "openalex:W1" in text
+
+
+def test_agreement_csv_text_matches_report_rows(tmp_path):
+    summary_for(
+        tmp_path,
+        [
+            ("openalex:W1", "titulo_resumo", "incluir", "r1"),
+            ("openalex:W1", "titulo_resumo", "excluir", "r2"),
+        ],
+    )
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    text = agreement_csv_text(con)
+    con.close()
+    rows = list(csv.DictReader(io.StringIO(text)))
+    assert rows[0]["tipo_linha"] == "resumo"
+    disagreement = next(row for row in rows if row["classificacao"] == "discordancia")
+    assert disagreement["record_key"] == "openalex:W1"

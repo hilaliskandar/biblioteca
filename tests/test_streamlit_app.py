@@ -138,3 +138,59 @@ def test_execution_page_separates_count_confirm_and_history(tmp_path_factory, mo
 
     captions = [str(caption.value) for caption in test.caption]
     assert any("rodada(s) agregadas" in caption for caption in captions)
+
+
+def test_screening_dashboard_shows_workflow_state_and_conflicts(tmp_path_factory, monkeypatch):
+    import duckdb
+
+    root = tmp_path_factory.mktemp("ui_screening")
+    db_dir = root / "data" / "db"
+    db_dir.mkdir(parents=True)
+    con = duckdb.connect(str(db_dir / "openalex.duckdb"))
+    con.execute("CREATE TABLE works (record_key VARCHAR, openalex_id VARCHAR, title VARCHAR)")
+    con.execute(
+        "INSERT INTO works VALUES "
+        "('openalex:W1', 'W1', 'Painel solar'), "
+        "('openalex:W2', 'W2', 'Bateria de litio'), "
+        "('openalex:W3', 'W3', 'Painel contra correntes')"
+    )
+    con.execute(
+        "CREATE TABLE screening_decisions ("
+        "record_key VARCHAR, stage VARCHAR, decision VARCHAR, exclusion_reason VARCHAR,"
+        " reviewer VARCHAR, decided_at TIMESTAMP, notes VARCHAR)"
+    )
+    con.execute(
+        "INSERT INTO screening_decisions VALUES "
+        "('openalex:W1', 'titulo_resumo', 'incluir', NULL, 'revisor_a', '2026-10-01', ''), "
+        "('openalex:W1', 'titulo_resumo', 'excluir', 'fora_escopo', 'revisor_b', '2026-10-01', ''), "
+        "('openalex:W2', 'titulo_resumo', 'incluir', NULL, 'revisor_a', '2026-10-01', ''), "
+        "('openalex:W2', 'titulo_resumo', 'excluir', 'fora_escopo', 'revisor_b', '2026-10-01', ''), "
+        "('openalex:W3', 'titulo_resumo', 'excluir', 'fora_escopo', 'revisor_a', '2026-10-01', '')"
+    )
+    con.execute(
+        "CREATE TABLE screening_resolutions ("
+        "record_key VARCHAR, stage VARCHAR, final_decision VARCHAR, exclusion_reason VARCHAR,"
+        " resolver VARCHAR, resolved_at TIMESTAMP, notes VARCHAR)"
+    )
+    con.execute(
+        "INSERT INTO screening_resolutions VALUES "
+        "('openalex:W2', 'titulo_resumo', 'excluir', 'fora_escopo', 'revisor_c', '2026-10-02', '')"
+    )
+    con.close()
+    monkeypatch.setenv("OPENALEX_REVIEW_ROOT", str(root))
+    test = _app_for("render_screening", tmp_path_factory)
+    assert not test.exception
+    steps = [str(item.value) for item in test.subheader]
+    for expected in (
+        "1. Importar decisões (ASReview)",
+        "2. Estado do workflow de triagem",
+        "3. Conflitos e resoluções",
+    ):
+        assert expected in steps
+    metric_labels = [metric.label for metric in test.metric]
+    assert "Obras no workflow de triagem" in metric_labels
+    assert "Conflitos a resolver" in metric_labels
+    assert "Conflitos resolvidos" in metric_labels
+    assert "Baixar relatório de concordância (CSV)" in [item.label for item in test.download_button]
+    captions = [str(caption.value) for caption in test.caption]
+    assert any("κ de Cohen" in caption for caption in captions)
