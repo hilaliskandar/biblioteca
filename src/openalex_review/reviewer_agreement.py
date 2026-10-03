@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import io
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -245,6 +246,20 @@ def write_reviewer_agreement(
         for row in summaries + details:
             writer.writerow(row)
     return summaries, details
+
+
+def agreement_csv_text(con) -> str:
+    """Return the agreement report as CSV text, same layout as ``write_reviewer_agreement``.
+
+    Usado pela interface para oferecer o download sem gravar artefato em disco.
+    """
+    summaries, details = build_reviewer_agreement(con)
+    stream = io.StringIO()
+    writer = csv.DictWriter(stream, fieldnames=AGREEMENT_COLUMNS)
+    writer.writeheader()
+    for row in summaries + details:
+        writer.writerow(row)
+    return stream.getvalue()
 
 
 def agreement_markdown(summaries: list[dict[str, Any]], details: list[dict[str, Any]]) -> str:

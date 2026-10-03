@@ -45,7 +45,8 @@ from openalex_review.interface import (
 from openalex_review.reference_import import import_references
 from openalex_review.report import _fulltext_details, _fulltext_summary
 from openalex_review.review_context import selected_node_review_context
-from openalex_review.screening_vocabulary import STAGE_CODES
+from openalex_review.reviewer_agreement import agreement_csv_text, build_reviewer_agreement
+from openalex_review.screening_vocabulary import STAGE_CODES, STAGES
 from openalex_review.ui import shell as ui_shell
 from openalex_review.ui_help import render_help_popover, short_help
 from openalex_review.workspace import CORPUS_SCOPES, select_workspace_corpus, summarize_workspace
@@ -861,6 +862,7 @@ def _render_screening(root: Path) -> None:
         st.success(f"Registro em foco: `{focused_record}`. Nenhuma decisão foi alterada automaticamente.")
         if st.button("Limpar registro em foco", key="clear_focused_record"):
             st.rerun()
+    st.subheader("1. Importar decisões (ASReview)")
     reviewer = st.text_input(
         "Revisor ou rodada",
         value="revisor_01",
@@ -880,9 +882,7 @@ def _render_screening(root: Path) -> None:
         type="csv",
         help=short_help("screening.csv"),
     )
-    if uploaded is None:
-        return
-    if st.button(
+    if uploaded is not None and st.button(
         "Importar decisões",
         type="primary",
         help="Valida o lote antes de gravar decisões no DuckDB.",
@@ -902,6 +902,130 @@ def _render_screening(root: Path) -> None:
             )
         except Exception as exc:
             st.error(str(exc))
+
+    st.subheader("2. Estado do workflow de triagem")
+    con = _read_only_database(root)
+    if con is None:
+        st.info(
+            "Ainda não há banco local nesta raiz. Execute uma coleta para habilitar o estado do workflow de triagem."
+        )
+        return
+    if not _table_exists(con, "works") or not _table_exists(con, "screening_decisions"):
+        st.info("O banco local ainda não materializou as tabelas de triagem. Gere o banco pelo pipeline.")
+        return
+    summaries, details = build_reviewer_agreement(con)
+    pending = sum(1 for row in details if row["classificacao"] == "pendente")
+    open_conflicts = sum(1 for row in details if row["classificacao"] == "discordancia")
+    resolved_conflicts = sum(1 for row in details if row["classificacao"] == "conflito_resolvido")
+    metrics = st.columns(4)
+    metrics[0].metric("Obras no workflow de triagem", f"{len(details):,}")
+    metrics[1].metric("Pendentes de decisão", f"{pending:,}")
+    metrics[2].metric("Conflitos a resolver", f"{open_conflicts:,}")
+    metrics[3].metric("Conflitos resolvidos", f"{resolved_conflicts:,}")
+    st.dataframe(
+        [
+            {
+                "Etapa": _stage_label(item["etapa"]),
+                "Revisores": item["revisores"] or "—",
+                "Obras na etapa": item["obras_na_etapa"],
+                "Avaliados por ambos": item["obras_avaliadas_por_ambos"],
+                "Acordo incluir": item["acordo_incluir"],
+                "Acordo excluir": item["acordo_excluir"],
+                "Discordâncias": item["discordancias"],
+                "Apenas um revisor": item["avaliados_por_apenas_um"],
+                "Pendentes": item["pendentes"],
+                "Concordância (%)": (
+                    "—"
+                    if item["concordancia_percentual"] is None
+                    else f"{item['concordancia_percentual']:.2f}"
+                ),
+                "Kappa (Cohen)": (
+                    "—" if item["kappa_cohen"] is None else f"{item['kappa_cohen']:.6f}"
+                ),
+                "Status kappa": item["kappa_status"],
+                "Casos comparáveis": item["casos_comparaveis"],
+            }
+            for item in summaries
+        ],
+        width="stretch",
+        hide_index=True,
+    )
+    st.caption(
+        "Concordância percentual e κ de Cohen são calculados por etapa, apenas entre revisores com decisão na mesma "
+        "obra; nenhuma concordância é induzida por adjudicação automática."
+    )
+
+    st.subheader("3. Conflitos e resoluções")
+    available_stages = tuple(
+        stage_code for stage_code in STAGE_CODES if any(item["etapa"] == stage_code for item in details)
+    )
+    stage_filter = st.selectbox("Etapa", ("todas_as_etapas",) + available_stages, key="screening_dashboard_stage")
+    situation_filter = st.selectbox(
+        "Situação",
+        (
+            "todas_as_situacoes",
+            "discordancia",
+            "conflito_resolvido",
+            "acordo_incluir",
+            "acordo_excluir",
+            "avaliado_por_apenas_um",
+            "pendente",
+        ),
+        key="screening_dashboard_situation",
+    )
+    rows = [
+        row
+        for row in details
+        if (stage_filter == "todas_as_etapas" or row["etapa"] == stage_filter)
+        and (situation_filter == "todas_as_situacoes" or row["classificacao"] == situation_filter)
+    ]
+    if not rows:
+        st.info("Nenhum registro na seleção atual.")
+    else:
+        st.dataframe(
+            [
+                {
+                    "Etapa": _stage_label(row["etapa"]),
+                    "Record": row["record_key"],
+                    "OpenAlex": row["openalex_id"] or "—",
+                    "Título": row["titulo"] or "—",
+                    "Revisores": row["revisores"],
+                    "Decisões": row["decisoes"],
+                    "Situação": row["classificacao"],
+                    "Resolução": row["status_resolucao"],
+                    "Decisão final": row["decisao_final"] or "—",
+                }
+                for row in rows
+            ],
+            width="stretch",
+            hide_index=True,
+        )
+        st.caption(
+            "Decisões individuais e resoluções permanecem separadas; a decisão final só existe quando uma "
+            "resolução foi registrada explicitamente."
+        )
+    st.download_button(
+        "Baixar relatório de concordância (CSV)",
+        data=agreement_csv_text(con).encode("utf-8-sig"),
+        file_name="reviewer_agreement.csv",
+        mime="text/csv",
+        help="Mesma estrutura do relatório de concordância: linhas de resumo por etapa e linhas por registro.",
+    )
+
+
+def _stage_label(stage_code: str) -> str:
+    term = STAGES.get(stage_code)
+    return term.description if term is not None else stage_code
+
+
+def _table_exists(con, table_name: str) -> bool:
+    return (
+        con.execute(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema = 'main' AND table_name = ?",
+            [table_name],
+        ).fetchone()
+        is not None
+    )
 
 
 def _read_only_database(root: Path):
