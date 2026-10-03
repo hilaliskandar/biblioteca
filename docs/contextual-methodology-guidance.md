@@ -225,7 +225,10 @@ substantiva deve produzir nova rodada. Sobrescrita é exceção.
 ### Screening
 
 Decisões individuais são evidência do processo. Consenso e adjudicação devem
-ser registrados separadamente e nunca apagar decisões originais.
+ser registrados separadamente e nunca apagar decisões originais. O fluxo de
+adjudicação (`export-adjudication` → `import-adjudication`) registra a decisão
+final, o responsável e a justificativa obrigatória em `screening_resolutions`,
+ao lado das decisões individuais preservadas.
 
 ### Produtos
 

@@ -7,6 +7,13 @@
   final, motivo, resolutor, data e observações), fechando o trilho de auditoria
   dos exports de triagem (P1 do roadmap). O nome é distinto do arquivo de
   controle de importação (`screening_resolutions.csv`).
+- **Triagem:** fluxo de adjudicação com justificativa (último item P1):
+  `export-adjudication` gera planilha apenas com conflitos não resolvidos, com
+  resumo das decisões de cada revisor; `import-adjudication` valida
+  (vocabulários controlados, justificativa obrigatória, etapa com conflito
+  real) e grava em `screening_resolutions`, que ganhou a coluna
+  `justification` com migração automática para bancos antigos. As decisões
+  individuais permanecem intactas.
 
 ## 0.4.0 — 2026-10-03
 

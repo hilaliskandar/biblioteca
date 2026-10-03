@@ -79,7 +79,7 @@ compatibilidade metodológica. Consulte README e algoritmo do pipeline.
 | Validar vocabulários de etapa, decisão e exclusão | Importação ASReview existente | Valores inválidos são recusados e a taxonomia é documentada. |
 | Exportar decisões de triagem | Vocabulários controlados | Exportação reproduzível contém chaves, decisões, motivos, revisores e datas. |
 | Calcular concordância entre revisores | Vocabulários e decisões exportáveis | **Concluído:** gera concordância por etapa, casos incompletos, divergências localizáveis e kappa apenas quando aplicável. |
-| Adjudicar conflitos | Concordância | Fluxo registra decisão final, responsável, justificativa e preserva decisões originais. |
+| Adjudicar conflitos | Concordância | **Concluído:** `export-adjudication`/`import-adjudication` registram decisão final, responsável, justificativa obrigatória e preservam decisões originais. |
 
 ### P1.5 — fundação bibliométrica
 

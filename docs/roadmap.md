@@ -58,8 +58,8 @@ operacionalizada, conectores multibase adicionais e a deduplicação avançada.
 ## P1 — triagem completa
 
 Já existe importação ASReview, resolução de registros, idempotência, conflitos,
-concordância e resoluções manuais com preservação das decisões originais. As
-próximas capacidades são:
+concordância, resoluções manuais e adjudicação guiada, sempre com preservação
+das decisões originais. As capacidades desta frente estão concluídas:
 
 - **Concluído:** vocabulários controlados para etapa, decisão e motivo de
   exclusão (`openalex_review.screening_vocabulary`), validados em importação,
@@ -72,8 +72,11 @@ próximas capacidades são:
   decisões (`openalex-review export-screening` →
   `screening_conflict_resolutions.csv`), fechando o trilho de auditoria dos
   exports de triagem;
-- fluxo de adjudicação com justificativa, quando não coberto pelo importador
-  existente.
+- **Concluído:** fluxo de adjudicação com justificativa — `export-adjudication`
+  exporta conflitos não resolvidos com resumo das decisões de cada revisor e
+  `import-adjudication` valida e registra a decisão final, responsável, motivo
+  e justificativa obrigatória em `screening_resolutions`, preservando as
+  decisões originais.
 
 ## P1.5 — fundação bibliométrica e interoperabilidade
 

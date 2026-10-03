@@ -203,7 +203,7 @@ linha correspondente em `screening_resolutions`.
 
 ```text
 record_key, stage, final_decision, exclusion_reason,
-resolver, resolved_at, notes
+resolver, resolved_at, notes, justification
 ```
 
 Registra uma resolução humana ou decisão final manual de uma obra e etapa sem
@@ -211,6 +211,9 @@ modificar `screening_decisions`. Há no máximo uma resolução vigente por
 `(record_key, stage)`. A resolução só pode ser importada quando existir decisão
 individual para a mesma obra e etapa; ela não exige que as decisões individuais
 sejam divergentes. Etapa, decisão e motivo obedecem aos vocabulários controlados.
+`justification` é a justificativa estruturada da adjudicação (preenchida pelo
+fluxo `import-adjudication`, obrigatória nele; pode ser vazia nas resoluções
+importadas diretamente).
 A importação é idempotente para conteúdo igual e exige opção explícita
 `--replace` para substituir conteúdo diferente. O DuckDB é a fonte de verdade;
 `data/control/screening_resolutions.csv` é uma projeção regenerável, preservada
