@@ -7,8 +7,8 @@ from typing import Any
 
 import yaml
 
-from .common import ensure_directories, run_id_now, safe_id, write_text_atomic
-from .config import SearchConfig, load_search_config
+from .common import ensure_directories, run_id_now, safe_id, utc_now_iso, write_text_atomic
+from .config import QuerySpec, SearchConfig, load_search_config
 
 PRODUCT_DIRECTORIES = (
     "data/manifests",
@@ -131,6 +131,33 @@ def load_and_count(config_path: Path) -> tuple[SearchConfig, list[tuple[str, int
     return config, count_config(config)
 
 
+def _describe_filters(spec: QuerySpec) -> str:
+    parts = [f"modo={spec.mode}"]
+    if spec.from_publication_date:
+        parts.append(f"de={spec.from_publication_date}")
+    if spec.to_publication_date:
+        parts.append(f"ate={spec.to_publication_date}")
+    if spec.types:
+        parts.append(f"tipo={'|'.join(spec.types)}")
+    if spec.languages:
+        parts.append(f"idioma={'|'.join(spec.languages)}")
+    if spec.open_access_only:
+        parts.append("acesso_aberto=true")
+    if spec.published_only:
+        parts.append("publicado=true")
+    if spec.journal_only:
+        parts.append("periodico=true")
+    if spec.has_abstract_only:
+        parts.append("resumo=true")
+    if spec.has_doi_only:
+        parts.append("doi=true")
+    if spec.exclude_retracted:
+        parts.append("retraidos=excluidos")
+    if spec.max_records is not None:
+        parts.append(f"max={spec.max_records}")
+    return "; ".join(parts)
+
+
 def run_guided_pipeline(
     config_path: Path,
     *,
@@ -140,7 +167,7 @@ def run_guided_pipeline(
 ) -> dict[str, Any]:
     """Executa os mesmos serviços usados pela CLI e retorna caminhos locais."""
     from .collector import collect_config
-    from .control import init_control
+    from .control import append_search_log, init_control
     from .database import build_database
     from .exporter import export_records
     from .report import generate_report
@@ -149,6 +176,26 @@ def run_guided_pipeline(
     config = load_search_config(config_path)
     actual_run_id = safe_id(run_id or run_id_now())
     raw_files = collect_config(config, actual_run_id, overwrite=overwrite, root=root)
+    for spec, raw_path in zip(config.queries, raw_files, strict=True):
+        collected = sum(1 for _ in raw_path.open(encoding="utf-8"))
+        strategy_version = config.source_path.name
+        append_search_log(
+            {
+                "id_consulta": f"{actual_run_id}__{spec.id}",
+                "projeto": config.project_name,
+                "plataforma": "OpenAlex",
+                "tipo_busca": spec.mode,
+                "expressao_integral": spec.search,
+                "filtros": _describe_filters(spec),
+                "ordenacao": f"{spec.sort_by}:{spec.sort_order}" if spec.sort_by else "padrao",
+                "data_execucao": utc_now_iso(),
+                "resultados": str(collected),
+                "arquivo_exportado": str(raw_path.relative_to(root)).replace("\\", "/"),
+                "versao_estrategia": strategy_version,
+                "observacoes": f"execucao_via=run_guided_pipeline; sha256_raw=manifesto:{spec.id}",
+            },
+            root=root,
+        )
     database = build_database(root, run_ids=[actual_run_id])
     exported = export_records("all", root)
     report = generate_report(root)

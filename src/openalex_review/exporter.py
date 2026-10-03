@@ -67,6 +67,8 @@ def write_ris(frame, path: Path) -> None:
     lines: list[str] = []
     for row in _iter_records(frame):
         lines.append(f"TY  - {_ris_type(row.get('type'))}")
+        if row.get("record_key"):
+            lines.append(f"RK1  - {row['record_key']}")
         if row.get("title"):
             lines.append(f"TI  - {row['title']}")
         for author in str(row.get("authors") or "").split("; "):

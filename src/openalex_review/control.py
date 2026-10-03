@@ -595,6 +595,20 @@ def import_evidence_matrix(
     )
 
 
+def append_search_log(row: dict[str, str], root: Path | None = None) -> Path:
+    """Anexa uma linha de execucao de consulta ao diario auditavel search_log.csv."""
+    base = root or project_root()
+    path = base / "data" / "control" / "search_log.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    columns = TEMPLATES["search_log.csv"]
+    if not path.exists():
+        with path.open("w", encoding="utf-8-sig", newline="") as stream:
+            csv.writer(stream).writerow(columns)
+    with path.open("a", encoding="utf-8-sig", newline="") as stream:
+        csv.DictWriter(stream, fieldnames=columns, extrasaction="ignore").writerow(row)
+    return path
+
+
 def init_control(root: Path | None = None, overwrite: bool = False) -> list[Path]:
     base = root or project_root()
     target = base / "data" / "control"
