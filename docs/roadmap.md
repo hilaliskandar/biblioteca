@@ -28,6 +28,13 @@ componentes conexos e o layout circular agrupado são determinísticos e
 registram algoritmo e seed; clustering comunitário e layouts avançados
 continuam planejados.
 
+A interface possui sistema visual nativo em `.streamlit/config.toml` (tema light,
+sem CSS global), o contrato de navegação está documentado em
+`docs/ui-architecture.md` e `docs/ux-guidelines.md` (entrega UX-01) e a navegação
+usa `st.navigation` com 8 `st.Page` de `url_path` estável (entrega UX-03 do
+backlog de UX); o próximo passo é extrair cada página para arquivos próprios
+segundo o mapa de destino dessas documentações.
+
 Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
 bloqueiam filtros incompatíveis de data e DOI. A bibliometria reproduzível, a
 visualização de redes e o painel visual PRISMA estão operacionais. Permanecem

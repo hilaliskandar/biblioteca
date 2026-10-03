@@ -21,7 +21,14 @@ from openalex_review.bibliometrics import (
     network_temporal_overlay,
     network_visualization_data,
 )
-from openalex_review.common import ensure_directories, env_api_key, project_root, run_id_now
+from openalex_review.common import (
+    configure_openalex,
+    duckdb_error,
+    ensure_directories,
+    format_openalex_error,
+    project_root,
+    run_id_now,
+)
 from openalex_review.control import import_screening_decisions
 from openalex_review.interface import (
     build_lexical_expression,
@@ -50,9 +57,9 @@ def _prepare_root(root: Path) -> None:
 
 
 def _focus_record_in_screening(record_key: str) -> None:
-    st.session_state["pending_navigation"] = "Triagem ASReview"
     st.session_state["pending_record_key"] = record_key
-    st.rerun()
+    target = pages_by_title()["Triagem ASReview"]
+    st.switch_page(target)
 
 
 def _render_selected_node_review_context(root: Path, node: dict, *, action_key: str) -> None:
@@ -620,11 +627,11 @@ def _render_execution(root: Path) -> None:
     )
     if st.button(
         "Contar resultados na OpenAlex",
-        use_container_width=True,
+        width="stretch",
         help="Conta o universo filtrado sem coletar os registros.",
     ):
         try:
-            env_api_key()
+            configure_openalex()
             _, counts = load_and_count(selected)
             st.table({"consulta": [item[0] for item in counts], "resultados": [item[1] for item in counts]})
             st.caption(
@@ -633,7 +640,7 @@ def _render_execution(root: Path) -> None:
             )
             st.warning("A contagem não remove o teto operacional de coleta configurado no YAML.")
         except Exception as exc:
-            st.error(str(exc))
+            st.error(format_openalex_error(exc))
     run_id = st.text_input(
         "Identificador da rodada",
         value=run_id_now(),
@@ -648,11 +655,11 @@ def _render_execution(root: Path) -> None:
     if st.button(
         "Executar coleta, banco, exportações e relatório",
         type="primary",
-        use_container_width=True,
+        width="stretch",
         help="Executa a cadeia local preservando JSONL, manifestos, banco e produtos derivados.",
     ):
         try:
-            env_api_key()
+            configure_openalex()
             with st.spinner("Executando pipeline local; a duração depende da API e do número de registros..."):
                 result = run_guided_pipeline(selected, root=root, run_id=run_id, overwrite=overwrite)
             st.success(f"Rodada {result['run_id']} concluída: {result['exported_records']} obras exportadas.")
@@ -662,7 +669,7 @@ def _render_execution(root: Path) -> None:
             )
             st.write(f"Relatório: {Path(result['report']).relative_to(root)}")
         except Exception as exc:
-            st.error(str(exc))
+            st.error(format_openalex_error(exc))
 
 
 def _render_products(root: Path) -> None:
@@ -751,11 +758,11 @@ def _render_screening(root: Path) -> None:
 
 
 def _read_only_database(root: Path):
-    import duckdb
-
-    path = root / "data" / "db" / "openalex.duckdb"
-    if not path.exists():
+    error = duckdb_error(root)
+    if error:
         return None
+    import duckdb
+    path = root / "data" / "db" / "openalex.duckdb"
     return duckdb.connect(str(path), read_only=True)
 
 
@@ -767,7 +774,7 @@ def _render_prisma(root: Path) -> None:
     )
     con = _read_only_database(root)
     if con is None:
-        st.info("Ainda não há banco DuckDB para montar o visual PRISMA.")
+        st.info(duckdb_error(root) or "Ainda não há banco DuckDB para montar o visual PRISMA.")
         return
     try:
         summary = con.execute(
@@ -939,8 +946,13 @@ def _render_corpus(root: Path) -> None:
             )
 
 
+
 def _render_bibliometrics(root: Path) -> None:
     st.header("Bibliometria")
+    database_issue = duckdb_error(root)
+    if database_issue:
+        st.info(database_issue)
+        return
     selection = st.session_state.get("corpus_selection")
     if selection is None:
         st.info("Fixe um corpus na página Corpus antes de abrir uma análise.")
@@ -1288,62 +1300,96 @@ def _render_bibliometrics(root: Path) -> None:
             )
 
 
+def _render_shell_context(root: Path) -> None:
+    st.caption(f"Painel local — raiz do projeto: {root}")
+    selected = st.session_state.get("corpus_selection")
+    if selected is not None:
+        st.caption(
+            f"Corpus fixado — {selected.scope}: {selected.record_count:,} obras · "
+            f"hash {selected.corpus_hash[:16]}…"
+        )
+
+
+def _page_search_collection(root: Path) -> None:
+    tabs = st.tabs(("Nova estratégia", "Contar e executar"))
+    with tabs[0]:
+        _render_search(root)
+    with tabs[1]:
+        _render_execution(root)
+
+
+def pages_by_title(root: Path | None = None) -> dict[str, st.Page]:
+    root = root or _root()
+    pages = [
+        st.Page(
+            lambda: _render_shell_context(root) or _render_overview(root),
+            title="Visão geral",
+            icon="📊",
+            url_path="visao-geral",
+            default=True,
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _page_search_collection(root),
+            title="Busca e coleta",
+            icon="🔍",
+            url_path="busca-e-coleta",
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _render_corpus(root),
+            title="Corpus",
+            icon="🗂️",
+            url_path="corpus",
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _render_bibliometrics(root),
+            title="Bibliometria",
+            icon="📈",
+            url_path="bibliometria",
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _render_screening(root),
+            title="Triagem ASReview",
+            icon="✅",
+            url_path="triagem-asreview",
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _render_prisma(root),
+            title="PRISMA",
+            icon="🧭",
+            url_path="prisma",
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _render_reference_import(root),
+            title="BibTeX/RIS",
+            icon="📥",
+            url_path="bibtex-ris",
+        ),
+        st.Page(
+            lambda: _render_shell_context(root) or _render_products(root),
+            title="Produtos",
+            icon="📦",
+            url_path="produtos",
+        ),
+    ]
+    return {str(page.title): page for page in pages}
+
+
 def main() -> None:
     st.set_page_config(page_title="OpenAlex Review", page_icon="📚", layout="wide")
     root = _root()
     _prepare_root(root)
-    st.title("OpenAlex Review Pipeline")
-    st.caption(f"Painel local — raiz do projeto: {root}")
     st.info(
         "A interface não publica dados nem substitui o protocolo de revisão. JSONL, DuckDB e exportáveis "
         "permanecem locais. As orientações contextuais explicam escolhas, mas não tomam decisões pelo pesquisador."
     )
     pending_navigation = st.session_state.pop("pending_navigation", None)
+    pages = pages_by_title(root)
+    selected = st.navigation(list(pages.values()))
     if pending_navigation:
-        st.session_state["navigation_page"] = pending_navigation
-    with st.sidebar:
-        st.header("Navegação")
-        page = st.radio(
-            "Fluxo",
-            (
-                "Visão geral",
-                "Corpus",
-                "Bibliometria",
-                "Busca e coleta",
-                "Produtos",
-                "PRISMA",
-                "BibTeX/RIS",
-                "Triagem ASReview",
-            ),
-            key="navigation_page",
-            label_visibility="collapsed",
-        )
-        selected = st.session_state.get("corpus_selection")
-        if selected is not None:
-            st.divider()
-            st.caption("Corpus fixado")
-            st.write(f"{selected.scope}: {selected.record_count:,} obras")
-            st.code(selected.corpus_hash[:16] + "…", language=None)
-    if page == "Visão geral":
-        _render_overview(root)
-    elif page == "Corpus":
-        _render_corpus(root)
-    elif page == "Bibliometria":
-        _render_bibliometrics(root)
-    elif page == "Busca e coleta":
-        tabs = st.tabs(("Nova estratégia", "Contar e executar"))
-        with tabs[0]:
-            _render_search(root)
-        with tabs[1]:
-            _render_execution(root)
-    elif page == "Produtos":
-        _render_products(root)
-    elif page == "PRISMA":
-        _render_prisma(root)
-    elif page == "BibTeX/RIS":
-        _render_reference_import(root)
-    else:
-        _render_screening(root)
+        target = pages.get(pending_navigation)
+        if target is not None:
+            st.switch_page(target)
+    selected.run()
 
 
 if __name__ == "__main__":
