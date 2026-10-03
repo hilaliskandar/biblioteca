@@ -87,7 +87,7 @@ Auxiliares compartilhados:
 4. **Falha de pré-condição** (sem banco, sem corpus fixado, sem credencial) produz
    `st.info`/`st.warning` com instrução, não exceção.
 
-## Migração para `st.navigation` (UX-03) — concluída, próximo passo: arquivos por página
+## Migração para ``st.navigation`` e extração de páginas (UX-03/04/05)
 
 | Função atual | Página-alvo (`st.Page`) | Observação |
 |---|---|---|
@@ -107,3 +107,11 @@ Critério de aceite da migração: cada rota passa em smoke test; contagem, cole
 corpus, bibliometria, triagem e importações continuam equivalentes ao fluxo atual;
 `st.set_page_config` continua em ponto único; estados de sessão acima preservados.
 
+
+
+### Estado pós-migração (UX-04/05)
+
+- O cabeçalho consistente (título, breadcrumb do fluxo, raiz do projeto, estado do corpus e aviso de banco) vive em ``openalex_review/ui/shell.py`` (``render_shell_context``); nenhuma página repete código de header.
+- As 8 páginas são arquivos em ``src/openalex_review/pages/`` (``overview``, ``search``, ``corpus``, ``bibliometrics``, ``screening``, ``prisma``, ``reference``, ``produtos``), cada um delegando a um wrapper ``render_*`` de ``openalex_review/ui/app_pages.py``.
+- ``streamlit_app.py`` é apenas o entrypoint: ``st.set_page_config`` + ``st.navigation`` + tratamento de navegação pendente.
+- A tabela de destino acima deve ser lida como implementada; renomeios futuros devem preservar ``url_path`` e título.
