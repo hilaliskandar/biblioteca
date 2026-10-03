@@ -15,7 +15,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: python -m pip install --upgrade pip
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,ui]"
       - run: ruff check .
       - run: pytest --cov=openalex_review --cov-report=term-missing
       - run: openalex-review validate-config --config config/searches.example.yaml

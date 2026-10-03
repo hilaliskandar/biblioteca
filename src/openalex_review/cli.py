@@ -150,8 +150,8 @@ def main(argv: list[str] | None = None) -> None:
             import pyalex
         except ImportError as exc:
             raise RuntimeError("Dependencia pyalex nao instalada.") from exc
-        pyalex.config.api_key = env_api_key()
-        pyalex.config.email = None
+        pyalex.config["api_key"] = env_api_key()
+        pyalex.config["email"] = None
         config = _config_from_args(args)
 
     if args.command == "count":

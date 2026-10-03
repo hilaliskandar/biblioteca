@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
 from .common import project_root
 
@@ -13,6 +14,8 @@ CORPUS_SCOPES = ("identified", "screened", "included", "custom")
 @dataclass(frozen=True)
 class CorpusSelection:
     """Deterministic input contract for a bibliometric or reading analysis."""
+
+
 
     scope: str
     definition: str
@@ -182,3 +185,158 @@ def _resolve_custom(con, custom_record_keys: Iterable[str] | None) -> list[str]:
     if missing:
         raise KeyError(f"record_key inexistente em works: {', '.join(missing)}")
     return found
+
+
+
+
+
+
+_WORK_COLUMNS = (
+    "record_key",
+    "openalex_id",
+    "doi",
+    "title",
+    "publication_year",
+    "publication_date",
+    "type",
+    "language",
+    "is_retracted",
+    "cited_by_count",
+    "abstract",
+    "has_abstract",
+    "authors",
+    "institutions",
+    "source_name",
+    "source_type",
+    "issn_l",
+    "volume",
+    "issue",
+    "first_page",
+    "last_page",
+    "is_oa",
+    "oa_status",
+    "landing_page_url",
+    "pdf_url",
+    "topics",
+    "keywords",
+    "referenced_works_count",
+)
+
+
+def _connect_read_only(root: Path | None = None):
+    base = root or project_root()
+    db_path = base / "data" / "db" / "openalex.duckdb"
+    if not db_path.is_file():
+        raise FileNotFoundError(f"Banco DuckDB nao encontrado: {db_path}")
+    try:
+        import duckdb
+    except ImportError as exc:
+        raise RuntimeError("Dependencia duckdb nao instalada.") from exc
+    return duckdb.connect(str(db_path), read_only=True)
+
+def search_corpus_works(
+    record_keys: Iterable[str] | None = None,
+    *,
+    root: Path | None = None,
+    text: str | None = None,
+    work_type: str | None = None,
+    open_access_only: bool = False,
+    has_abstract_only: bool = False,
+    year_from: int | None = None,
+    year_to: int | None = None,
+    limit: int = 100,
+) -> tuple[list[dict[str, Any]], int]:
+    """Search deduplicated works for the corpus explorer (read-only).
+
+    When ``record_keys`` is provided the search is restricted to that set,
+    otherwise it spans the whole base corpus. Returns the ordered work rows
+    (year desc, then title) plus the total match count without the limit.
+    """
+    if limit <= 0:
+        raise ValueError("limit deve ser positivo.")
+    if year_from is not None and year_to is not None and int(year_from) > int(year_to):
+        raise ValueError("Ano inicial maior que o ano final.")
+    clauses: list[str] = []
+    parameters: list[Any] = []
+    if record_keys is not None:
+        keys = sorted({str(key).strip() for key in record_keys if str(key).strip()})
+        if not keys:
+            return [], 0
+        clauses.append(f"record_key IN ({', '.join('?' for _ in keys)})")
+        parameters.extend(keys)
+    if text and text.strip():
+        pattern = f"%{text.strip().lower()}%"
+        clauses.append(
+            "(LOWER(COALESCE(title, '')) LIKE ? OR LOWER(COALESCE(doi, '')) LIKE ? "
+            "OR LOWER(COALESCE(openalex_id, '')) LIKE ? "
+            "OR LOWER(COALESCE(record_key, '')) LIKE ?)"
+        )
+        parameters.extend([pattern] * 4)
+    if work_type:
+        clauses.append("type = ?")
+        parameters.append(work_type)
+    if open_access_only:
+        clauses.append("is_oa = TRUE")
+    if has_abstract_only:
+        clauses.append("has_abstract = TRUE")
+    if year_from is not None:
+        clauses.append("publication_year >= ?")
+        parameters.append(int(year_from))
+    if year_to is not None:
+        clauses.append("publication_year <= ?")
+        parameters.append(int(year_to))
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    columns = ", ".join(_WORK_COLUMNS)
+    con = _connect_read_only(root)
+    try:
+        _require_table(con, "works")
+        total = int(con.execute(f"SELECT COUNT(*) FROM works {where}", parameters).fetchone()[0])
+        rows = con.execute(
+            f"""
+            SELECT {columns}
+            FROM works
+            {where}
+            ORDER BY publication_year DESC NULLS LAST, COALESCE(title, '')
+            LIMIT ?
+            """,
+            [*parameters, int(limit)],
+        ).fetchall()
+        names = [item[0] for item in con.description]
+        return [dict(zip(names, row, strict=True)) for row in rows], total
+    finally:
+        con.close()
+
+def get_work_record(record_key: str, *, root: Path | None = None) -> dict[str, Any] | None:
+    """Return the full work record for a ``record_key`` or None when missing."""
+    con = _connect_read_only(root)
+    try:
+        _require_table(con, "works")
+        row = con.execute(
+            f"SELECT {', '.join(_WORK_COLUMNS)} FROM works WHERE record_key = ?",
+            [record_key],
+        ).fetchone()
+    finally:
+        con.close()
+    if row is None:
+        return None
+    return dict(zip(_WORK_COLUMNS, row, strict=True))
+
+
+def work_query_ids(record_key: str, *, root: Path | None = None) -> tuple[str, ...]:
+    """Return the strategies that originated a work, in stable order."""
+    con = _connect_read_only(root)
+    try:
+        if not _has_table(con, "work_queries"):
+            return ()
+        rows = con.execute(
+            """
+            SELECT DISTINCT query_id
+            FROM work_queries
+            WHERE record_key = ?
+            ORDER BY 1
+            """,
+            [record_key],
+        ).fetchall()
+    finally:
+        con.close()
+    return tuple(str(query_id) for query_id, in rows)

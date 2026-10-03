@@ -5,6 +5,7 @@ import duckdb
 import pytest
 
 from openalex_review.control import (
+    append_search_log,
     import_evidence_matrix,
     import_fulltext_assets,
     import_reading_status,
@@ -18,6 +19,24 @@ def test_init_control(tmp_path):
     assert (tmp_path / "data/control/evidence_matrix.csv").exists()
     assert (tmp_path / "data/control/screening_resolutions.csv").exists()
     assert (tmp_path / "data/control/fulltext_assets.csv").exists()
+
+
+def test_append_search_log_creates_header_and_appends_rows(tmp_path):
+    path = append_search_log(
+        {"id_consulta": "run1__q01", "projeto": "projeto", "resultados": "10"},
+        root=tmp_path,
+    )
+    append_search_log(
+        {"id_consulta": "run1__q02", "projeto": "projeto", "resultados": "5"},
+        root=tmp_path,
+    )
+
+    assert path == tmp_path / "data/control/search_log.csv"
+    with path.open(encoding="utf-8-sig", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert [row["id_consulta"] for row in rows] == ["run1__q01", "run1__q02"]
+    assert [row["resultados"] for row in rows] == ["10", "5"]
+    assert "coluna_inexistente" not in rows[0]
 
 
 def make_database(tmp_path):

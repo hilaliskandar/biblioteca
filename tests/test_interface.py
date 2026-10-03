@@ -7,6 +7,7 @@ from openalex_review.interface import (
     build_lexical_expression,
     guided_config_payload,
     list_product_files,
+    render_guided_yaml,
     save_guided_config,
 )
 
@@ -86,3 +87,17 @@ def test_list_product_files_only_returns_existing_local_products(tmp_path):
     products = list_product_files(tmp_path)
 
     assert products == [ProductFile(Path("reports/quality_and_prisma_report.md"), len(b"# Relatorio"))]
+
+
+def test_render_guided_yaml_matches_saved_file(tmp_path):
+    payload = guided_config_payload(
+        project_name="projeto_teste",
+        query_id="q01",
+        mode="lexical",
+        expression='"dados" OR "open data"',
+    )
+
+    text = render_guided_yaml(payload)
+    path, _ = save_guided_config(payload, root=tmp_path)
+
+    assert path.read_text(encoding="utf-8") == text

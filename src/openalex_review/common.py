@@ -119,3 +119,57 @@ def env_api_key() -> str:
             "OPENALEX_API_KEY nao configurada. Copie .env.example para .env e informe a chave."
         )
     return key
+
+
+def configure_openalex() -> str:
+    """Validate the local credential and configure PyAlex for API calls."""
+    key = env_api_key()
+    try:
+        import pyalex
+    except ImportError as exc:
+        raise RuntimeError(
+            "Dependencia pyalex nao instalada. Ative o .venv e execute `pip install -e .[ui]`."
+        ) from exc
+    pyalex.config["api_key"] = key
+    pyalex.config["email"] = None
+    return key
+
+
+def local_database_path(root: Path | None = None) -> Path:
+    return (root or project_root()) / "data" / "db" / "openalex.duckdb"
+
+
+def duckdb_error(root: Path | None = None) -> str | None:
+    """Return an actionable DuckDB diagnostic, or None when it is ready."""
+    try:
+        import duckdb  # noqa: F401
+    except ImportError:
+        return (
+            "DuckDB não está disponível neste ambiente. Ative o ambiente virtual "
+            "`.venv` e execute `python -m pip install -e .[ui]`."
+        )
+    path = local_database_path(root)
+    if not path.is_file():
+        return (
+            f"Banco DuckDB ainda não foi criado ({path}). Execute uma coleta em "
+            "‘Busca e coleta’ ou rode `openalex-review build-db` após obter JSONL."
+        )
+    return None
+
+
+def format_openalex_error(exc: Exception) -> str:
+    """Translate common OpenAlex/PyAlex failures into UI/CLI guidance."""
+    text = str(exc).strip()
+    lowered = text.casefold()
+    if "401" in lowered or "403" in lowered or "unauthorized" in lowered or "forbidden" in lowered:
+        return (
+            "A API OpenAlex recusou a credencial (HTTP 401/403). Verifique "
+            "`OPENALEX_API_KEY` no `.env`, sem aspas ou espaços extras, e tente novamente."
+        )
+    if "429" in lowered or "rate limit" in lowered:
+        return "A API OpenAlex atingiu o limite de requisições. Aguarde alguns minutos e tente novamente."
+    if "timeout" in lowered or "connection" in lowered or "temporary" in lowered:
+        return "Não foi possível alcançar a API OpenAlex. Verifique a internet/proxy e tente novamente."
+    if "has_doi" in lowered and "semantic" in lowered:
+        return "A busca semântica do OpenAlex não aceita o filtro de DOI. Desmarque ‘Exigir DOI’."
+    return f"Falha na API OpenAlex: {text or type(exc).__name__}."
