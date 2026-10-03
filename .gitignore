@@ -33,6 +33,9 @@ Thumbs.db
 /reports/*
 
 # Logs e artefatos locais da interface/testes
+temp/
+mcp_*.json
+
 .streamlit-local.log
 .streamlit-local.err.log
 *.zip
