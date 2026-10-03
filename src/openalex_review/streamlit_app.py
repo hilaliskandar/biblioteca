@@ -30,6 +30,7 @@ from openalex_review.common import (
     run_id_now,
 )
 from openalex_review.control import import_screening_decisions
+from openalex_review.corpus import get_work_record, search_corpus_works, work_query_ids
 from openalex_review.interface import (
     build_lexical_expression,
     guided_config_payload,
@@ -945,6 +946,142 @@ def _render_corpus(root: Path) -> None:
                 hide_index=True,
             )
 
+    st.divider()
+    _render_corpus_explorer(root, selection)
+
+
+def _render_corpus_explorer(root: Path, selection) -> None:
+    """Explorador de obras: busca e filtros executados no backend.
+
+    Os resultados ficam em session_state para a selecao nao perder contexto ao
+    navegar entre paginas (o explorador e reaberto sobre a ultima busca).
+    """
+    st.subheader("Explorar obras")
+    if selection is not None:
+        st.caption(f"Busca restrita ao corpus fixado ({selection.record_count:,} obras).")
+    else:
+        st.caption("Nenhum corpus fixado: busca sobre todas as obras do corpus-base.")
+
+    col_a, col_b, col_c, col_d = st.columns(4)
+    with col_a:
+        text = st.text_input(
+            "Busca",
+            key="corpus_explorer_text",
+            placeholder="titulo, DOI, OpenAlex ID, record_key",
+        )
+    with col_b:
+        work_type = st.selectbox(
+            "Tipo",
+            ["", "article", "review", "book-chapter", "preprint", "other"],
+            key="corpus_explorer_type",
+            format_func=lambda value: value or "Qualquer tipo",
+        )
+    with col_c:
+        oa_only = st.checkbox("Apenas open access", key="corpus_explorer_oa")
+        abstract_only = st.checkbox("Apenas com resumo", key="corpus_explorer_abstract")
+    with col_d:
+        year_from = st.number_input("Ano (de)", min_value=0, step=1, key="corpus_explorer_year_from")
+        year_to = st.number_input("Ano (ate)", min_value=0, step=1, key="corpus_explorer_year_to")
+    limit = st.selectbox("Limite de linhas", [50, 100, 250, 500], index=1, key="corpus_explorer_limit")
+
+    if st.button("Aplicar filtros", type="primary"):
+        try:
+            results, total = search_corpus_works(
+                selection.record_keys if selection is not None else None,
+                root=root,
+                text=text,
+                work_type=work_type or None,
+                open_access_only=bool(oa_only),
+                has_abstract_only=bool(abstract_only),
+                year_from=int(year_from) if year_from else None,
+                year_to=int(year_to) if year_to else None,
+                limit=int(limit),
+            )
+        except (FileNotFoundError, ValueError, RuntimeError) as exc:
+            st.error(str(exc))
+            return
+        st.session_state["corpus_explorer_results"] = results
+        st.session_state["corpus_explorer_total"] = total
+
+    results = st.session_state.get("corpus_explorer_results")
+    if not results:
+        st.info("Aplique os filtros para listar obras.")
+        return
+    total = st.session_state.get("corpus_explorer_total", 0)
+    st.caption(f"{total:,} obras correspondem aos filtros; exibindo {len(results)} (ano decrescente).")
+    rows = [
+        {
+            "Titulo": r.get("title"),
+            "Ano": r.get("publication_year"),
+            "Tipo": r.get("type"),
+            "Fonte": r.get("source_name"),
+            "DOI": r.get("doi"),
+            "OA": "Sim" if r.get("is_oa") else "Nao",
+            "record_key": r.get("record_key"),
+        }
+        for r in results
+    ]
+    st.dataframe(rows, width="stretch", hide_index=True)
+    labels = {r["record_key"]: r["Titulo"] or r["record_key"] for r in rows}
+    selected_key = st.selectbox(
+        "Obra selecionada",
+        [r["record_key"] for r in rows],
+        format_func=lambda key: labels.get(key, key),
+    )
+    summary = next(r for r in results if r["record_key"] == selected_key)
+    _render_work_card(selected_key, root, summary=summary)
+def _render_work_card(record_key: str, root: Path, summary: dict | None = None) -> None:
+    """Ficha reutilizavel de obra (Corpus, posteriores paginas e contextos)."""
+    record = summary if summary is not None else get_work_record(record_key, root=root)
+    if record is None:
+        st.warning("Obra nao encontrada no banco local.")
+        return
+    st.divider()
+    st.subheader(record.get("title") or "Sem titulo")
+    if record.get("is_retracted"):
+        st.warning("Esta obra foi retratada.")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Ano", record.get("publication_year") or "-")
+    c2.metric("Tipo", record.get("type") or "-")
+    c3.metric("Citacoes", record.get("cited_by_count") or 0)
+    source = record.get("source_name") or "-"
+    parts = [str(p) for p in (record.get("volume"), record.get("issue"), record.get("first_page"), record.get("last_page")) if p]
+    if parts:
+        source += " - " + ", ".join(parts)
+    st.caption("Fonte: " + source)
+    if record.get("authors"):
+        st.caption("Autores: " + str(record["authors"]))
+    if record.get("institutions"):
+        st.caption("Instituicoes: " + str(record["institutions"]))
+    access_bits = []
+    access_bits.append("OA" if record.get("is_oa") else "Fechado")
+    if record.get("oa_status"):
+        access_bits.append(f"{record['oa_status']} access")
+    st.caption(" | ".join(access_bits))
+    links = []
+    if record.get("doi"):
+        links.append(f"[DOI {record['doi']}](https://doi.org/{record['doi']})")
+    if record.get("landing_page_url"):
+        links.append(f"[Pagina da obra]({record['landing_page_url']} )")
+    if record.get("pdf_url"):
+        links.append(f"[PDF]({record['pdf_url']} )")
+    if links:
+        st.markdown(" | ".join(links))
+    strategies = work_query_ids(record_key, root=root)
+    if strategies:
+        st.caption("Estrategias de origem: " + ", ".join(f"{i + 1}. {q}" for i, q in enumerate(strategies)))
+    if record.get("abstract"):
+        with st.expander("Resumo"):
+            st.markdown(str(record["abstract"]))
+    tail_bits = []
+    if record.get("topics"):
+        tail_bits.append("Topics: " + str(record["topics"]))
+    if record.get("keywords"):
+        tail_bits.append("Keywords: " + str(record["keywords"]))
+    if tail_bits:
+        st.caption(" | ".join(tail_bits))
+    st.code(record_key, language=None)
+    st.button("Abrir na triagem", on_click=_focus_record_in_screening, args=[record_key])
 
 
 def _render_bibliometrics(root: Path) -> None:

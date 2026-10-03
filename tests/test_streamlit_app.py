@@ -56,3 +56,13 @@ def test_entrypoint_boots_default_page_without_exceptions():
 def test_page_renders_without_exceptions(page_title, render_name, tmp_path_factory):
     test = _app_for(render_name, tmp_path_factory)
     assert not test.exception
+def test_corpus_explorer_applies_filters_and_shows_work_card(tmp_path_factory):
+    test = _app_for("_render_corpus", tmp_path_factory)
+    assert not test.exception
+    button = next(item for item in test.button if item.label == "Aplicar filtros")
+    button.click()
+    test.run()
+    assert not test.exception
+    assert "Obra selecionada" in [box.label for box in test.selectbox]
+    assert "Ano" in [metric.label for metric in test.metric]
+    assert [item.label for item in test.button if item.label == "Abrir na triagem"]

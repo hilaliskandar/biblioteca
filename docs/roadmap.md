@@ -32,7 +32,7 @@ A interface possui sistema visual nativo em `.streamlit/config.toml` (tema light
 sem CSS global), o contrato de navegação está documentado em
 `docs/ui-architecture.md` e `docs/ux-guidelines.md` (entrega UX-01) e a navegação
 usa `st.navigation` com 8 `st.Page` de `url_path` estável (entrega UX-03 do
-backlog de UX); o próximo passo é extrair cada página para arquivos próprios
+backlog de UX). A página Corpus também oferece um explorador de obras: busca textual (título, DOI, OpenAlex ID, record_key), filtros por tipo, open access, resumo e intervalo de anos executados no DuckDB, tabela com limite e ficha detalhada de obra reutilizável (entrega UX-08); o próximo passo é extrair cada página para arquivos próprios
 segundo o mapa de destino dessas documentações.
 
 Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
