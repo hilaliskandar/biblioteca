@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Sem mudanças pendentes desde a release `0.4.0`.
+- **Triagem:** `openalex-review export-screening` agora inclui resoluções de
+  conflitos (`screening_conflict_resolutions.csv`, com obra, etapa, decisão
+  final, motivo, resolutor, data e observações), fechando o trilho de auditoria
+  dos exports de triagem (P1 do roadmap). O nome é distinto do arquivo de
+  controle de importação (`screening_resolutions.csv`).
 
 ## 0.4.0 — 2026-10-03
 

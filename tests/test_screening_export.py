@@ -3,7 +3,11 @@ import csv
 import duckdb
 
 from openalex_review.cli import build_parser, main
-from openalex_review.screening_export import EXPORT_COLUMNS, export_screening
+from openalex_review.screening_export import (
+    EXPORT_COLUMNS,
+    RESOLUTIONS_EXPORT_COLUMNS,
+    export_screening,
+)
 
 
 def make_database(root):
@@ -41,6 +45,57 @@ def read_rows(path):
         return list(csv.DictReader(stream))
 
 
+def test_exports_resolutions_with_and_without_work_match(tmp_path):
+    make_database(tmp_path)
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"))
+    con.execute(
+        """
+        CREATE TABLE screening_resolutions (
+            record_key VARCHAR, stage VARCHAR, final_decision VARCHAR,
+            exclusion_reason VARCHAR, resolver VARCHAR, resolved_at TIMESTAMP,
+            notes VARCHAR, UNIQUE(record_key, stage)
+        )
+        """
+    )
+    con.execute(
+        """
+        INSERT INTO screening_resolutions VALUES
+        ('openalex:W1', 'titulo_resumo', 'incluir', '', 'resolver-a',
+         TIMESTAMP '2026-01-06 09:00:00', 'conflito resolvido'),
+        ('openalex:W9', 'texto_integral', 'excluir', 'fora_escopo', 'resolver-b',
+         TIMESTAMP '2026-01-07 09:00:00', 'obra fora do works')
+        """
+    )
+    con.close()
+
+    paths = export_screening(tmp_path)
+    assert paths["resolutions"].name == "screening_conflict_resolutions.csv"
+    resolutions = read_rows(paths["resolutions"])
+    assert list(resolutions[0]) == list(RESOLUTIONS_EXPORT_COLUMNS)
+    assert len(resolutions) == 2
+    by_key = {row["record_key"]: row for row in resolutions}
+    assert by_key["openalex:W1"]["openalex_id"] == "W1"
+    assert by_key["openalex:W1"]["decisao_final"] == "incluir"
+    assert by_key["openalex:W1"]["data_resolucao"] == "2026-01-06 09:00:00"
+    assert by_key["openalex:W1"]["observacoes"] == "conflito resolvido"
+    assert by_key["openalex:W9"]["openalex_id"] == ""
+    assert by_key["openalex:W9"]["doi"] == ""
+    assert by_key["openalex:W9"]["decisao_final"] == "excluir"
+
+
+def test_exports_header_only_resolutions_when_table_missing(tmp_path):
+    make_database(tmp_path)
+
+    paths = export_screening(tmp_path)
+    resolutions = read_rows(paths["resolutions"])
+
+    assert paths["resolutions"].name == "screening_conflict_resolutions.csv"
+    assert resolutions == []
+    with paths["resolutions"].open(encoding="utf-8-sig", newline="") as stream:
+        header = stream.readline().strip().split(",")
+    assert header == list(RESOLUTIONS_EXPORT_COLUMNS)
+
+
 def test_exports_full_decisions_only_conflicts_and_stage_universe_pending(tmp_path):
     make_database(tmp_path)
 
@@ -55,7 +110,8 @@ def test_exports_full_decisions_only_conflicts_and_stage_universe_pending(tmp_pa
     assert list(decisions[0]) == list(EXPORT_COLUMNS)
     assert len(decisions) == 5
     first_decision = next(
-        row for row in decisions
+        row
+        for row in decisions
         if row["record_key"] == "openalex:W1" and row["decisao"] == "incluir"
     )
     assert first_decision["doi"] == "10.1000/one"
@@ -79,5 +135,7 @@ def test_export_screening_cli_uses_duckdb(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     main(["--root", str(tmp_path), "export-screening"])
 
-    assert "screening_decisions.csv" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "screening_decisions.csv" in out
+    assert "screening_conflict_resolutions.csv" in out
     assert (tmp_path / "data" / "control" / "screening_pending.csv").is_file()

@@ -68,8 +68,10 @@ próximas capacidades são:
   (`openalex-review export-screening`);
 - **Concluído (0.4.0):** concordância entre revisores com resumo por etapa,
   κ de Cohen e download do relatório na interface;
-- exportação auditável das `screening_resolutions` ao lado das decisões, para
-  fechar o trilho de auditoria dos exports de triagem;
+- **Concluído:** exportação auditável das `screening_resolutions` ao lado das
+  decisões (`openalex-review export-screening` →
+  `screening_conflict_resolutions.csv`), fechando o trilho de auditoria dos
+  exports de triagem;
 - fluxo de adjudicação com justificativa, quando não coberto pelo importador
   existente.
 
