@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Sem mudanças pendentes desde a release `0.4.0`.
+
 ## 0.4.0 — 2026-10-03
 
 ### Added

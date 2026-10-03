@@ -61,10 +61,15 @@ Já existe importação ASReview, resolução de registros, idempotência, confl
 concordância e resoluções manuais com preservação das decisões originais. As
 próximas capacidades são:
 
-- vocabulários controlados para etapa, decisão e motivo de exclusão;
-- exportação reproduzível das decisões;
-- concordância entre revisores;
-- exportação auditável das decisões e resoluções;
+- **Concluído:** vocabulários controlados para etapa, decisão e motivo de
+  exclusão (`openalex_review.screening_vocabulary`), validados em importação,
+  CLI e interface;
+- **Concluído:** exportação reproduzível de decisões, pendências e conflitos
+  (`openalex-review export-screening`);
+- **Concluído (0.4.0):** concordância entre revisores com resumo por etapa,
+  κ de Cohen e download do relatório na interface;
+- exportação auditável das `screening_resolutions` ao lado das decisões, para
+  fechar o trilho de auditoria dos exports de triagem;
 - fluxo de adjudicação com justificativa, quando não coberto pelo importador
   existente.
 

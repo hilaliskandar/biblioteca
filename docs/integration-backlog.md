@@ -210,7 +210,9 @@ A especificação completa está em
 ## Sequência imediata
 
 1. Revisar e publicar esta reconciliação documental.
-2. Preparar a release `0.3.0` sem misturar mudanças funcionais.
+2. **Concluído:** release `v0.3.0` taguada em 2026-09-27 e release `v0.4.0`
+   publicada em 2026-10-03 com changelog consolidando as entregas subsequentes,
+   sem misturar mudanças funcionais.
 3. Formalizar a revisão humana dos relatórios `reference_imports.csv` e `prisma_fulltext_details.csv`.
 4. Adicionar conectores multibase somente após política de proveniência e direitos.
 5. Manter ASReview e Zotero como integrações incrementais, sem duplicar suas funções especializadas.
