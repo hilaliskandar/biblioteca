@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from streamlit.testing.v1 import AppTest
+from test_corpus import make_explorer_database
 
 APP_FILE = Path(__file__).parent.parent / "src" / "openalex_review" / "streamlit_app.py"
 
@@ -45,11 +46,15 @@ def test_entrypoint_boots_default_page_without_exceptions():
     test = AppTest.from_file(str(APP_FILE), default_timeout=120)
     test.run()
     assert not test.exception
-    labels = [metric.label for metric in test.metric]
-    assert "Obras no corpus-base" in labels
-    assert "Decisões de triagem" in labels
     captions = [str(caption.value) for caption in test.caption]
     assert any("**Visão geral**" in caption for caption in captions)
+    labels = [metric.label for metric in test.metric]
+    infos = [str(item.value) for item in test.info]
+    if "Obras no corpus-base" in labels:
+        assert "Decisões de triagem" in labels
+    else:
+        # Raiz vazia (ex.: CI): o dashboard comunica a ausência de banco.
+        assert any("Ainda não há um banco local" in value for value in infos)
 
 
 @pytest.mark.parametrize("page_title, render_name", sorted(PAGES.items()))
@@ -60,7 +65,10 @@ def test_page_renders_without_exceptions(page_title, render_name, tmp_path_facto
     assert any(f"**{page_title}**" in caption for caption in captions)
 
 
-def test_corpus_explorer_applies_filters_and_shows_work_card(tmp_path_factory):
+def test_corpus_explorer_applies_filters_and_shows_work_card(tmp_path_factory, monkeypatch):
+    root = tmp_path_factory.mktemp("ui_corpus")
+    make_explorer_database(root)
+    monkeypatch.setenv("OPENALEX_REVIEW_ROOT", str(root))
     test = _app_for("render_corpus", tmp_path_factory)
     assert not test.exception
     button = next(item for item in test.button if item.label == "Aplicar filtros")
