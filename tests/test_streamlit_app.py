@@ -12,6 +12,27 @@ from openalex_review.interface import guided_config_payload, save_guided_config
 
 APP_FILE = Path(__file__).parent.parent / "src" / "openalex_review" / "streamlit_app.py"
 
+
+def test_ui_console_script_target_resolves():
+    """O console script openalex-review-ui deve apontar para um alvo existente."""
+    import importlib
+    import re
+
+    pyproject = (Path(__file__).parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'openalex-review-ui\s*=\s*"([^"]+)"', pyproject)
+    assert match is not None, "console script openalex-review-ui ausente no pyproject"
+    module_name, attr = match.group(1).split(":")
+    module = importlib.import_module(module_name)
+    assert callable(getattr(module, attr))
+    from openalex_review.ui import launcher
+
+    assert launcher.app_file().is_file()
+    import os
+
+    # samefile compara o arquivo real; em sistemas com caminho nao-ASCII
+    # (ex.: "Alê_2_0"), a string do importador pode diferir em codificacao.
+    assert os.path.samefile(launcher.app_file(), APP_FILE)
+
 # Página -> wrapper executado por pages/*.py em openalex_review.ui.app_pages.
 PAGES = {
     "Visão geral": "render_visao_geral",

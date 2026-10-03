@@ -14,6 +14,10 @@
   real) e grava em `screening_resolutions`, que ganhou a coluna
   `justification` com migração automática para bancos antigos. As decisões
   individuais permanecem intactas.
+- **Interface:** `openalex-review-ui` agora aponta para um launcher existente
+  (`openalex_review.ui.launcher`), que executa `streamlit run
+  src/openalex_review/streamlit_app.py`; antes o alvo do console script não
+  existia e o comando falhava.
 
 ## 0.4.0 — 2026-10-03
 
