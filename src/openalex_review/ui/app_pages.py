@@ -35,6 +35,7 @@ from openalex_review.interface import (
     guided_config_payload,
     list_product_files,
     load_and_count,
+    render_guided_yaml,
     run_guided_pipeline,
     save_guided_config,
     split_terms,
@@ -454,30 +455,73 @@ def _section_help(title: str, key: str) -> None:
         render_help_popover(st, key, label="?")
 
 
+def _search_payload_from_fields(
+    *,
+    project_name: str,
+    query_id: str,
+    mode: str,
+    expression: str | None,
+    from_date,
+    to_date,
+    semantic_search: bool,
+    types: list[str],
+    languages: str,
+    open_access: bool,
+    has_abstract: bool,
+    has_doi: bool,
+    max_records: int,
+) -> dict:
+    """Construi o MESMO payload usado na revisao e no salvamento."""
+    return guided_config_payload(
+        project_name=project_name,
+        query_id=query_id,
+        mode=mode,
+        expression=expression or "",
+        from_publication_date=(
+            from_date.isoformat() if not semantic_search and isinstance(from_date, date) else None
+        ),
+        to_publication_date=(
+            to_date.isoformat() if not semantic_search and isinstance(to_date, date) else None
+        ),
+        types=types,
+        languages=split_terms(languages),
+        open_access_only=open_access,
+        has_abstract_only=has_abstract,
+        has_doi_only=has_doi,
+        max_records=int(max_records),
+    )
+
+
 def _render_search(root: Path) -> None:
     _section_help("Nova estratégia", "search.mode")
     st.caption(
-        "Defina a estratégia antes da coleta. Passe o cursor sobre o ícone de ajuda de cada campo "
-        "para a orientação curta; use ? para contexto metodológico mais amplo."
+        "Etapas da estratégia: 1. Identificação · 2. Modo e termos · 3. Filtros · 4. Limites · "
+        "5. Revisão (preview do YAML) · 6. Salvamento. Nada é coletado até você salvar."
     )
-    mode = st.radio(
-        "Modo",
-        ("lexical", "semantic"),
-        horizontal=True,
-        help=short_help("search.mode"),
-    )
-    semantic_search = mode == "semantic"
     with st.form("guided-search"):
-        project_name = st.text_input(
-            "Nome do projeto",
-            value="minha_revisao",
-            help=short_help("search.project_name"),
+        st.subheader("1. Identificação")
+        id_left, id_right = st.columns(2)
+        with id_left:
+            project_name = st.text_input(
+                "Nome do projeto",
+                value="minha_revisao",
+                help=short_help("search.project_name"),
+            )
+        with id_right:
+            query_id = st.text_input(
+                "Identificador da consulta",
+                value="q01_busca_guiada",
+                help=short_help("search.query_id"),
+            )
+
+        st.subheader("2. Modo e termos")
+        mode = st.radio(
+            "Modo",
+            ("lexical", "semantic"),
+            horizontal=True,
+            help=short_help("search.mode"),
         )
-        query_id = st.text_input(
-            "Identificador da consulta",
-            value="q01_busca_guiada",
-            help=short_help("search.query_id"),
-        )
+        semantic_search = mode == "semantic"
         advanced_expression = st.text_area(
             "Expressão booleana avançada (opcional)",
             help=short_help("search.expression"),
@@ -500,6 +544,8 @@ def _render_search(root: Path) -> None:
                 "Busca semântica é suplementar: no OpenAlex, filtros de data e DOI não são compatíveis "
                 "com esse modo. Preserve a rodada lexical como referência quando a pergunta permitir."
             )
+
+        st.subheader("3. Filtros")
         from_date = st.date_input(
             "Publicados a partir de",
             value=None,
@@ -537,6 +583,8 @@ def _render_search(root: Path) -> None:
             disabled=semantic_search,
             help=short_help("search.has_doi"),
         )
+
+        st.subheader("4. Limites")
         max_records = st.number_input(
             "Máximo de registros",
             min_value=1,
@@ -544,6 +592,45 @@ def _render_search(root: Path) -> None:
             value=200,
             help=short_help("search.max_records"),
         )
+
+        st.subheader("5. Revisão")
+        expression: str | None = None
+        try:
+            expression = advanced_expression.strip() or build_lexical_expression((group_one, group_two))
+        except ValueError as exc:
+            st.warning(str(exc))
+        if expression:
+            st.code(expression, language=None)
+        preview_payload: dict | None = None
+        if expression:
+            try:
+                preview_payload = _search_payload_from_fields(
+                    project_name=project_name,
+                    query_id=query_id,
+                    mode=mode,
+                    expression=expression,
+                    from_date=from_date,
+                    to_date=to_date,
+                    semantic_search=semantic_search,
+                    types=list(types),
+                    languages=languages,
+                    open_access=bool(open_access),
+                    has_abstract=bool(has_abstract),
+                    has_doi=bool(has_doi),
+                    max_records=int(max_records),
+                )
+            except ValueError as exc:
+                st.warning(f"Revisão: {exc}")
+        if preview_payload:
+            st.code(render_guided_yaml(preview_payload), language="yaml")
+            st.caption(
+                "Prévia do YAML que será salvo (mesma serialização do arquivo). Leia a expressão final "
+                "como parte do método: ela deve ser preservada exatamente como executada."
+            )
+        else:
+            st.caption("Preencha as etapas anteriores para revisar a estratégia final.")
+
+        st.subheader("6. Salvamento")
         overwrite_config = st.checkbox(
             "Substituir YAML personalizado com o mesmo nome",
             help=short_help("search.overwrite_config"),
@@ -555,36 +642,33 @@ def _render_search(root: Path) -> None:
     if not submitted:
         return
     try:
-        expression = advanced_expression.strip() or build_lexical_expression((group_one, group_two))
-        payload = guided_config_payload(
+        payload = _search_payload_from_fields(
             project_name=project_name,
             query_id=query_id,
             mode=mode,
             expression=expression,
-            from_publication_date=(
-                from_date.isoformat() if not semantic_search and isinstance(from_date, date) else None
-            ),
-            to_publication_date=(
-                to_date.isoformat() if not semantic_search and isinstance(to_date, date) else None
-            ),
-            types=types,
-            languages=split_terms(languages),
-            open_access_only=open_access,
-            has_abstract_only=has_abstract,
-            has_doi_only=has_doi,
+            from_date=from_date,
+            to_date=to_date,
+            semantic_search=semantic_search,
+            types=list(types),
+            languages=languages,
+            open_access=bool(open_access),
+            has_abstract=bool(has_abstract),
+            has_doi=bool(has_doi),
             max_records=int(max_records),
         )
         config_path, config = save_guided_config(payload, root=root, overwrite=overwrite_config)
     except (ValueError, FileExistsError) as exc:
         st.error(str(exc))
         return
+    final_expression = str(payload["queries"][0]["search"])
     st.session_state["config_path"] = str(config_path)
     st.success(f"Estratégia validada e salva em {config_path.relative_to(root)}")
     st.caption(
         "Leia a expressão final como parte do método: ela deve ser preservada exatamente como executada "
         "e posteriormente associada à rodada e ao corpus produzido."
     )
-    st.code(expression, language=None)
+    st.code(final_expression, language=None)
     st.download_button(
         "Baixar YAML",
         data=config_path.read_bytes(),

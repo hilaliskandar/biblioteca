@@ -109,6 +109,15 @@ def guided_config_payload(
     }
 
 
+"""Serializes a guided payload exactly as ``save_guided_config`` writes it.
+
+The preview in the UI reuses this function so the on-screen YAML matches
+byte-for-byte the file that will be stored when the user saves.
+"""
+def render_guided_yaml(payload: dict[str, Any]) -> str:
+    return yaml.safe_dump(payload, allow_unicode=True, sort_keys=False)
+
+
 def save_guided_config(
     payload: dict[str, Any], *, root: Path, filename: str | None = None, overwrite: bool = False
 ) -> tuple[Path, SearchConfig]:

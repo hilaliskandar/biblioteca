@@ -70,3 +70,18 @@ def test_corpus_explorer_applies_filters_and_shows_work_card(tmp_path_factory):
     assert "Obra selecionada" in [box.label for box in test.selectbox]
     assert "Ano" in [metric.label for metric in test.metric]
     assert [item.label for item in test.button if item.label == "Abrir na triagem"]
+def test_search_page_shows_guided_steps_and_yaml_preview(tmp_path_factory):
+    test = _app_for("render_busca_coleta", tmp_path_factory)
+    assert not test.exception
+    steps = [str(item.value) for item in test.subheader]
+    for expected in (
+        "1. Identificação",
+        "2. Modo e termos",
+        "3. Filtros",
+        "4. Limites",
+        "5. Revisão",
+        "6. Salvamento",
+    ):
+        assert expected in steps
+    codes = [str(item.value) for item in test.code]
+    assert any("project_name: minha_revisao" in value for value in codes)

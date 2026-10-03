@@ -32,7 +32,7 @@ A interface possui sistema visual nativo em `.streamlit/config.toml` (tema light
 sem CSS global), o contrato de navegação está documentado em
 `docs/ui-architecture.md` e `docs/ux-guidelines.md` (entrega UX-01) e a navegação
 usa `st.navigation` com 8 `st.Page` de `url_path` estável (entrega UX-03 do
-backlog de UX). O cabeçalho consistente (breadcrumb, raiz, estado do corpus e avisos globais) é compartilhado via ui.shell (UX-04), as 8 páginas são arquivos em pages/ delegando a wrappers de ui.app_pages (UX-05) e a página Corpus oferece o explorador de obras com filtros no backend e ficha de obra reutilizável (UX-08)
+backlog de UX). O cabeçalho consistente (breadcrumb, raiz, estado do corpus e avisos globais) é compartilhado via ui.shell (UX-04), as 8 páginas são arquivos em pages/ delegando a wrappers de ui.app_pages (UX-05) e a página Corpus oferece o explorador de obras com filtros no backend e ficha de obra reutilizável (UX-08). A página de pesquisa guiada foi redesenhada em etapas (identificação, termos, filtros, limites, revisão com preview do YAML e salvamento), preservando o payload e as validações semânticas/lexicais (UX-06)
 segundo o mapa de destino dessas documentações.
 
 Buscas semânticas são suplementares, limitadas a 50 registros por consulta e
