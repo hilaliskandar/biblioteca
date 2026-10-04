@@ -39,7 +39,7 @@ estão em [`docs/roadmap.md`](docs/roadmap.md),
 | Ferramenta | Papel no ecossistema | Responsabilidade do `biblioteca` |
 |---|---|---|
 | **ASReview** | Triagem assistida por aprendizado ativo | Preparar corpus, registrar rodada, importar decisões, preservar conflitos/adjudicações, hashes e metadados de reprodutibilidade. |
-| **Zotero** | Referências, coleções e anexos | Exportar RIS/CSL JSON, validar interoperabilidade e futuramente reconciliar coleções, identificadores e anexos. |
+| **Zotero** | Referências, coleções e anexos | Exportar RIS/BibTeX/CSL JSON, validar interoperabilidade e futuramente reconciliar coleções, identificadores e anexos. |
 | **Bibliometrix/Biblioshiny** | Análise bibliométrica exploratória | Exportar dados ricos e internalizar métricas essenciais com parâmetros registrados. |
 | **VOSviewer** | Redes e mapas bibliométricos | Exportar nós/arestas, thesaurus e metadados; documentar o intercâmbio. |
 | **CiteSpace** | Bursts e tendências temporais | Integração secundária, posterior à consolidação de Bibliometrix e VOSviewer. |
@@ -247,7 +247,7 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 ### Exportação, triagem e PRISMA
 
-`export` aceita `all`, `open_access`, `with_abstract`, `with_doi` e `not_retracted`, produzindo RIS/CSL JSON para Zotero, CSV/RIS para ASReview, CSV para Bibliometrix e `works_deduplicated.csv`. Valores ausentes do pandas são convertidos antes de gerar RIS e CSL JSON.
+`export` aceita `all`, `open_access`, `with_abstract`, `with_doi` e `not_retracted`, produzindo RIS/BibTeX/CSL JSON para Zotero, CSV/RIS para ASReview, CSV para Bibliometrix e `works_deduplicated.csv`. Valores ausentes do pandas são convertidos antes de gerar RIS e CSL JSON.
 
 `import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza rótulos ASReview para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Etapas e motivos usam os códigos de `screening_vocabulary.py`; exclusão em `texto_integral` requer motivo válido. Use `--stage-column`/`--reason-column` para indicar colunas no CSV. Valores inválidos ou obra desconhecida cancelam o lote sem escrita parcial. Inclusões não exigem motivo; motivos históricos não são recodificados automaticamente.
 
@@ -561,6 +561,8 @@ por corpus, bibliometria e revisão:
    de um nó bibliométrico abre suas obras associadas por `metadata_json`, com
    estados de triagem, leitura, evidências/FAFAT+ e atalho somente de navegação
    para o registro em foco.
+7. **BibTeX/RIS:** importa referências `.bib`/`.ris` e exporta a coleção deduplicada para o Zotero (`exports/zotero/`: RIS, BibTeX e CSL JSON), com o mesmo comportamento da CLI `openalex-review export`.
+
 As páginas **Triagem ASReview** e **Bibliometria** exibem a seção
 **"Programas externos: quando e qual saída submeter"**, com o link para cada
 programa (ASReview, VOSviewer/VOSviewer Online): o CSV de triagem

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -119,6 +120,63 @@ def write_csl(frame, path: Path) -> None:
     path.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+_BIBTEX_TYPES = {
+    "article": "article",
+    "review": "article",
+    "book-chapter": "inbook",
+    "book": "book",
+    "report": "techreport",
+    "preprint": "misc",
+}
+
+
+def _bibtex_key(row, used: set[str]) -> str:
+    base = str(row.get("openalex_id") or row.get("record_key") or "openalex")
+    key = re.sub(r"[^A-Za-z0-9]+", "_", base).strip("_").lower() or "openalex"
+    suffix = 2
+    candidate = key
+    while candidate in used:
+        candidate = f"{key}_{suffix}"
+        suffix += 1
+    used.add(candidate)
+    return candidate
+
+
+def _escape_bibtex(value: str) -> str:
+    """Escapa caracteres especiais minimais para campos de valor simples."""
+    return str(value).replace("\\", r"\textbackslash{}").replace("{", r"\{").replace("}", r"\}")
+
+
+def write_bibtex(frame, path: Path) -> None:
+    """Gera um arquivo BibTeX deduplicado (um @entry por obra)."""
+    used: set[str] = set()
+    entries: list[str] = []
+    for row in _iter_records(frame):
+        entry_type = _BIBTEX_TYPES.get(str(row.get("type")), "misc")
+        key = _bibtex_key(row, used)
+        fields: list[str] = []
+        authors = [name for name in str(row.get("authors") or "").split("; ") if name]
+        if authors:
+            fields.append(f"  author = {{{_escape_bibtex(' and '.join(authors))}}}")
+        if row.get("title"):
+            fields.append(f"  title = {{{_escape_bibtex(row['title'])}}}")
+        if row.get("publication_year"):
+            fields.append(f"  year = {{{int(row['publication_year'])}}}")
+        if row.get("source_name"):
+            fields.append(f"  journal = {{{_escape_bibtex(row['source_name'])}}}")
+        if row.get("doi"):
+            fields.append(f"  doi = {{{row['doi']}}}")
+        if row.get("landing_page_url"):
+            fields.append(f"  url = {{{row['landing_page_url']}}}")
+        if row.get("abstract"):
+            fields.append(f"  abstract = {{{_escape_bibtex(row['abstract'])}}}")
+        if row.get("keywords"):
+            fields.append(f"  keywords = {{{_escape_bibtex(row['keywords'])}}}")
+        fields.append(f"  note = {{{row.get('openalex_id')}; consultas: {row.get('query_ids')}}}")
+        entries.append(f"@{entry_type}{{{key},\n" + ",\n".join(fields) + "\n}")
+    path.write_text("\n\n".join(entries), encoding="utf-8", newline="\n")
+
+
 def export_records(filter_name: str = "all", root: Path | None = None) -> int:
     if filter_name not in ALLOWED_FILTERS:
         raise ValueError(f"Filtro desconhecido: {filter_name}")
@@ -141,6 +199,7 @@ def export_records(filter_name: str = "all", root: Path | None = None) -> int:
     for path in (zotero, asreview, bibliometrix, base / "data" / "processed"):
         path.mkdir(parents=True, exist_ok=True)
     write_ris(records, zotero / "openalex_deduplicated.ris")
+    write_bibtex(records, zotero / "openalex_deduplicated.bib")
     write_csl(records, zotero / "openalex_deduplicated.csl.json")
     _write_csv(
         [

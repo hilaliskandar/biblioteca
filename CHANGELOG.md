@@ -24,6 +24,7 @@
   indicando quando enviar cada saída local (CSV de triagem, CSV rotulado,
   `*-items.txt`/`*-network.txt`) e onde ela é gerada. Catálogo canônico em
   `src/openalex_review/external_programs.py`.
+- **Zotero:** nova exportação BibTeX (`exports/zotero/openalex_deduplicated.bib`) ao lado do RIS e do CSL JSON; a página BibTeX/RIS da UI ganhou a seção "Exportar para Zotero" (filtro, geração via `export_records` e downloads diretos), com orientação de programa externo (zotero.org).
 
 ## 0.4.0 — 2026-10-03
 
