@@ -3,6 +3,7 @@
 from openalex_review.external_programs import (
     EXTERNAL_PROGRAMS,
     PAGE_BIBLIOMETRICS,
+    PAGE_REFERENCE,
     PAGE_SCREENING,
     programs_for_page,
 )
@@ -12,6 +13,7 @@ def test_all_programs_have_links_and_submission_guidance():
     assert {program.page for program in EXTERNAL_PROGRAMS} == {
         PAGE_SCREENING,
         PAGE_BIBLIOMETRICS,
+        PAGE_REFERENCE,
     }
     for program in EXTERNAL_PROGRAMS:
         assert program.name
@@ -25,7 +27,15 @@ def test_all_programs_have_links_and_submission_guidance():
 def test_programs_for_page_filters_by_page():
     assert tuple(p.name for p in programs_for_page(PAGE_SCREENING)) == ("ASReview",)
     assert tuple(p.name for p in programs_for_page(PAGE_BIBLIOMETRICS)) == ("VOSviewer",)
+    assert tuple(p.name for p in programs_for_page(PAGE_REFERENCE)) == ("Zotero",)
     assert programs_for_page("pagina_inexistente") == ()
+
+
+def test_reference_guidance_references_zotero_export_files():
+    program = next(p for p in programs_for_page(PAGE_REFERENCE))
+    assert "zotero.org" in program.url
+    assert "openalex_deduplicated.ris" in program.what
+    assert "openalex_deduplicated.bib" in program.what
 
 
 def test_screening_guidance_references_roundtrip_files():

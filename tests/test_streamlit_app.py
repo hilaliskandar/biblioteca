@@ -29,6 +29,15 @@ def test_bibliometrics_page_shows_external_program_guidance(tmp_path_factory):
     assert any("vosviewer.com" in value for value in values)
 
 
+def test_reference_page_shows_zotero_export_guidance(tmp_path_factory):
+    test = _app_for("render_reference_import", tmp_path_factory)
+    assert not test.exception
+    values = [str(item.value) for item in test.markdown]
+    assert any("zotero.org" in value for value in values)
+    subheaders = [str(item.value) for item in test.subheader]
+    assert any("Exportar para Zotero" in value for value in subheaders)
+
+
 def test_ui_console_script_target_resolves():
     """O console script openalex-review-ui deve apontar para um alvo existente."""
     import importlib

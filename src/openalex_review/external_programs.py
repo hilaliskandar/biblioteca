@@ -13,6 +13,7 @@ from dataclasses import dataclass
 #: Chaves das páginas da interface que exibirão a orientação do programa.
 PAGE_SCREENING = "screening"
 PAGE_BIBLIOMETRICS = "bibliometrics"
+PAGE_REFERENCE = "reference"
 
 
 @dataclass(frozen=True)
@@ -65,6 +66,21 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
         ),
         where="Páginas Bibliometria, seção de redes de cada análise.",
         page=PAGE_BIBLIOMETRICS,
+    ),
+    ExternalProgram(
+        name="Zotero",
+        url="https://www.zotero.org/",
+        when=(
+            "Quando a coleção deduplicada devesse ser organizada em gerenciador de referências, "
+            "por exemplo para manutenção de citações ou controle do texto integral."
+        ),
+        what=(
+            "Arquivos de `exports/zotero/` — `openalex_deduplicated.ris`, "
+            "`openalex_deduplicated.bib` ou `openalex_deduplicated.csl.json` — gerados na seção "
+            "\"Exportar para Zotero\" da página BibTeX/RIS ou pelo comando `openalex-review export`."
+        ),
+        where="Página BibTeX/RIS, seção \"Exportar para Zotero\" (equivalente da CLI: `openalex-review export`).",
+        page=PAGE_REFERENCE,
     ),
 )
 

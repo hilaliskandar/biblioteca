@@ -31,8 +31,10 @@ from openalex_review.common import (
 from openalex_review.config import load_search_config
 from openalex_review.control import import_screening_decisions
 from openalex_review.corpus import get_work_record, search_corpus_works, work_query_ids
+from openalex_review.exporter import ALLOWED_FILTERS, export_records
 from openalex_review.external_programs import (
     PAGE_BIBLIOMETRICS,
+    PAGE_REFERENCE,
     PAGE_SCREENING,
     programs_for_page,
 )
@@ -446,6 +448,7 @@ def _render_temporal_density(
 
 def _download_mime(path: Path) -> str:
     return {
+        ".bib": "application/x-bibtex",
         ".csv": "text/csv",
         ".json": "application/json",
         ".ris": "application/x-research-info-systems",
@@ -1138,6 +1141,57 @@ def _render_prisma(root: Path) -> None:
             st.download_button("Baixar detalhes PRISMA", report_path.read_bytes(), report_path.name, "text/csv")
 
 
+_REFERENCE_EXPORT_FILTERS = {
+    "all": "Todas as obras",
+    "open_access": "Só acesso aberto",
+    "with_abstract": "Só com resumo",
+    "with_doi": "Só com DOI",
+    "not_retracted": "Sem retraídas",
+}
+
+
+def _render_reference_export(root: Path) -> None:
+    st.subheader("Exportar para Zotero e gerenciadores de referência")
+    _render_external_programs(PAGE_REFERENCE)
+    st.caption(
+        "Mesma função da CLI `openalex-review export`: deduplica as obras de `works_with_queries` "
+        "e reescreve os arquivos locais de `exports/` (Zotero, ASReview e Bibliometrix). "
+        "Nada é enviado a programas externos; a importação no Zotero é manual."
+    )
+    filter_choice = st.selectbox(
+        "Filtro de exportação",
+        options=[name for name in ALLOWED_FILTERS],
+        format_func=lambda name: _REFERENCE_EXPORT_FILTERS.get(name, name),
+        key="reference_export_filter",
+    )
+    if st.button(
+        "Exportar agora (RIS, BibTeX e CSL JSON)",
+        key="reference_export_run",
+        help="Regenera os arquivos de exports/ a partir do banco local.",
+    ):
+        try:
+            count = export_records(filter_choice, root=root)
+            st.success(f"{count:,} obras exportadas; veja `exports/zotero/` abaixo.")
+        except Exception as exc:
+            st.error(str(exc))
+    zotero_dir = root / "exports" / "zotero"
+    downloadables = (
+        ("openalex_deduplicated.ris", "RIS (import direto no Zotero)"),
+        ("openalex_deduplicated.bib", "BibTeX (.bib)"),
+        ("openalex_deduplicated.csl.json", "CSL JSON (Zotero)"),
+    )
+    for file_name, label in downloadables:
+        path = zotero_dir / file_name
+        if path.exists():
+            st.download_button(
+                f"Baixar {label}",
+                data=path.read_bytes(),
+                file_name=file_name,
+                mime=_download_mime(path),
+                key=f"reference_export_download_{file_name}",
+            )
+
+
 def _render_reference_import(root: Path) -> None:
     _section_help("Importar BibTeX/RIS", "screening.stage")
     st.caption(
@@ -1158,6 +1212,7 @@ def _render_reference_import(root: Path) -> None:
             )
         except Exception as exc:
             st.error(str(exc))
+    _render_reference_export(root)
     report_path = root / "reports" / "reference_imports.csv"
     if report_path.exists():
         st.subheader("Resultado da importação")
