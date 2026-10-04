@@ -557,6 +557,52 @@ def export_network_vosviewer(network: NetworkResult) -> dict[str, bytes]:
     }
 
 
+def export_network_vosviewer_json(network: NetworkResult) -> bytes:
+    """Serializa a rede no formato JSON oficial do VOSviewer (arquivo unico).
+
+    Estrutura documentada em
+    app.vosviewer.com/docs/file-types/json-file-type: objeto de nivel superior
+    ``network`` com ``items`` (id inteiro 1..N, label, x, y, cluster no intervalo
+    1-1000 e mapa ``weights``) e ``links`` (``source_id``/``target_id``/
+    ``strength`` nao negativos). Os identificadores locais sao remapeados para
+    inteiros, da mesma forma dos arquivos de mapa/rede, preservando a
+    correspondencia entre os exports.
+    """
+    id_map: dict[str, int] = {}
+    for index, node in enumerate(network.nodes, start=1):
+        id_map[str(node.get("node_id") or f"__node_{index}")] = index
+
+    items: list[dict[str, Any]] = []
+    for node in network.nodes:
+        item: dict[str, Any] = {"id": id_map[str(node.get("node_id") or "")]}
+        label = node.get("label")
+        if label is not None:
+            item["label"] = str(label)
+        for coordinate in ("x", "y"):
+            value = node.get(coordinate)
+            if value is not None:
+                item[coordinate] = float(value)
+        cluster = _vosviewer_cluster(node.get("cluster_id"))
+        if cluster is not None:
+            item["cluster"] = cluster
+        weight = node.get("weight")
+        if weight is not None:
+            item["weights"] = {"Links": float(weight)}
+        items.append(item)
+
+    links: list[dict[str, Any]] = []
+    for edge in network.edges:
+        source = id_map.get(str(edge.get("source_node_id") or ""))
+        target = id_map.get(str(edge.get("target_node_id") or ""))
+        weight = edge.get("weight")
+        if source is None or target is None or weight is None:
+            continue
+        links.append({"source_id": source, "target_id": target, "strength": float(weight)})
+
+    payload = {"network": {"items": items, "links": links}}
+    return json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+
+
 
 def _node_record_keys(node: dict[str, Any]) -> tuple[str, ...]:
     try:

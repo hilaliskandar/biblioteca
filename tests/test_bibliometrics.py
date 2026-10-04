@@ -12,6 +12,7 @@ from openalex_review.bibliometrics import (
     execute_performance_analysis,
     export_network_csv,
     export_network_json,
+    export_network_vosviewer_json,
     filter_network,
     list_bibliometric_runs,
     list_network,
@@ -488,6 +489,60 @@ def test_network_csv_exports_have_headers_and_utf8_content():
     assert "Árvore" in nodes_csv
     assert "source_node_id" in edges_csv.splitlines()[0]
     assert "a" in edges_csv
+
+
+def test_vosviewer_json_export_follows_official_structure():
+    """O JSON deve seguir app.vosviewer.com/docs/file-types/json-file-type."""
+    network = NetworkResult(
+        3,
+        2,
+        (
+            {
+                "node_id": "a",
+                "label": "Alpha",
+                "x": 0.5,
+                "y": -0.25,
+                "cluster_id": "cluster_007",
+                "weight": 3,
+            },
+            {"node_id": "b", "label": "Beta", "weight": 1},
+            {"node_id": "c", "label": "Gama, Ltda", "weight": 2},
+        ),
+        (
+            {"source_node_id": "a", "target_node_id": "b", "weight": 4},
+            {"source_node_id": "a", "target_node_id": "c", "weight": 2},
+        ),
+    )
+
+    payload = json.loads(export_network_vosviewer_json(network).decode("utf-8"))
+
+    assert set(payload) == {"network"}
+    items = payload["network"]["items"]
+    links = payload["network"]["links"]
+    # IDs remapeados para inteiros sequenciais (1..N), como no arquivo de mapa.
+    assert [item["id"] for item in items] == [1, 2, 3]
+    assert items[0]["label"] == "Alpha"
+    assert items[0]["x"] == 0.5 and items[0]["y"] == -0.25
+    assert items[0]["cluster"] == 7
+    assert items[0]["weights"] == {"Links": 3.0}
+    # Nenhum campo nulo: chaves opcionais ausentes sao omitidas.
+    def without_nulls(value):
+        if isinstance(value, dict):
+            return all(without_nulls(item) for item in value.values())
+        if isinstance(value, list):
+            return all(without_nulls(item) for item in value)
+        return value is not None
+
+    assert without_nulls(payload)
+    assert "x" not in items[1]
+    # Links apontam apenas para itens existentes, com intensidade nao negativa.
+    item_ids = {item["id"] for item in items}
+    assert [(link["source_id"], link["target_id"]) for link in links] == [
+        (1, 2),
+        (1, 3),
+    ]
+    assert all(link["source_id"] in item_ids and link["target_id"] in item_ids for link in links)
+    assert all(link["strength"] >= 0 for link in links)
 
 
 def test_network_temporal_overlay_is_reproducible_and_counts_recent_records(tmp_path):

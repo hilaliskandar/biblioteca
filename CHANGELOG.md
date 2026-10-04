@@ -30,6 +30,11 @@
   remapeados para inteiros; antes, os arquivos eram um TSV genérico que o
   VOSviewer Online recusava. A orientação da UI inclui os passos de *Create new
   network* no VOSviewer Online.
+- **VOSviewer JSON:** novo export em arquivo único no formato JSON oficial do
+  VOSviewer Online (`network.items`/`network.links`, IDs inteiros 1..N,
+  cluster no intervalo 1-1000), documentado em
+  `docs/file-types/json-file-type`; botão "VOSviewer JSON" na seção de redes da
+  Bibliometria, alternativa ao par mapa+rede.
 - **VOSviewer:** a orientação da UI passa a nomear os slots exatos do diálogo de
   importação do VOSviewer Online (Map file = `*-items.txt`, Network file =
   `*-network.txt`), o erro comum quando os arquivos são trocados e o link para a
