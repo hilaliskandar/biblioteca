@@ -336,7 +336,8 @@ elegibilidade ou síntese. Use `--analysis-id` para fixar a execução, `--limit
 para limitar a fila e `--include-completed` para incluir obras já lidas.
 
 As redes filtradas da interface também podem ser exportadas para VOSviewer em
-arquivos tabulados de itens e relações, sem alterar as tabelas persistidas.
+arquivos tabulados de itens e relações (mapa + rede), ou em um único arquivo
+JSON no formato oficial do VOSviewer Online, sem alterar as tabelas persistidas.
 
 ### Importação BibTeX/RIS e fonte de download
 
@@ -567,9 +568,9 @@ As páginas **Triagem ASReview** e **Bibliometria** exibem a seção
 **"Programas externos: quando e qual saída submeter"**, com o link para cada
 programa (ASReview, VOSviewer/VOSviewer Online): o CSV de triagem
 (`data/processed/openalex_search_results/...`) alimenta um estudo ASReview e o
-CSV rotulado exportado por ele volta a esta interface; os arquivos `*-items.txt`
-e `*-network.txt` da Bibliometria alimentam o VOSviewer. Nenhuma submissão é
-automática. A fonte canônica desse catálogo é
+CSV rotulado exportado por ele volta a esta interface; os arquivos `*-items.txt`,
+`*-network.txt` ou `*-vosviewer.json` da Bibliometria alimentam o VOSviewer.
+Nenhuma submissão é automática. A fonte canônica desse catálogo é
 `src/openalex_review/external_programs.py`.
 
 

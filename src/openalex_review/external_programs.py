@@ -67,7 +67,9 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "Online use *Create new network*; no diálogo de abertura, **Map file** = "
             "`*-items.txt` e **Network file** = `*-network.txt`. Se invertidos, o app "
             "apresenta o erro \"There must be an ID column or a LABEL column\" na "
-            "linha 1. Base auditável alternativa: CSVs de nós/arestas e o JSON + parâmetros. "
+            "linha 1. Alternativa em arquivo único: o export `*-vosviewer.json` "
+            "(formato JSON oficial do app), aberto diretamente no VOSviewer Online. "
+            "Base auditável: CSVs de nós/arestas e o JSON + parâmetros. "
             "Documentação oficial do formato: "
             "<https://app.vosviewer.com/docs/file-types/map-and-network-file-type/>."
         ),

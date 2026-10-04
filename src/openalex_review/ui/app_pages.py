@@ -15,6 +15,7 @@ from openalex_review.bibliometrics import (
     export_network_csv,
     export_network_json,
     export_network_vosviewer,
+    export_network_vosviewer_json,
     filter_network,
     list_bibliometric_runs,
     network_density_grid,
@@ -312,13 +313,15 @@ def _render_network_exports(
     nodes_csv = export_network_csv(network, record_type="nodes")
     edges_csv = export_network_csv(network, record_type="edges")
     vosviewer = export_network_vosviewer(network)
+    vosviewer_json = export_network_vosviewer_json(network)
     st.caption("As exportações representam apenas a rede filtrada; os dados persistidos não são alterados.")
     st.caption(
         "Para o VOSviewer/VOSviewer Online use sempre os dois arquivos: **Map file** = "
         "VOSviewer mapa (itens); **Network file** = VOSviewer rede (links). Trocar os arquivos "
-        "de lugar produz o erro do app: “There must be an ID column or a LABEL column”."
+        "de lugar produz o erro do app: “There must be an ID column or a LABEL column”. "
+        "Alternativa em arquivo único: o export **VOSviewer JSON**, no formato oficial do app."
     )
-    left, middle, right, vos_items, vos_network = st.columns(5)
+    left, middle, right, vos_items, vos_network, vos_json = st.columns(6)
     left.download_button(
         "Baixar JSON + parâmetros",
         data=json_data,
@@ -353,6 +356,13 @@ def _render_network_exports(
         file_name=f"{network_type}-{analysis_id}-network.txt",
         mime="text/tab-separated-values",
         key=f"{key}_vosviewer_network",
+    )
+    vos_json.download_button(
+        "VOSviewer JSON",
+        data=vosviewer_json,
+        file_name=f"{network_type}-{analysis_id}-vosviewer.json",
+        mime="application/json",
+        key=f"{key}_vosviewer_json",
     )
 
 
