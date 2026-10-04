@@ -17,7 +17,7 @@ def test_screening_page_shows_external_program_guidance(tmp_path_factory):
     test = _app_for("render_screening", tmp_path_factory)
     assert not test.exception
     values = [str(item.value) for item in test.markdown]
-    assert any("asreview.org" in value for value in values)
+    assert any("asreview.ai" in value for value in values)
     captions = [str(item.value) for item in test.caption]
     assert any("Nenhum arquivo sai desta máquina automaticamente" in value for value in captions)
 

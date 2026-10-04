@@ -20,7 +20,7 @@
   existia e o comando falhava.
 - **Interface:** as páginas Triagem ASReview e Bibliometria agora exibem a
   seção "Programas externos: quando e qual saída submeter", com links para
-  ASReview (asreview.org) e VOSviewer (vosviewer.com / app.vosviewer.com) —
+  ASReview (asreview.ai) e VOSviewer (vosviewer.com / app.vosviewer.com) —
   indicando quando enviar cada saída local (CSV de triagem, CSV rotulado,
   `*-items.txt`/`*-network.txt`) e onde ela é gerada. Catálogo canônico em
   `src/openalex_review/external_programs.py`.
