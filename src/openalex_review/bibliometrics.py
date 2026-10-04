@@ -492,31 +492,70 @@ def export_network_csv(network: NetworkResult, *, record_type: str) -> bytes:
     return output.getvalue().encode("utf-8-sig")
 
 
+def _vosviewer_cluster(value) -> int | None:
+    """Converte `cluster_028` (ou inteiro) no intervalo 1-1000 do VOSviewer."""
+    if value is None:
+        return None
+    match = re.search(r"(\d+)$", str(value))
+    if match is None:
+        return None
+    number = int(match.group(1))
+    return ((number - 1) % 1000) + 1
+
+
+def _vosviewer_field(value) -> str:
+    """Escapa o campo do mapa quando contem separador (virgula, ponto-e-virgula ou tab)."""
+    text = str(value if value is not None else "")
+    if any(char in text for char in (",", ";", "\t", "\n")):
+        return '"' + text.replace('"', '""') + '"'
+    return text
+
+
 def export_network_vosviewer(network: NetworkResult) -> dict[str, bytes]:
-    """Serialize a network using VOSviewer ``items`` and ``network`` files."""
-    item_output = io.StringIO(newline="")
-    item_writer = csv.writer(item_output, delimiter="\t", lineterminator="\n")
-    item_writer.writerow(["id", "label", "weight", "cluster"])
+    """Serializa a rede nos formatos oficiais de VOSviewer (mapa + rede).
+
+    Formato documentado em
+    app.vosviewer.com/docs/file-types/map-and-network-file-type: o arquivo de
+    mapa tem colunas id/label/x/y/cluster/weight<Links> (cluster inteiro
+    1-1000) e o arquivo de rede tem linhas "id id intensidade" sem cabecalho.
+    Os identificadores locais (com dois-pontos e acentos) sao remapeados para
+    inteiros 1..N para preservar a correspondencia entre os dois arquivos.
+    """
+    id_map: dict[str, int] = {}
+    for index, node in enumerate(network.nodes, start=1):
+        id_map[str(node.get("node_id") or f"__node_{index}")] = index
+    lines: list[str] = ["id\tlabel\tx\ty\tcluster\tweight<Links>"]
     for node in network.nodes:
-        item_writer.writerow(
-            [
-                node.get("node_id", ""),
-                node.get("label", ""),
-                node.get("weight", ""),
-                node.get("cluster_id", "") or "",
-            ]
+        item_id = id_map[str(node.get("node_id") or "")]
+        x = node.get("x")
+        y = node.get("y")
+        weight = node.get("weight")
+        cluster = _vosviewer_cluster(node.get("cluster_id"))
+        lines.append(
+            "\t".join(
+                [
+                    str(item_id),
+                    _vosviewer_field(node.get("label", "")),
+                    "" if x is None else f"{float(x):.6f}",
+                    "" if y is None else f"{float(y):.6f}",
+                    "" if cluster is None else str(cluster),
+                    "" if weight is None else f"{float(weight):.6f}",
+                ]
+            )
         )
-    network_output = io.StringIO(newline="")
-    network_writer = csv.writer(network_output, delimiter="\t", lineterminator="\n")
-    network_writer.writerow(["source", "target", "weight"])
+    links: list[str] = []
     for edge in network.edges:
-        network_writer.writerow(
-            [edge.get("source_node_id", ""), edge.get("target_node_id", ""), edge.get("weight", "")]
-        )
+        source = id_map.get(str(edge.get("source_node_id") or ""))
+        target = id_map.get(str(edge.get("target_node_id") or ""))
+        weight = edge.get("weight")
+        if source is None or target is None or weight is None:
+            continue
+        links.append(f"{source}\t{target}\t{float(weight):.6f}")
     return {
-        "items": item_output.getvalue().encode("utf-8-sig"),
-        "network": network_output.getvalue().encode("utf-8-sig"),
+        "items": ("\n".join(lines) + "\n").encode("utf-8"),
+        "network": ("\n".join(links) + "\n").encode("utf-8"),
     }
+
 
 
 def _node_record_keys(node: dict[str, Any]) -> tuple[str, ...]:
