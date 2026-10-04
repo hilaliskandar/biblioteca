@@ -30,6 +30,10 @@
   remapeados para inteiros; antes, os arquivos eram um TSV genérico que o
   VOSviewer Online recusava. A orientação da UI inclui os passos de *Create new
   network* no VOSviewer Online.
+- **VOSviewer:** a orientação da UI passa a nomear os slots exatos do diálogo de
+  importação do VOSviewer Online (Map file = `*-items.txt`, Network file =
+  `*-network.txt`), o erro comum quando os arquivos são trocados e o link para a
+  documentação oficial do formato.
 - **Zotero:** nova exportação BibTeX (`exports/zotero/openalex_deduplicated.bib`) ao lado do RIS e do CSL JSON; a página BibTeX/RIS da UI ganhou a seção "Exportar para Zotero" (filtro, geração via `export_records` e downloads diretos), com orientação de programa externo (zotero.org).
 
 ## 0.4.0 — 2026-10-03
