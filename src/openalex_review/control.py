@@ -46,7 +46,21 @@ TEMPLATES: dict[str, list[str]] = {
     ],
 }
 
-DECISION_COLUMNS = ("label", "decision", "included", "relevant", "relevance")
+#: Nomes de coluna de decisao aceitos no CSV de triagem. Inclui a lista de
+#: nomes reconhecidos pelo ASReview LAB (docs/file-types -> Included), com
+#: `final_included` primeiro porque e o nome canonico da propria exportacao.
+DECISION_COLUMNS = (
+    "final_included",
+    "label",
+    "decision",
+    "included",
+    "relevant",
+    "relevance",
+    "include",
+    "label_included",
+    "included_label",
+    "included_final",
+)
 IDENTIFIER_COLUMNS = ("record_key", "openalex_id", "doi", "title")
 
 

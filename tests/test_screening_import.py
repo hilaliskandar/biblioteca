@@ -80,6 +80,27 @@ def test_import_screening_decisions_writes_control_and_duckdb(tmp_path):
     con.close()
 
 
+def test_import_accepts_asreview_final_included_binary_column(tmp_path):
+    """O CSV exportado pelo ASReview LAB usa a coluna `final_included` (0/1)."""
+    make_database(tmp_path)
+    path = tmp_path / "asreview_rotulado.csv"
+    with path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=["openalex_id", "title", "final_included"])
+        writer.writeheader()
+        writer.writerow({"openalex_id": "W1", "title": "Primeiro registro", "final_included": "1"})
+        writer.writerow({"openalex_id": "W2", "title": "Segundo registro", "final_included": "0"})
+
+    result = import_screening_decisions(path, reviewer="r1", root=tmp_path)
+
+    assert result.imported == 2
+    assert result.invalid_decisions == 0
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT record_key, decision FROM screening_decisions ORDER BY record_key"
+    ).fetchall() == [("openalex:W1", "incluir"), ("openalex:W2", "excluir")]
+    con.close()
+
+
 def test_import_screening_decisions_is_idempotent_without_replace(tmp_path):
     make_database(tmp_path)
     source = write_csv(

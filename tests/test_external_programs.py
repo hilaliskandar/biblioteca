@@ -59,4 +59,6 @@ def test_screening_guidance_references_roundtrip_files():
     # O texto deve orientar o ciclo completo: CSV local para o programa e o
     # CSV rotulado de volta para esta interface.
     assert "openalex_search_results" in program.what
-    assert "CSV rotulado" in program.what
+    assert "Gerar CSV do corpus para o ASReview" in program.what
+    # A coluna de decisao canonica do ASReview deve estar nomeada.
+    assert "final_included" in program.what
