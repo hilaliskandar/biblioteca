@@ -313,6 +313,11 @@ def _render_network_exports(
     edges_csv = export_network_csv(network, record_type="edges")
     vosviewer = export_network_vosviewer(network)
     st.caption("As exportações representam apenas a rede filtrada; os dados persistidos não são alterados.")
+    st.caption(
+        "Para o VOSviewer/VOSviewer Online use sempre os dois arquivos: **Map file** = "
+        "VOSviewer mapa (itens); **Network file** = VOSviewer rede (links). Trocar os arquivos "
+        "de lugar produz o erro do app: “There must be an ID column or a LABEL column”."
+    )
     left, middle, right, vos_items, vos_network = st.columns(5)
     left.download_button(
         "Baixar JSON + parâmetros",

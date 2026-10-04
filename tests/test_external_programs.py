@@ -44,6 +44,14 @@ def test_asreview_points_to_official_program_site():
     assert program.url == "https://asreview.ai/"
 
 
+def test_bibliometrics_guidance_names_vosviewer_slots():
+    """A orientação deve nomear os slots Map file/Network file para evitar troca."""
+    program = next(p for p in programs_for_page(PAGE_BIBLIOMETRICS))
+    assert "Map file" in program.what
+    assert "Network file" in program.what
+    assert "id id intensidade" in program.what
+
+
 def test_screening_guidance_references_roundtrip_files():
     program = next(p for p in programs_for_page(PAGE_SCREENING))
     # O texto deve orientar o ciclo completo: CSV local para o programa e o

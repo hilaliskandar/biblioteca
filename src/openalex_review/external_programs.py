@@ -64,9 +64,10 @@ what=(
             "No bloco de exportação de rede da página Bibliometria, baixe `*-items.txt` "
             "(mapa: um item por nó, com rótulo, cluster, coordenadas e peso) e "
             "`*-network.txt` (linhas `id id intensidade`, sem cabeçalho). No VOSviewer "
-            "Online use *Create new network* e informe o arquivo de items como mapa e "
-            "o de network como rede. Base auditável alternativa: CSVs de nós/arestas "
-            "e o JSON + parâmetros."
+            "Online use *Create new network*; no diálogo de abertura, **Map file** = "
+            "`*-items.txt` e **Network file** = `*-network.txt`. Se invertidos, o app "
+            "apresenta o erro \"There must be an ID column or a LABEL column\" na "
+            "linha 1. Base auditável alternativa: CSVs de nós/arestas e o JSON + parâmetros."
         ),
         where="Páginas Bibliometria, seção de redes de cada análise.",
         page=PAGE_BIBLIOMETRICS,
