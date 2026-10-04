@@ -50,6 +50,7 @@ def test_bibliometrics_guidance_names_vosviewer_slots():
     assert "Map file" in program.what
     assert "Network file" in program.what
     assert "id id intensidade" in program.what
+    assert "https://app.vosviewer.com/docs/file-types/map-and-network-file-type/" in program.what
 
 
 def test_screening_guidance_references_roundtrip_files():
