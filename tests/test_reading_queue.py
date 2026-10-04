@@ -73,6 +73,34 @@ def test_vosviewer_export_contains_items_and_network_files():
 
     exported = export_network_vosviewer(network)
 
+    # Formato oficial de VOSviewer (map and network files):
+    # mapa com colunas id/label/x/y/cluster/weight e rede sem cabecalho.
     assert set(exported) == {"items", "network"}
-    assert b"id\tlabel\tweight\tcluster" in exported["items"]
-    assert b"source\ttarget\tweight" in exported["network"]
+    item_lines = exported["items"].decode("utf-8").strip().split("\n")
+    assert item_lines[0] == "id\tlabel\tx\ty\tcluster\tweight<Links>"
+    assert item_lines[1] == "1\tA\t\t\t1\t2.000000"
+    assert item_lines[2] == "2\tB\t\t\t1\t1.000000"
+    assert exported["network"].decode("utf-8").strip() == "1\t2\t2.000000"
+
+
+def test_vosviewer_export_quotes_labels_and_skips_orphan_edges():
+    network = NetworkResult(
+        2,
+        1,
+        (
+            {"node_id": "a", "label": "A, B; C", "weight": 1, "x": 0.5, "y": -0.5},
+            {"node_id": "b", "label": "B", "weight": 1, "cluster_id": "cluster_1002"},
+        ),
+        (
+            {"source_node_id": "a", "target_node_id": "desconhecido", "weight": 3},
+            {"source_node_id": "a", "target_node_id": "b", "weight": 1},
+        ),
+    )
+
+    exported = export_network_vosviewer(network)
+
+    item_lines = exported["items"].decode("utf-8").strip().split("\n")
+    assert item_lines[1] == '1\t"A, B; C"\t0.500000\t-0.500000\t\t1.000000'
+    # cluster_1002 fica fora do intervalo 1-1000 e deve ser remapeado, nao omitido.
+    assert item_lines[2].split("\t")[4] == "2"
+    assert exported["network"].decode("utf-8").strip() == "1\t2\t1.000000"

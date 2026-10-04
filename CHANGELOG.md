@@ -24,6 +24,12 @@
   indicando quando enviar cada saída local (CSV de triagem, CSV rotulado,
   `*-items.txt`/`*-network.txt`) e onde ela é gerada. Catálogo canônico em
   `src/openalex_review/external_programs.py`.
+- **VOSviewer:** a exportação de redes agora segue o formato oficial de
+  VOSviewer/VOSviewer Online (arquivo de mapa com id/label/x/y/cluster inteiros e
+  peso, e arquivo de rede sem cabeçalho `id id intensidade`), com identificadores
+  remapeados para inteiros; antes, os arquivos eram um TSV genérico que o
+  VOSviewer Online recusava. A orientação da UI inclui os passos de *Create new
+  network* no VOSviewer Online.
 - **Zotero:** nova exportação BibTeX (`exports/zotero/openalex_deduplicated.bib`) ao lado do RIS e do CSL JSON; a página BibTeX/RIS da UI ganhou a seção "Exportar para Zotero" (filtro, geração via `export_records` e downloads diretos), com orientação de programa externo (zotero.org).
 
 ## 0.4.0 — 2026-10-03

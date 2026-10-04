@@ -336,14 +336,14 @@ def _render_network_exports(
         key=f"{key}_edges_export",
     )
     vos_items.download_button(
-        "VOSviewer itens",
+        "VOSviewer mapa (itens)",
         data=vosviewer["items"],
         file_name=f"{network_type}-{analysis_id}-items.txt",
         mime="text/tab-separated-values",
         key=f"{key}_vosviewer_items",
     )
     vos_network.download_button(
-        "VOSviewer rede",
+        "VOSviewer rede (links)",
         data=vosviewer["network"],
         file_name=f"{network_type}-{analysis_id}-network.txt",
         mime="text/tab-separated-values",

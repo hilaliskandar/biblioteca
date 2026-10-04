@@ -60,9 +60,13 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "Quando a rede calculada na página Bibliometria (desempenho, coautoria ou "
             "coocorrência) precisar de visualização com qualidade de publicação fora do painel."
         ),
-        what=(
-            "Arquivos `*-items.txt` e `*-network.txt` do bloco de exportação de rede; "
-            "alternativamente, os CSVs de nós/arestas e o JSON + parâmetros como base auditável."
+what=(
+            "No bloco de exportação de rede da página Bibliometria, baixe `*-items.txt` "
+            "(mapa: um item por nó, com rótulo, cluster, coordenadas e peso) e "
+            "`*-network.txt` (linhas `id id intensidade`, sem cabeçalho). No VOSviewer "
+            "Online use *Create new network* e informe o arquivo de items como mapa e "
+            "o de network como rede. Base auditável alternativa: CSVs de nós/arestas "
+            "e o JSON + parâmetros."
         ),
         where="Páginas Bibliometria, seção de redes de cada análise.",
         page=PAGE_BIBLIOMETRICS,
