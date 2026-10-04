@@ -30,6 +30,13 @@
   remapeados para inteiros; antes, os arquivos eram um TSV genérico que o
   VOSviewer Online recusava. A orientação da UI inclui os passos de *Create new
   network* no VOSviewer Online.
+- **ASReview:** a página Triagem ASReview ganhou a seção "1. Exportar corpus
+  para o ASReview" com botão de destaque que reescreve `exports/asreview/`
+  (CSV com as colunas reconhecidas pelo ASReview LAB — `title`, `abstract`,
+  `authors`, `keywords`, `doi`, `url` — e RIS) e downloads diretos. O import
+  de triagem agora aceita a lista completa de nomes de coluna de rótulo do
+  ASReview LAB, sendo `final_included` (0/1) o nome canônico da própria
+  exportação do programa.
 - **VOSviewer JSON:** novo export em arquivo único no formato JSON oficial do
   VOSviewer Online (`network.items`/`network.links`, IDs inteiros 1..N,
   cluster no intervalo 1-1000), documentado em

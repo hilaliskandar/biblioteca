@@ -894,6 +894,54 @@ def _render_products(root: Path) -> None:
                 st.code(path.read_text(encoding="utf-8", errors="replace")[:12000], language=None)
 
 
+def _render_asreview_corpus_export(root: Path) -> None:
+    """Botao de destaque: gera o CSV do corpus no formato oficial do ASReview."""
+    st.subheader("1. Exportar corpus para o ASReview")
+    _render_external_programs(PAGE_SCREENING)
+    st.caption(
+        "O botão abaixo reescreve `exports/asreview/openalex_asreview.csv` seguindo a tabela de "
+        "colunas reconhecidas pelo ASReview LAB (`title`, `abstract`, `authors`, `keywords`, "
+        "`doi`, `url`); as colunas extras de rastreio são ignoradas pelo programa. No ASReview "
+        "LAB (asreview.ai), crie um novo projeto importando este CSV como *dataset*. Concluída a "
+        "triagem, exporte o CSV do ASReview — a coluna `final_included` (0 = excluir, "
+        "1 = incluir) é reconhecida pelo import da seção 2 desta página. Nada sai desta "
+        "máquina automaticamente."
+    )
+    filter_choice = st.selectbox(
+        "Filtro de exportação",
+        options=[name for name in ALLOWED_FILTERS],
+        format_func=lambda name: _REFERENCE_EXPORT_FILTERS.get(name, name),
+        key="asreview_export_filter",
+    )
+    if st.button(
+        "Gerar CSV do corpus para o ASReview",
+        type="primary",
+        key="asreview_export_run",
+        help="Regenera exports/asreview/ a partir do banco local.",
+    ):
+        try:
+            count = export_records(filter_choice, root=root)
+            st.success(
+                f"{count:,} obras exportadas; use o botão de download abaixo para levar o CSV ao ASReview."
+            )
+        except Exception as exc:
+            st.error(str(exc))
+    asreview_dir = root / "exports" / "asreview"
+    for file_name, label in (
+        ("openalex_asreview.csv", "CSV para ASReview LAB (corpus)"),
+        ("openalex_asreview.ris", "RIS para ASReview"),
+    ):
+        path = asreview_dir / file_name
+        if path.exists():
+            st.download_button(
+                f"Baixar {label}",
+                data=path.read_bytes(),
+                file_name=file_name,
+                mime=_download_mime(path),
+                key=f"asreview_export_download_{file_name}",
+            )
+
+
 def _render_screening(root: Path) -> None:
     _section_help("Importar triagem ASReview", "screening.stage")
     st.caption(
@@ -905,8 +953,8 @@ def _render_screening(root: Path) -> None:
         st.success(f"Registro em foco: `{focused_record}`. Nenhuma decisão foi alterada automaticamente.")
         if st.button("Limpar registro em foco", key="clear_focused_record"):
             st.rerun()
-    _render_external_programs(PAGE_SCREENING)
-    st.subheader("1. Importar decisões (ASReview)")
+    _render_asreview_corpus_export(root)
+    st.subheader("2. Importar decisões (ASReview)")
     reviewer = st.text_input(
         "Revisor ou rodada",
         value="revisor_01",
@@ -947,7 +995,7 @@ def _render_screening(root: Path) -> None:
         except Exception as exc:
             st.error(str(exc))
 
-    st.subheader("2. Estado do workflow de triagem")
+    st.subheader("3. Estado do workflow de triagem")
     con = _read_only_database(root)
     if con is None:
         st.info(
@@ -999,7 +1047,7 @@ def _render_screening(root: Path) -> None:
         "obra; nenhuma concordância é induzida por adjudicação automática."
     )
 
-    st.subheader("3. Conflitos e resoluções")
+    st.subheader("4. Conflitos e resoluções")
     available_stages = tuple(
         stage_code for stage_code in STAGE_CODES if any(item["etapa"] == stage_code for item in details)
     )

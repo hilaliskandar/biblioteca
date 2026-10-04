@@ -35,7 +35,7 @@ projeto/corpus é renderizado por `_render_shell_context` no topo de cada págin
 | Busca e coleta | `busca-e-coleta` | `_render_search` (aba "Nova estratégia") + `_render_execution` (aba "Contar e executar") | `guided_config_payload`, `save_guided_config`, `load_and_count`, `run_guided_pipeline`, `append_search_log` | escreve `config/custom/*.yaml`, `data/raw`, `data/manifests`, `data/control/search_log.csv`, banco e relatórios |
 | Corpus | `corpus` | `_render_corpus` | `select_workspace_corpus`, `summarize_workspace`, `CORPUS_SCOPES` | grava `corpus_selection` em estado de sessão |
 | Bibliometria | `bibliometria` | `_render_bibliometrics` (+ `_render_network_chart`, `_render_network_exports`, `_render_temporal_density`) | `bibliometrics.*` (análise, rede, exports, execuções) | grava `bibliometric_result` em sessão; cria execuções em `bibliometric_runs` |
-| Triagem ASReview | `triagem-asreview` | `_render_screening` | `control.import_screening_decisions` | escreve `data/control/imports/*` e `screening_decisions` no banco |
+| Triagem ASReview | `triagem-asreview` | `_render_screening` | `control.import_screening_decisions` + `exporter.export_records` (corpus para o ASReview) | escreve `data/control/imports/*`, `screening_decisions` no banco e `exports/asreview/*` |
 | PRISMA | `prisma` | `_render_prisma` | SQL sobre `works_stage` e `fulltext_assets` | somente leitura |
 | BibTeX/RIS | `bibtex-ris` | `_render_reference_import` | `reference_import.import_references` | escreve `data/control/imports/*` e `reports/reference_imports.csv` |
 | Produtos | `produtos` | `_render_products` | `interface.list_product_files` | somente leitura (download) |

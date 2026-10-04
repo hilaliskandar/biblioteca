@@ -249,7 +249,7 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 `export` aceita `all`, `open_access`, `with_abstract`, `with_doi` e `not_retracted`, produzindo RIS/BibTeX/CSL JSON para Zotero, CSV/RIS para ASReview, CSV para Bibliometrix e `works_deduplicated.csv`. Valores ausentes do pandas são convertidos antes de gerar RIS e CSL JSON.
 
-`import-screening` detecta `label`, `decision`, `included`, `relevant` ou `relevance`; normaliza rótulos ASReview para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Etapas e motivos usam os códigos de `screening_vocabulary.py`; exclusão em `texto_integral` requer motivo válido. Use `--stage-column`/`--reason-column` para indicar colunas no CSV. Valores inválidos ou obra desconhecida cancelam o lote sem escrita parcial. Inclusões não exigem motivo; motivos históricos não são recodificados automaticamente.
+`import-screening` detecta `final_included`, `label`, `decision`, `included`, `relevant`, `relevance` e os demais nomes de coluna de rótulo reconhecidos pelo ASReview LAB; normaliza rótulos ASReview para `incluir`/`excluir`; resolve a obra por `record_key`, `openalex_id`, DOI ou título. Etapas e motivos usam os códigos de `screening_vocabulary.py`; exclusão em `texto_integral` requer motivo válido. Use `--stage-column`/`--reason-column` para indicar colunas no CSV. Valores inválidos ou obra desconhecida cancelam o lote sem escrita parcial. Inclusões não exigem motivo; motivos históricos não são recodificados automaticamente.
 
 `import-reading --input leitura.csv` importa estados `pendente`, `em_leitura`, `lido`, `nao_localizado` ou `nao_disponivel` para `reading_status`, resolvendo a obra por `record_key`, OpenAlex, DOI ou título. O lote é validado antes da transação e reimportações idênticas são ignoradas. `import-fulltext-assets --input ativos.csv` registra URLs ou caminhos locais em `fulltext_assets`; arquivos locais têm SHA-256 e tamanho calculados, mas não são copiados para o repositório.
 
@@ -557,7 +557,10 @@ por corpus, bibliometria e revisão:
    controle usando as mesmas funções da CLI;
 5. **Produtos:** lista somente arquivos locais existentes em `data/processed`,
    `exports/`, `reports/`, manifestos e controles, com prévia e download;
-6. **Triagem ASReview:** recebe CSV rotulado, revisor, etapa e opção explícita
+6. **Triagem ASReview:** em destaque, gera o CSV do corpus para o ASReview
+   (`exports/asreview/`, formato de colunas reconhecido pelo ASReview LAB) e
+   oferece downloads diretos; depois recebe CSV rotulado (coluna
+   `final_included` 0/1 ou equivalentes), revisor, etapa e opção explícita
    de substituição, delegando a validação ao importador já existente. A seleção
    de um nó bibliométrico abre suas obras associadas por `metadata_json`, com
    estados de triagem, leitura, evidências/FAFAT+ e atalho somente de navegação

@@ -40,14 +40,18 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "aponta os itens mais prováveis de incluir."
         ),
         what=(
-            "CSV do corpus com título/resumo — os arquivos de `data/processed/"
-            "openalex_search_results/<run_id>/<query_id>_<timestamp>.csv` (gerados pela coleta) "
-            "ou as exportações de `exports/` — para montar o estudo ASReview. Depois, devolva a "
-            "esta interface o CSV rotulado exportado pelo ASReview na seção 1 desta página."
+            "No topo da página Triagem ASReview, o botão de destaque "
+            "**Gerar CSV do corpus para o ASReview** produz `exports/asreview/"
+            "openalex_asreview.csv` com as colunas reconhecidas pelo ASReview LAB "
+            "(`title`, `abstract`, `authors`, `keywords`, `doi`, `url`). Importe-o como "
+            "*dataset* de um novo projeto em asreview.ai; triage com o priorizador e, "
+            "depois, devolva o CSV exportado pelo ASReview — a coluna `final_included` "
+            "(0/1) é reconhecida pelo import da seção 2 da mesma página. Alternativa: os "
+            "CSVs de coleta de `data/processed/openalex_search_results/`."
         ),
         where=(
-            "Coleta (página Busca e coleta / Produtos): CSV para triagem → ASReview "
-            "(estudo + priorização) → import do CSV rotulado nesta página."
+            "Página Triagem ASReview: seção \"1. Exportar corpus para o ASReview\" "
+            "(botão de destaque + downloads) e \"2. Importar decisões (ASReview)\"."
         ),
         page=PAGE_SCREENING,
     ),

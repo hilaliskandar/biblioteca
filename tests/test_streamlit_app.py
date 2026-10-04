@@ -22,6 +22,16 @@ def test_screening_page_shows_external_program_guidance(tmp_path_factory):
     assert any("Nenhum arquivo sai desta máquina automaticamente" in value for value in captions)
 
 
+def test_screening_page_offers_prominent_asreview_corpus_export(tmp_path_factory):
+    """A pagina de triagem deve exibir a secao de exportacao de corpus em destaque."""
+    test = _app_for("render_screening", tmp_path_factory)
+    assert not test.exception
+    subheaders = [str(item.value) for item in test.subheader]
+    assert any("Exportar corpus para o ASReview" in value for value in subheaders)
+    labels = [str(item.label) for item in test.button]
+    assert "Gerar CSV do corpus para o ASReview" in labels
+
+
 def test_bibliometrics_page_shows_external_program_guidance(tmp_path_factory):
     test = _app_for("render_bibliometria", tmp_path_factory)
     assert not test.exception
@@ -228,9 +238,9 @@ def test_screening_dashboard_shows_workflow_state_and_conflicts(tmp_path_factory
     assert not test.exception
     steps = [str(item.value) for item in test.subheader]
     for expected in (
-        "1. Importar decisões (ASReview)",
-        "2. Estado do workflow de triagem",
-        "3. Conflitos e resoluções",
+        "2. Importar decisões (ASReview)",
+        "3. Estado do workflow de triagem",
+        "4. Conflitos e resoluções",
     ):
         assert expected in steps
     metric_labels = [metric.label for metric in test.metric]
