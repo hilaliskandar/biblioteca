@@ -44,6 +44,14 @@ def test_asreview_points_to_official_program_site():
     assert program.url == "https://asreview.ai/"
 
 
+def test_asreview_guidance_offers_local_docker_option():
+    """A orientação deve oferecer o ASReview LAB local em Docker (imagem oficial)."""
+    program = next(p for p in programs_for_page(PAGE_SCREENING))
+    assert "scripts/asreview_docker.ps1" in program.what
+    assert "localhost:5000" in program.what
+    assert program.secondary_url and "docker" in program.secondary_url_name.lower()
+
+
 def test_bibliometrics_guidance_names_vosviewer_slots():
     """A orientação deve nomear os slots Map file/Network file para evitar troca."""
     program = next(p for p in programs_for_page(PAGE_BIBLIOMETRICS))

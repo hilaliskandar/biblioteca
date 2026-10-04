@@ -901,8 +901,10 @@ def _render_asreview_corpus_export(root: Path) -> None:
     st.caption(
         "O botão abaixo reescreve `exports/asreview/openalex_asreview.csv` seguindo a tabela de "
         "colunas reconhecidas pelo ASReview LAB (`title`, `abstract`, `authors`, `keywords`, "
-        "`doi`, `url`); as colunas extras de rastreio são ignoradas pelo programa. No ASReview "
-        "LAB (asreview.ai), crie um novo projeto importando este CSV como *dataset*. Concluída a "
+        "`doi`, `url`); as colunas extras de rastreio são ignoradas pelo programa. Use a versão "
+        "hospedada (asreview.ai) ou o ASReview LAB local em Docker: `.\scripts/asreview_docker.ps1` "
+        "inicia a interface em `http://localhost:5000`. Crie um novo projeto importando este CSV "
+        "como *dataset*. Concluída a "
         "triagem, exporte o CSV do ASReview — a coluna `final_included` (0 = excluir, "
         "1 = incluir) é reconhecida pelo import da seção 2 desta página. Nada sai desta "
         "máquina automaticamente."

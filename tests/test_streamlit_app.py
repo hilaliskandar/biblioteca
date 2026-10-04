@@ -30,6 +30,9 @@ def test_screening_page_offers_prominent_asreview_corpus_export(tmp_path_factory
     assert any("Exportar corpus para o ASReview" in value for value in subheaders)
     labels = [str(item.label) for item in test.button]
     assert "Gerar CSV do corpus para o ASReview" in labels
+    captions = [str(caption.value) for caption in test.caption]
+    assert any("asreview_docker.ps1" in caption for caption in captions)
+    assert any("localhost:5000" in caption for caption in captions)
 
 
 def test_bibliometrics_page_shows_external_program_guidance(tmp_path_factory):

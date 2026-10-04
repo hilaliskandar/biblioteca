@@ -47,6 +47,12 @@
   `*-network.txt`), o erro comum quando os arquivos são trocados e o link para a
   documentação oficial do formato.
 - **Zotero:** nova exportação BibTeX (`exports/zotero/openalex_deduplicated.bib`) ao lado do RIS e do CSL JSON; a página BibTeX/RIS da UI ganhou a seção "Exportar para Zotero" (filtro, geração via `export_records` e downloads diretos), com orientação de programa externo (zotero.org).
+- **ASReview local (Docker):** novo `scripts/asreview_docker.ps1` cria/inicia um
+  container local do ASReview LAB com a imagem oficial
+  (`ghcr.io/asreview/asreview`) na porta 5000, com volume persistente para os
+  projetos (`up`/`down`/`status`/`logs`/`remove`); a orientação de programas
+  externos e a seção de exportação da página de triagem documentam a opção
+  local (interface em `http://localhost:5000`) ao lado da versão hospedada.
 
 ## 0.4.0 — 2026-10-03
 
