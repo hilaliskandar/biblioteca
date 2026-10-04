@@ -33,7 +33,7 @@ class ExternalProgram:
 EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
     ExternalProgram(
         name="ASReview",
-        url="https://asreview.org/",
+        url="https://asreview.ai/",
         when=(
             "Quando houver decisões de triagem registradas e a revisão devesse continuar com "
             "priorização por aprendizado ativo: o priorizador aprende com os rótulos já feitos e "

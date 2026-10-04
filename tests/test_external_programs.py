@@ -38,6 +38,12 @@ def test_reference_guidance_references_zotero_export_files():
     assert "openalex_deduplicated.bib" in program.what
 
 
+def test_asreview_points_to_official_program_site():
+    """Guarda contra o domínio errado: asreview.org e um jornal estudantil, nao o programa."""
+    program = next(p for p in programs_for_page(PAGE_SCREENING))
+    assert program.url == "https://asreview.ai/"
+
+
 def test_screening_guidance_references_roundtrip_files():
     program = next(p for p in programs_for_page(PAGE_SCREENING))
     # O texto deve orientar o ciclo completo: CSV local para o programa e o
