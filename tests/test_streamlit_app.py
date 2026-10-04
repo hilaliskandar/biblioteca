@@ -13,6 +13,22 @@ from openalex_review.interface import guided_config_payload, save_guided_config
 APP_FILE = Path(__file__).parent.parent / "src" / "openalex_review" / "streamlit_app.py"
 
 
+def test_screening_page_shows_external_program_guidance(tmp_path_factory):
+    test = _app_for("render_screening", tmp_path_factory)
+    assert not test.exception
+    values = [str(item.value) for item in test.markdown]
+    assert any("asreview.org" in value for value in values)
+    captions = [str(item.value) for item in test.caption]
+    assert any("Nenhum arquivo sai desta máquina automaticamente" in value for value in captions)
+
+
+def test_bibliometrics_page_shows_external_program_guidance(tmp_path_factory):
+    test = _app_for("render_bibliometria", tmp_path_factory)
+    assert not test.exception
+    values = [str(item.value) for item in test.markdown]
+    assert any("vosviewer.com" in value for value in values)
+
+
 def test_ui_console_script_target_resolves():
     """O console script openalex-review-ui deve apontar para um alvo existente."""
     import importlib

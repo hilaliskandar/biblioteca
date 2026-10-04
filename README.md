@@ -561,6 +561,15 @@ por corpus, bibliometria e revisão:
    de um nó bibliométrico abre suas obras associadas por `metadata_json`, com
    estados de triagem, leitura, evidências/FAFAT+ e atalho somente de navegação
    para o registro em foco.
+As páginas **Triagem ASReview** e **Bibliometria** exibem a seção
+**"Programas externos: quando e qual saída submeter"**, com o link para cada
+programa (ASReview, VOSviewer/VOSviewer Online): o CSV de triagem
+(`data/processed/openalex_search_results/...`) alimenta um estudo ASReview e o
+CSV rotulado exportado por ele volta a esta interface; os arquivos `*-items.txt`
+e `*-network.txt` da Bibliometria alimentam o VOSviewer. Nenhuma submissão é
+automática. A fonte canônica desse catálogo é
+`src/openalex_review/external_programs.py`.
+
 
 O formulário não envia uma busca descartável: antes de contar ou coletar, a
 estratégia é persistida como YAML. A busca lexical combina sinônimos de um
