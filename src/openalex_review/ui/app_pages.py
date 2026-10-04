@@ -31,6 +31,11 @@ from openalex_review.common import (
 from openalex_review.config import load_search_config
 from openalex_review.control import import_screening_decisions
 from openalex_review.corpus import get_work_record, search_corpus_works, work_query_ids
+from openalex_review.external_programs import (
+    PAGE_BIBLIOMETRICS,
+    PAGE_SCREENING,
+    programs_for_page,
+)
 from openalex_review.interface import (
     build_lexical_expression,
     guided_config_payload,
@@ -450,6 +455,26 @@ def _download_mime(path: Path) -> str:
     }.get(path.suffix.lower(), "application/octet-stream")
 
 
+def _render_external_programs(page: str) -> None:
+    """Orienta quando e qual saída local submeter a programas externos."""
+    programs = programs_for_page(page)
+    if not programs:
+        return
+    with st.expander("Programas externos: quando e qual saída submeter", expanded=False):
+        st.caption(
+            "Nenhum arquivo sai desta máquina automaticamente: a submissão abaixo é manual e "
+            "o pesquisador decide quando executá-la."
+        )
+        for program in programs:
+            label = f"[{program.name}]({program.url})"
+            if program.secondary_url and program.secondary_url_name:
+                label += f" · [{program.secondary_url_name}]({program.secondary_url})"
+            st.markdown(f"**{label}**")
+            st.markdown(f"- **Quando:** {program.when}")
+            st.markdown(f"- **Qual saída submeter:** {program.what}")
+            st.markdown(f"- **Onde ela é gerada:** {program.where}")
+
+
 def _section_help(title: str, key: str) -> None:
     left, right = st.columns([12, 1])
     with left:
@@ -862,6 +887,7 @@ def _render_screening(root: Path) -> None:
         st.success(f"Registro em foco: `{focused_record}`. Nenhuma decisão foi alterada automaticamente.")
         if st.button("Limpar registro em foco", key="clear_focused_record"):
             st.rerun()
+    _render_external_programs(PAGE_SCREENING)
     st.subheader("1. Importar decisões (ASReview)")
     reviewer = st.text_input(
         "Revisor ou rodada",
@@ -1356,6 +1382,7 @@ def _render_work_card(record_key: str, root: Path, summary: dict | None = None) 
 
 def _render_bibliometrics(root: Path) -> None:
     st.header("Bibliometria")
+    _render_external_programs(PAGE_BIBLIOMETRICS)
     database_issue = duckdb_error(root)
     if database_issue:
         st.info(database_issue)

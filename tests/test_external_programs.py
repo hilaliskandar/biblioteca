@@ -1,0 +1,36 @@
+"""Testes do catálogo de programas externos (orientação de submissão na UI)."""
+
+from openalex_review.external_programs import (
+    EXTERNAL_PROGRAMS,
+    PAGE_BIBLIOMETRICS,
+    PAGE_SCREENING,
+    programs_for_page,
+)
+
+
+def test_all_programs_have_links_and_submission_guidance():
+    assert {program.page for program in EXTERNAL_PROGRAMS} == {
+        PAGE_SCREENING,
+        PAGE_BIBLIOMETRICS,
+    }
+    for program in EXTERNAL_PROGRAMS:
+        assert program.name
+        assert program.url.startswith("https://")
+        assert program.when and program.what and program.where
+        if program.secondary_url:
+            assert program.secondary_url.startswith("https://")
+            assert program.secondary_url_name
+
+
+def test_programs_for_page_filters_by_page():
+    assert tuple(p.name for p in programs_for_page(PAGE_SCREENING)) == ("ASReview",)
+    assert tuple(p.name for p in programs_for_page(PAGE_BIBLIOMETRICS)) == ("VOSviewer",)
+    assert programs_for_page("pagina_inexistente") == ()
+
+
+def test_screening_guidance_references_roundtrip_files():
+    program = next(p for p in programs_for_page(PAGE_SCREENING))
+    # O texto deve orientar o ciclo completo: CSV local para o programa e o
+    # CSV rotulado de volta para esta interface.
+    assert "openalex_search_results" in program.what
+    assert "CSV rotulado" in program.what
