@@ -45,7 +45,7 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "openalex_asreview.csv` com as colunas reconhecidas pelo ASReview LAB "
             "(`title`, `abstract`, `authors`, `keywords`, `doi`, `url`). Use a versão "
             "hospedada (asreview.ai) ou o ASReview LAB local em Docker: "
-            "`.\scripts/asreview_docker.ps1` cria o container e a interface abre em "
+            "`.\\scripts/asreview_docker.ps1` cria o container e a interface abre em "
             "`http://localhost:5000` (imagem oficial: ghcr.io/asreview/asreview). "
             "Importe o CSV como *dataset* de um novo projeto; triage com o priorizador "
             "e, depois, devolva o CSV exportado pelo ASReview — a coluna de rótulo "

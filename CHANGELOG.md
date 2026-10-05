@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Texto integral (P2):** novo comando `openalex-review acquire-fulltext`
+  (módulo `openalex_review.fulltext_acquisition`) para aquisição automatizada
+  de PDFs open access: baixa o `pdf_url` do `best_oa_location` do OpenAlex por
+  obra em `data/fulltext/<openalex_id>.pdf` (não versionado, ignorado pelo
+  `.gitignore`), calcula SHA-256 e tamanho e registra o ativo em
+  `fulltext_assets` (`available`, ou `failed` com o motivo preservado para
+  `--retry-failed`). Fila determinística, limites de 50 MB por arquivo,
+  `--limit` (padrão 10), `--all`, `--timeout` e `--dry-run`; ativo já
+  registrado com a mesma URI é ignorado; relatório em
+  `reports/fulltext_acquisition_report.csv`. Falhas não deixam arquivo
+  parcial. A elegibilidade final continua sendo decisão humana.
 - **Triagem:** `openalex-review export-screening` agora inclui resoluções de
   conflitos (`screening_conflict_resolutions.csv`, com obra, etapa, decisão
   final, motivo, resolutor, data e observações), fechando o trilho de auditoria

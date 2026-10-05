@@ -106,6 +106,16 @@ def build_parser() -> argparse.ArgumentParser:
     assets.add_argument("--input", required=True, help="CSV de ativos de texto integral.")
     assets.add_argument("--replace", action="store_true", help="Substitui o ativo com o mesmo asset_id.")
 
+    acquire = sub.add_parser(
+        "acquire-fulltext",
+        help="Baixa PDFs open access (best OA do OpenAlex), calcula hash e registra em fulltext_assets.",
+    )
+    acquire.add_argument("--limit", type=int, default=10, help="Maximo de PDFs por execucao (padrao 10).")
+    acquire.add_argument("--all", dest="all", action="store_true", help="Remove o limite de aquisicao.")
+    acquire.add_argument("--retry-failed", action="store_true", help="Tenta de novo ativos com status failed.")
+    acquire.add_argument("--dry-run", action="store_true", help="Só gera a fila, sem baixar nada.")
+    acquire.add_argument("--timeout", type=float, default=60.0, help="Timeout por download em segundos.")
+
     evidence = sub.add_parser("import-evidence", help="Importa matriz de evidências/FAFAT+ para CSV e DuckDB.")
     evidence.add_argument("--input", required=True, help="CSV da matriz de evidências.")
     evidence.add_argument("--replace", action="store_true", help="Substitui evidências com o mesmo evidence_id.")
@@ -262,6 +272,26 @@ def main(argv: list[str] | None = None) -> None:
             f"Ja existentes: {result.skipped_existing}\n"
             f"Controle: {result.control_path}\nErros: {result.errors_path}"
         )
+    elif args.command == "acquire-fulltext":
+        from .fulltext_acquisition import acquire_fulltext
+
+        result = acquire_fulltext(
+            root,
+            limit=None if args.all else args.limit,
+            retry_failed=args.retry_failed,
+            dry_run=args.dry_run,
+            timeout=args.timeout,
+        )
+        summary = (
+            f"Aquisicao de texto integral: {result.succeeded} baixados, "
+            f"{result.failed} falhas, {result.skipped} ignorados "
+            f"(fila {result.total})."
+        )
+        if result.planned:
+            summary = f"Aquisicao de texto integral (dry-run): {result.planned} planejados."
+        print(summary)
+        print(result.report_path)
+
     elif args.command == "import-fulltext-assets":
         source = Path(args.input)
         if not source.is_absolute():
