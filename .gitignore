@@ -27,6 +27,7 @@ Thumbs.db
 /data/processed/*
 /data/quarantine/*
 /data/control/*
+/data/fulltext/*
 /exports/zotero/*
 /exports/asreview/*
 /exports/bibliometrix/*
@@ -49,6 +50,7 @@ mcp_*.json
 !/data/processed/.gitkeep
 !/data/quarantine/.gitkeep
 !/data/control/.gitkeep
+!/data/fulltext/.gitkeep
 !/exports/zotero/.gitkeep
 !/exports/asreview/.gitkeep
 !/exports/bibliometrix/.gitkeep

@@ -253,6 +253,8 @@ Assim, `build-db` não deve apagar controles já registrados.
 
 `import-reading --input leitura.csv` importa estados `pendente`, `em_leitura`, `lido`, `nao_localizado` ou `nao_disponivel` para `reading_status`, resolvendo a obra por `record_key`, OpenAlex, DOI ou título. O lote é validado antes da transação e reimportações idênticas são ignoradas. `import-fulltext-assets --input ativos.csv` registra URLs ou caminhos locais em `fulltext_assets`; arquivos locais têm SHA-256 e tamanho calculados, mas não são copiados para o repositório.
 
+`acquire-fulltext` baixa o PDF da melhor fonte open access registrada em `works` (`pdf_url` do `best_oa_location` do OpenAlex), salva em `data/fulltext/<openalex_id>.pdf` (não versionado) e registra o ativo em `fulltext_assets` com SHA-256, tamanho e origem. Falhas (ex.: HTTP 403) não deixam arquivo parcial e viram ativo `failed` com o motivo preservado para `--retry-failed`. A fila ignora obras que já têm ativo com a mesma URI; use `--dry-run` para planejar, `--limit N` (padrão 10), `--all` e `--timeout`. O relatório `reports/fulltext_acquisition_report.csv` documenta cada tentativa; a elegibilidade final continua sendo decisão humana.
+
 `import-evidence --input evidencia.csv` importa a matriz FAFAT+ para `evidence_notes`. Cada linha exige `evidence_id`, obra existente, achado, página/trecho, natureza (`empirica`, `teorica`, `documental`, `metodologica` ou `sintese`) e valor de conferência. Evidências repetidas são ignoradas; substituição exige `--replace`. O relatório agrega evidências por tema e destaca lacunas antes da síntese.
 
 Resoluções ou decisões finais manuais são registradas separadamente com:
@@ -494,6 +496,7 @@ openalex-review --root F:\ale_2_0\openalex\biblioteca report
 | `export [--filter <nome>]` | Exporta obras deduplicadas. |
 | `report` | Gera relatórios Markdown e CSV. |
 | `reading-queue [--analysis-id ...]` | Gera fila auxiliar de leitura em CSV/JSON. |
+| `acquire-fulltext [--limit N] [--all] [--dry-run] [--retry-failed] [--timeout S]` | Baixa PDFs open access, calcula SHA-256 e registra em `fulltext_assets`. |
 | `validate-seeds [--fail-on-missing]` | Confere DOIs-semente. |
 | `init-control [--overwrite]` | Cria modelos CSV. |
 | `import-screening ...` | Importa decisões. |

@@ -1,6 +1,6 @@
 # Backlog de integração
 
-**Atualizado em:** 30 de setembro de 2026
+**Atualizado em:** 2 de outubro de 2026
 
 **Base verificada:** `origin/main` em `82522fe`
 
@@ -49,7 +49,7 @@ como backlog pendente.
 | Eixo | Já existe | Próxima lacuna funcional |
 |---|---|---|
 | Triagem | Importação ASReview, decisões controladas, resolução de registros, idempotência, concordância, conflitos e resoluções manuais. | Exportação auditável consolidada e eventual fluxo de adjudicação guiado, se necessário além de `import-resolutions`. |
-| Texto integral | **Parcial ampliado nesta entrega:** `reading_status` e `fulltext_assets` são criados/preservados; importadores atômicos validam estado, obra, URI/local e hash SHA-256; PRISMA detalha elegibilidade e motivos por candidato. | Aquisição automatizada e resolução humana da elegibilidade final ainda pendentes. |
+| Texto integral | **Parcial ampliado nesta entrega:** `reading_status` e `fulltext_assets` são criados/preservados; importadores atômicos validam estado, obra, URI/local e hash SHA-256; PRISMA detalha elegibilidade e motivos por candidato; **`acquire-fulltext`** baixa PDFs open access do `best_oa_location` do OpenAlex com SHA-256, relatório de tentativas e falhas auditáveis. | Resolução humana da elegibilidade final ainda pendente (por design). |
 | Evidências | **Parcial ampliado nesta entrega:** `evidence_notes` e `evidence_matrix.csv` têm importação atômica, validação referencial, vocabulários de natureza/conferência e relatório de lacunas. | Fluxo de síntese/FAFAT+ no manuscrito continua dependente de revisão humana. |
 | PRISMA | **Implementado:** relatório e painel Streamlit visualizam identificação, deduplicação, título/resumo, texto integral, exclusões por motivo, conflitos, pendências e incluídos finais. | Integração de fontes externas adicionais e decisão final continuam dependentes de revisão humana. |
 | Interface | Shell local com navegação, visão geral, seleção explícita de corpus, bibliometria, redes interativas, estratégia, execução, produtos e importação. | Filtros/exportações avançadas, acompanhamento de leitura e lacunas; não há hospedagem pública ou múltiplos usuários. |
@@ -182,6 +182,7 @@ A especificação completa está em
 |---|---|---|
 | Modelar ativos de texto integral | — | **Concluído nesta entrega:** `fulltext_assets` registra obra, URI/local, tipo, origem e estado sem versionar conteúdo protegido. |
 | Registrar disponibilidade, aquisição e hash | Modelo de ativos | **Concluído nesta entrega:** importador calcula/valida SHA-256 e tamanho para arquivos locais e preserva tentativa/falha. |
+| Aquisição automatizada de PDFs open access | `works.pdf_url` e `fulltext_assets` | **Concluído nesta entrega:** `acquire-fulltext` baixa o PDF do `best_oa_location` do OpenAlex para `data/fulltext` (não versionado), calcula SHA-256/tamanho, registra ativo `available`/`failed` com motivo preservado, emite `reports/fulltext_acquisition_report.csv` e suporta `--dry-run`, `--limit`/`--all`, `--retry-failed` e `--timeout`. |
 | Importar e validar leitura integral | Vocabulários P1 e ativos | **Concluído nesta entrega:** `import-reading` valida estados, resolve identificadores, é idempotente e grava atomicamente. |
 | Registrar elegibilidade de texto integral | Leitura integral | **Parcial:** decisões controladas e relatório detalhado por motivo ficam associados à obra; resolução final segue humana. |
 
