@@ -30,8 +30,9 @@ def _records_from_result(result) -> list[dict[str, Any]]:
     return [dict(zip(columns, row, strict=True)) for row in result.fetchall()]
 
 
-def _write_csv(records: list[dict[str, Any]], path: Path, columns: list[str]) -> None:
-    with path.open("w", encoding="utf-8-sig", newline="") as stream:
+def _write_csv(records: list[dict[str, Any]], path: Path, columns: list[str], bom: bool = True) -> None:
+    """Escreve CSV; `bom=False` gera utf-8 puro para leitores sem tratamento de BOM (ASReview)."""
+    with path.open("w", encoding="utf-8-sig" if bom else "utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=columns, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(
@@ -214,6 +215,7 @@ def export_records(filter_name: str = "all", root: Path | None = None) -> int:
         ],
         asreview / "openalex_asreview.csv",
         ["title", "abstract", "authors", "keywords", "doi", "url", "openalex_id", "source_queries", "publication_year", "source"],
+        bom=False,  # utf-8 puro: o ASReview lê utf-8/ISO-8859-1 e o BOM corromperia a coluna 'title'
     )
     write_ris(records, asreview / "openalex_asreview.ris")
     _write_csv(

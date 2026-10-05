@@ -48,8 +48,10 @@ TEMPLATES: dict[str, list[str]] = {
 
 #: Nomes de coluna de decisao aceitos no CSV de triagem. Inclui a lista de
 #: nomes reconhecidos pelo ASReview LAB (docs/file-types -> Included), com
-#: `final_included` primeiro porque e o nome canonico da propria exportacao.
+#: `asreview_label` primeiro porque e a coluna do export de dataset do
+#: ASReview LAB 3; `final_included` segue como nome da exportacao classica.
 DECISION_COLUMNS = (
+    "asreview_label",
     "final_included",
     "label",
     "decision",

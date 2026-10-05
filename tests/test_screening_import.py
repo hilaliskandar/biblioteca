@@ -101,6 +101,32 @@ def test_import_accepts_asreview_final_included_binary_column(tmp_path):
     con.close()
 
 
+def test_import_accepts_asreview_label_column_from_asreview3_export(tmp_path):
+    """O export de dataset do ASReview 3 usa `asreview_label` (0/1) e a primeira coluna vazia."""
+    make_database(tmp_path)
+    path = tmp_path / "asreview3_rotulado.csv"
+    with path.open("w", encoding="utf-8", newline="") as stream:
+        # primeira coluna vazia (index), como no export real do ASReview 3
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=["", "title", "doi", "openalex_id", "asreview_group_id", "asreview_label"],
+            restval="",
+        )
+        writer.writeheader()
+        writer.writerow({"": "0", "title": "Primeiro registro", "doi": "", "openalex_id": "W1", "asreview_group_id": "", "asreview_label": "1"})
+        writer.writerow({"": "1", "title": "Segundo registro", "doi": "", "openalex_id": "W2", "asreview_group_id": "", "asreview_label": "0"})
+
+    result = import_screening_decisions(path, reviewer="r1", root=tmp_path)
+
+    assert result.imported == 2
+    assert result.invalid_decisions == 0
+    con = duckdb.connect(str(tmp_path / "data" / "db" / "openalex.duckdb"), read_only=True)
+    assert con.execute(
+        "SELECT record_key, decision FROM screening_decisions ORDER BY record_key"
+    ).fetchall() == [("openalex:W1", "incluir"), ("openalex:W2", "excluir")]
+    con.close()
+
+
 def test_import_screening_decisions_is_idempotent_without_replace(tmp_path):
     make_database(tmp_path)
     source = write_csv(

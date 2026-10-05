@@ -48,8 +48,9 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "`.\scripts/asreview_docker.ps1` cria o container e a interface abre em "
             "`http://localhost:5000` (imagem oficial: ghcr.io/asreview/asreview). "
             "Importe o CSV como *dataset* de um novo projeto; triage com o priorizador "
-            "e, depois, devolva o CSV exportado pelo ASReview — a coluna `final_included` "
-            "(0/1) é reconhecida pelo import da seção 2 da mesma página. Alternativa: os "
+            "e, depois, devolva o CSV exportado pelo ASReview — a coluna de rótulo "
+            "(`asreview_label` no ASReview 3; `final_included` nas versões 1/2, 0/1) é "
+            "reconhecida pelo import da seção 2 da mesma página. Alternativa: os "
             "CSVs de coleta de `data/processed/openalex_search_results/`."
         ),
         where=(
