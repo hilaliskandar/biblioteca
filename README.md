@@ -541,6 +541,20 @@ openalex-review report
 
 Use `--decision-column minha_coluna` para cabeçalho não reconhecido e `--replace` somente para substituir decisões anteriores do mesmo revisor e etapa.
 
+ASReview LAB local (Docker):
+
+```powershell
+.\scripts\asreview_docker.ps1 -Action up    # cria/inicia o container (imagem ghcr.io/asreview/asreview)
+.\scripts\asreview_docker.ps1 -Action down  # para (projetos ficam no volume Docker)
+.\scripts\asreview_docker.ps1 -Action status|logs|remove
+```
+
+Depois abra `http://localhost:5000`, importe `exports/asreview/openalex_asreview.csv`
+(gerado pela página **Triagem ASReview**) como dataset de um novo projeto e,
+concluída a triagem, devolva o CSV exportado pelo ASReview (coluna `final_included`
+0/1) pela mesma página. A instalação e o volume de projetos seguem a
+[documentação oficial do ASReview LAB](https://asreview.readthedocs.io/en/latest/lab/installation.html).
+
 ## Interface visual local
 
 O comando `openalex-review-ui` inicia um painel Streamlit local com navegação

@@ -43,9 +43,12 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "No topo da página Triagem ASReview, o botão de destaque "
             "**Gerar CSV do corpus para o ASReview** produz `exports/asreview/"
             "openalex_asreview.csv` com as colunas reconhecidas pelo ASReview LAB "
-            "(`title`, `abstract`, `authors`, `keywords`, `doi`, `url`). Importe-o como "
-            "*dataset* de um novo projeto em asreview.ai; triage com o priorizador e, "
-            "depois, devolva o CSV exportado pelo ASReview — a coluna `final_included` "
+            "(`title`, `abstract`, `authors`, `keywords`, `doi`, `url`). Use a versão "
+            "hospedada (asreview.ai) ou o ASReview LAB local em Docker: "
+            "`.\scripts/asreview_docker.ps1` cria o container e a interface abre em "
+            "`http://localhost:5000` (imagem oficial: ghcr.io/asreview/asreview). "
+            "Importe o CSV como *dataset* de um novo projeto; triage com o priorizador "
+            "e, depois, devolva o CSV exportado pelo ASReview — a coluna `final_included` "
             "(0/1) é reconhecida pelo import da seção 2 da mesma página. Alternativa: os "
             "CSVs de coleta de `data/processed/openalex_search_results/`."
         ),
@@ -53,6 +56,8 @@ EXTERNAL_PROGRAMS: tuple[ExternalProgram, ...] = (
             "Página Triagem ASReview: seção \"1. Exportar corpus para o ASReview\" "
             "(botão de destaque + downloads) e \"2. Importar decisões (ASReview)\"."
         ),
+        secondary_url="https://asreview.readthedocs.io/en/latest/lab/installation.html",
+        secondary_url_name="Instalação local (Docker)",
         page=PAGE_SCREENING,
     ),
     ExternalProgram(
