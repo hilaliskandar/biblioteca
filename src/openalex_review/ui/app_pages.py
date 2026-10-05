@@ -905,9 +905,10 @@ def _render_asreview_corpus_export(root: Path) -> None:
         "hospedada (asreview.ai) ou o ASReview LAB local em Docker: `.\scripts/asreview_docker.ps1` "
         "inicia a interface em `http://localhost:5000`. Crie um novo projeto importando este CSV "
         "como *dataset*. Concluída a "
-        "triagem, exporte o CSV do ASReview — a coluna `final_included` (0 = excluir, "
-        "1 = incluir) é reconhecida pelo import da seção 2 desta página. Nada sai desta "
-        "máquina automaticamente."
+        "triagem, exporte o CSV do ASReview — a coluna de rótulo (`asreview_label` no "
+        "ASReview 3; `final_included` nas versões 1/2, 0 = excluir, 1 = incluir) é "
+        "reconhecida pelo import da seção 2 desta página. Nada sai desta máquina "
+        "automaticamente."
     )
     filter_choice = st.selectbox(
         "Filtro de exportação",

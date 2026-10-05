@@ -1,6 +1,28 @@
 import pandas as pd
 
-from openalex_review.exporter import _replace_missing_values, write_bibtex, write_csl, write_ris
+from openalex_review.exporter import (
+    _replace_missing_values,
+    _write_csv,
+    write_bibtex,
+    write_csl,
+    write_ris,
+)
+
+
+def test_write_csv_without_bom_keeps_first_column_readable_as_plain_utf8(tmp_path):
+    """O BOM do utf-8-sig corrompe a primeira coluna para quem lê utf-8 puro (caso do ASReview)."""
+    path = tmp_path / "asreview.csv"
+    _write_csv([{"title": "Título ç", "doi": "10.1/x"}], path, ["title", "doi"], bom=False)
+    assert not path.read_bytes().startswith(b"\xef\xbb\xbf")
+    frame = pd.read_csv(path, encoding="utf-8", engine="python")
+    assert list(frame.columns)[:2] == ["title", "doi"]
+    assert frame["title"].iloc[0] == "Título ç"
+
+
+def test_write_csv_keeps_bom_by_default_for_excel(tmp_path):
+    path = tmp_path / "excel.csv"
+    _write_csv([{"a": "1"}], path, ["a"])
+    assert path.read_bytes().startswith(b"\xef\xbb\xbf")
 
 
 def test_replace_missing_values_converts_pandas_na_to_none():

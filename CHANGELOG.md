@@ -47,6 +47,17 @@
   `*-network.txt`), o erro comum quando os arquivos são trocados e o link para a
   documentação oficial do formato.
 - **Zotero:** nova exportação BibTeX (`exports/zotero/openalex_deduplicated.bib`) ao lado do RIS e do CSL JSON; a página BibTeX/RIS da UI ganhou a seção "Exportar para Zotero" (filtro, geração via `export_records` e downloads diretos), com orientação de programa externo (zotero.org).
+- **ASReview:** `import-screening` agora detecta `asreview_label` (0/1), a
+  coluna de rótulo do export de dataset do ASReview LAB 3 (colocado antes de
+  `final_included` na prioridade), além de tolerar a primeira coluna vazia
+  (index) desse export; validado com o arquivo exportado de verdade pela API
+  local do ASReview.
+- **ASReview:** o `exports/asreview/openalex_asreview.csv` agora é gravado em
+  utf-8 puro, sem BOM (os demais CSVs mantêm BOM para o Excel); o BOM de
+  `utf-8-sig` fazia o ASReview LAB não reconhecer a primeira coluna
+  (`title`), pois o leitor do programa usa `utf-8`/`ISO-8859-1` sem
+  tratamento de BOM. Detectado ao criar projeto pela API local
+  (`n_missing_title` = total de registros).
 - **ASReview local (Docker):** novo `scripts/asreview_docker.ps1` cria/inicia um
   container local do ASReview LAB com a imagem oficial
   (`ghcr.io/asreview/asreview`) na porta 5000, com volume persistente para os
