@@ -44,7 +44,6 @@ def export_screening_audit(root: Path | None = None, *, run_id: str | None = Non
     for rk, oa, doi, tit in works:
         sts = {""}
         sts.update(s for s in [None] + [d[1] for d in decis if d[0]==rk] + [r[1] for r in resol if r[0]==rk] if s)
-        sts.update(s for s in [rk] if rk in leit_map)
         for st in sorted(sts):
             dlist = dec_map.get((rk, st), [])
             rinfo = res_map.get((rk, st), {})
