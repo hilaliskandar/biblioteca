@@ -63,6 +63,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser(
         "export-screening",
         help="Exporta decisoes, pendencias, conflitos e resolucoes da triagem do DuckDB.",
+
+
     )
     queue = sub.add_parser("reading-queue", help="Gera fila de leitura bibliométrica auditável.")
     queue.add_argument("--analysis-id")
@@ -136,6 +138,11 @@ def build_parser() -> argparse.ArgumentParser:
     pipeline.add_argument("--progress-every", type=int)
     pipeline.add_argument("--overwrite", action="store_true")
     pipeline.add_argument("--build-run-id", action="append", help="Rodada a incluir no banco; repita para combinar.")
+    export_audit = sub.add_parser("export-screening-audit", help="Exporta relatorio auditavel consolidado da triagem.")
+    export_audit.add_argument("--run-id", help="Identificador da rotulacao para o nome do relatorio (padrao: latest).")
+
+    
+    
     return parser
 
 
@@ -193,6 +200,10 @@ def main(argv: list[str] | None = None) -> None:
         from .screening_export import export_screening
         for path in export_screening(root).values():
             print(path)
+    elif args.command == "export-screening-audit":
+        from .screening_audit import export_screening_audit
+        print(export_screening_audit(root, run_id=args.run_id))
+
     elif args.command == "reading-queue":
         from .reading_queue import write_reading_queue
         for path in write_reading_queue(
